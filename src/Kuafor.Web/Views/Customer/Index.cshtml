@@ -1,3 +1,4 @@
+@model Kuafor.Web.Models.CustomerDashboardViewModel
 @{
     ViewData["Title"] = "Pano";
     var name = User?.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(User?.Identity?.Name)
@@ -16,18 +17,18 @@
         </div>
     </div>
 
-    @Html.Partial("~/Views/Shared/_UpcomingAppointment.cshtml")
+    <partial name="_UpcomingAppointment" model="Model?.Upcoming" />
 
     <div class="my-4">
-        @Html.Partial("~/Views/Shared/_QuickActions.cshtml")
+        <partial name="_QuickActions" />
     </div>
 
     <div>
-        @Html.Partial("~/Views/Shared/_ServicesGrid.cshtml")
+        <partial name="_ServicesGrid" />
     </div>
 </div>
 
-@Html.Partial("~/Views/Shared/_CommandPalette.cshtml")
+<partial name="_CommandPalette" />
 
 @section Scripts {
     <script src="~/js/command-palette.js"></script>
