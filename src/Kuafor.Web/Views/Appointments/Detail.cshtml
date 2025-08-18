@@ -1,0 +1,21 @@
+@{
+    ViewData["Title"] = "Randevu Detayı";
+    var m = ViewBag.Model;
+}
+<div class="container py-4">
+  <h3 class="mb-3">Randevu Detayı</h3>
+  <div class="card border-0 shadow-sm">
+    <div class="card-body">
+      <div><strong>ID:</strong> @m.Id</div>
+      <div><strong>Tarih & Saat:</strong> @m.When</div>
+      <div><strong>Hizmet:</strong> @m.Service</div>
+      <div><strong>Kuaför:</strong> @m.Stylist</div>
+      <div><strong>Şube:</strong> @m.Branch</div>
+      <div class="mt-3"><strong>Not:</strong> @m.Notes</div>
+      <div class="mt-3 d-flex gap-2">
+        <a class="btn btn-outline-primary" href="/Appointments/Reschedule/@m.Id">Tarihi Değiştir</a>
+        <a class="btn btn-outline-danger" href="#">İptal Et</a>
+      </div>
+    </div>
+  </div>
+</div>
