@@ -1,0 +1,18 @@
+@model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
+<div class="mb-3 d-flex justify-content-between">
+  <a class="btn btn-link" href="@Url.Action("New","Appointments", new { serviceId = Model.SelectedServiceId })">← Geri: Kuaför</a>
+  <div class="text-muted">Seçim: <strong>@Model.SelectedService?.Name</strong> · <strong>@Model.SelectedStylist?.Name</strong></div>
+</div>
+
+<div class="row g-2">
+  @foreach (var slot in Model.TimeSlots)
+  {
+    var disabled = !slot.IsAvailable;
+    <div class="col-6 col-md-3 col-lg-2">
+      <a class="btn btn-@(disabled?"outline-secondary disabled":"outline-primary") w-100"
+         href="@(disabled?"#":Url.Action("New","Appointments", new { serviceId = Model.SelectedServiceId, stylistId = Model.SelectedStylistId, start = slot.Start.ToString("yyyy-MM-dd HH:mm:ss") }))">
+        @slot.Start.ToString("dd MMM HH:mm")
+      </a>
+    </div>
+  }
+</div>
