@@ -1,0 +1,30 @@
+@{
+    ViewData["Title"] = "Profile";
+    var p = ViewBag.Profile;
+}
+<div class="container py-4">
+    <h3 class="mb-3">Profil</h3>
+    <form>
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label">Ad Soyad</label>
+                <input class="form-control" value="@p.FullName" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">E-posta</label>
+                <input class="form-control" value="@p.Email" />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label">Telefon</label>
+                <input class="form-control" value="@p.Phone" />
+            </div>
+            <div class="col-md-12 form-check mt-2">
+                <input class="form-check-input" id="n" type="checkbox" @(p.Newsletter?"checked":null) />
+                <label class="form-check-label" for="n">Duyuru ve teklifleri almak istiyorum</label>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button class="btn btn-primary" type="button" onclick="alert('Mock: Değişiklikler kaydedildi')">Kaydet</button>
+        </div>
+    </form>
+</div>
