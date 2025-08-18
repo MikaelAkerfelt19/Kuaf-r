@@ -241,7 +241,7 @@ dotnet user-secrets set "Smtp:Pass" "super-secret"
 ---
 
 ## Yol Haritası
-- [ ] Giriş & kayıt modalları (_Layout uyumlu)
+- [x] Giriş & kayıt modalları (_Layout uyumlu)
 - [ ] Ana sayfa hero & dinamik hizmetler
 - [ ] Yorumlar (admin onay akışı)
 - [ ] Randevu (takvim seçimi, çakışma kontrolü)
@@ -264,4 +264,4 @@ dotnet user-secrets set "Smtp:Pass" "super-secret"
 ---
 
 ## Lisans
-Bu projeye henüz lisans eklenmedi. **MIT** lisansını öneririm; isterseniz `LICENSE` dosyası olarak ekleyebilirim.
+Bu projeye henüz lisans eklenmedi.
