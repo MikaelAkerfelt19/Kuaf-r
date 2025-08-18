@@ -1,0 +1,31 @@
+@{
+    ViewData["Title"] = "Randevularım";
+}
+<div class="container py-4">
+  <h3 class="mb-3">Randevularım</h3>
+  @if (TempData["Booked"] != null) {
+    <div class="alert alert-success">@TempData["Booked"]</div>
+  }
+
+  <h5>Yaklaşan</h5>
+  <div class="list-group mb-4">
+    @foreach (var a in (IEnumerable<dynamic>)ViewBag.Upcoming)
+    {
+      <a class="list-group-item list-group-item-action d-flex justify-content-between" href="/Appointments/Details/@a.Id">
+        <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
+        <span class="text-muted">Detay →</span>
+      </a>
+    }
+  </div>
+
+  <h5>Geçmiş</h5>
+  <div class="list-group">
+    @foreach (var a in (IEnumerable<dynamic>)ViewBag.Past)
+    {
+      <a class="list-group-item list-group-item-action d-flex justify-content-between" href="/Appointments/Details/@a.Id">
+        <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
+        <span class="text-muted">Detay →</span>
+      </a>
+    }
+  </div>
+</div>
