@@ -1,0 +1,34 @@
+@model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
+@using Kuafor.Web.Models.Appointments
+@{
+    ViewData["Title"] = "Randevu Al";
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">Randevu Al</h3>
+    <div class="mb-3">
+        <div class="progress" style="height: 8px;">
+            <div class="progress-bar" role="progressbar" style="width:@(((int)Model.Step*25))%;"></div>
+        </div>
+    </div>
+
+    @switch (Model.Step)
+    {
+        case WizardStep.Service:
+            @await Html.PartialAsync("Partials/_Step1_Service", Model)
+            break;
+        case WizardStep.Stylist:
+            @await Html.PartialAsync("Partials/_Step2_Stylist", Model)
+            break;
+        case WizardStep.Time:
+            @await Html.PartialAsync("Partials/_Step3_Time", Model)
+            break;
+        case WizardStep.Confirm:
+            @await Html.PartialAsync("Partials/_Step4_Confirm", Model)
+            break;
+    }
+</div>
+
+@section Scripts {
+    <script src="~/js/appointment-wizard.js"></script>
+}
