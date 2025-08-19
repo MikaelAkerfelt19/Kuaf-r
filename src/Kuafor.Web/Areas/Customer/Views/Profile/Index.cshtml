@@ -12,6 +12,9 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-addresses" type="button" role="tab">Adresler</button>
         </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-notifications" type="button" role="tab">Bildirimler</button>
+        </li>
     </ul>
 
     <div class="tab-content pt-3">
@@ -21,10 +24,14 @@
         <div class="tab-pane fade" id="tab-addresses" role="tabpanel">
             <partial name="Partials/_Profile.Addresses" model="Model.Addresses" />
         </div>
+        <div class="tab-pane fade" id="tab-notifications" role="tabpanel">
+            <partial name="Partials/_Profile.Notifications" model="Model.Notifications" />
+        </div>
     </div>
 </div>
 
 @section Scripts {
     <script src="~/js/profile-identity.js"></script>
     <script src="~/js/profile-addresses.js"></script>
+    <script src="~/js/profile-notifications.js"></script>
 }
