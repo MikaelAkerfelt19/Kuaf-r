@@ -1,0 +1,65 @@
+@model Kuafor.Web.Models.Profile.NotificationsViewModel
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Bildirim Tercihleri</h5>
+
+        <!-- Kanallar -->
+        <div class="row g-3 mb-2">
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" asp-for="Email" id="nEmail" />
+                <label class="form-check-label" for="nEmail">E-posta Bildirimleri</label>
+            </div>
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" asp-for="Sms" id="nSms" />
+                <label class="form-check-label" for="nSms">SMS Bildirimleri</label>
+            </div>
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" asp-for="Push" id="nPush" />
+                <label class="form-check-label" for="nPush">Push (web) Bildirimleri</label>
+            </div>
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" asp-for="WhatsApp" id="nWhatsApp" />
+                <label class="form-check-label" for="nWhatsApp">WhatsApp Bildirimleri</label>
+            </div>            
+        </div>
+
+        <hr />
+
+        <!-- Kategoriler -->
+        <div class="row g-3 mb-2">
+            <div class="col-12 col-md-4 form-check">
+                <input class="form-check-input" asp-for="Reminders" id="cRem" />
+                <label class="form-check-label" for="cRem">Hatırlatıcılar</label>
+            </div>
+            <div class="col-12 col-md-4 form-check">
+                <input class="form-check-input" asp-for="Campaigns" id="cCamp" />
+                <label class="form-check-label" for="cCamp">Kampanyalar</label>
+            </div>
+            <div class="col-12 col-md-4 form-check">
+                <input class="form-check-input" asp-for="Critical" id="cCrit" />
+                <label class="form-check-label" for="cCrit">Önemli Duyurular</label>
+            </div>
+        </div>
+
+        <hr />
+
+        <!-- Sessiz Saat -->
+        <div class="row g-3">
+            <div class="col-md-4">
+                <label class="form-label">Sessiz Saatler (Başlangıç)</label>
+                <input class="form-control" id="quietFrom" type="time" value="@Model.QuietFrom.ToString(@"hh\:mm")" />
+            </div>
+            <div class="col-md-4">
+                <label class="form-label">Sessiz Saatler (Bitiş)</label>
+                <input class="form-control" id="quietTo" type="time" value="@Model.QuietTo.ToString(@"hh\:mm")" />
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <div class="text-muted">Not: Aralık geceyi aşabilir (22:00 → 08:00).</div>
+            </div>
+        </div>
+        <div class="mt-3">
+            <button type="button" class="btn btn-primary" onclick="window.profileNotifSave()">Kaydet</button>
+        </div>
+    </div>
+</div>
