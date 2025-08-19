@@ -7,14 +7,14 @@
   if(!overlay || !input || !results) return;
 
   const commands = [
-    { icon:'✂️', title:'Yeni Randevu', desc:'Hızlıca yeni randevu oluştur', url:'/Appointments/New', keywords:'randevu olustur yeni create' },
-    { icon:'🗓️', title:'Randevularım', desc:'Geçmiş ve yaklaşan randevular', url:'/Appointments', keywords:'randevularim liste gecmis yaklasan' },
-    { icon:'🧑\u200d🦱', title:'Kuaförler', desc:'Usta listesi ve puanlar', url:'/Stylists', keywords:'kuaforler stilist usta' },
-    { icon:'🧴', title:'Hizmetler', desc:'Tüm hizmetleri görüntüle', url:'/Services', keywords:'hizmetler servisler' },
-    { icon:'🎁', title:'Fırsatlar', desc:'Kupon ve kampanyalar', url:'/Coupons', keywords:'kupon kampanya indirim' },
-    { icon:'⚙️', title:'Profil', desc:'Bilgilerini düzenle', url:'/Profile', keywords:'profil ayarlar hesap' },
-    { icon:'❔', title:'Destek', desc:'Yardım & SSS', url:'/Support', keywords:'destek yardim sss' },
-    { icon:'🚪', title:'Çıkış Yap', desc:'Hesaptan çıkış', url:'/Account/Logout', keywords:'cikis logout' }
+    { icon:'✂️', title:'Yeni Randevu', desc:'Hızlıca yeni randevu oluştur', url:'/Customer/Appointments/New', keywords:'randevu olustur yeni create' },
+    { icon:'🗓️', title:'Randevularım', desc:'Geçmiş ve yaklaşan randevular', url:'/Customer/Appointments', keywords:'randevularim liste gecmis yaklasan' },
+    { icon:'🧑\u200d🦱', title:'Kuaförler', desc:'Usta listesi ve puanlar', url:'/Customer/Stylists', keywords:'kuaforler stilist usta' },
+    { icon:'🧴', title:'Hizmetler', desc:'Tüm hizmetleri görüntüle', url:'/Customer/Services', keywords:'hizmetler servisler' },
+    { icon:'🎁', title:'Fırsatlar', desc:'Kupon ve kampanyalar', url:'/Customer/Coupons', keywords:'kupon kampanya indirim' },
+    { icon:'⚙️', title:'Profil', desc:'Bilgilerini düzenle', url:'/Customer/Profile', keywords:'profil ayarlar hesap' },
+    { icon:'❔', title:'Destek', desc:'Yardım & SSS', url:'/Customer/Support', keywords:'destek yardim sss' },
+    { icon:'🚪', title:'Çıkış Yap', desc:'Hesaptan çıkış', url:'/Customer/Account/Logout', keywords:'cikis logout' }
   ];
 
   let activeIndex = -1;

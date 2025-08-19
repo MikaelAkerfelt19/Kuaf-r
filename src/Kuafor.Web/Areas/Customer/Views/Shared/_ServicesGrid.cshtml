@@ -1,6 +1,6 @@
 <div class="d-flex justify-content-between align-items-center mb-2">
   <h4 class="mb-0">Hizmetler</h4>
-  <a class="btn btn-link" href="/Services">Tümünü Gör</a>
+  <a class="btn btn-link" asp-area="Customer" asp-controller="Services" asp-action="Index">Tümünü Gör</a>
 </div>
 
 <div class="row g-3">
@@ -16,8 +16,8 @@
         </div>
         <p class="mt-3 mb-4 text-muted small">Temel kesim, yüz hatlarına uygun model önerisi.</p>
         <div class="mt-auto d-flex gap-2">
-          <a href="/Appointments/New?serviceId=1" class="btn btn-primary">Randevu Al</a>
-          <a href="/Services/Details/1" class="btn btn-outline-secondary">Detay</a>
+          <a asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-serviceId="1" class="btn btn-primary">Randevu Al</a>
+          <a asp-area="Customer" asp-controller="Services" asp-action="Details" asp-route-id="1" class="btn btn-outline-secondary">Detay</a>
         </div>
       </div>
     </div>
@@ -36,8 +36,8 @@
         </div>
         <p class="mt-3 mb-4 text-muted small">Renk değişimi, röfle, pigmentasyon danışmanlığı.</p>
         <div class="mt-auto d-flex gap-2">
-          <a href="/Appointments/New?serviceId=2" class="btn btn-primary">Randevu Al</a>
-          <a href="/Services/Details/2" class="btn btn-outline-secondary">Detay</a>
+          <a asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-serviceId="2" class="btn btn-primary">Randevu Al</a>
+          <a asp-area="Customer" asp-controller="Services" asp-action="Details" asp-route-id="2" class="btn btn-outline-secondary">Detay</a>
         </div>
       </div>
     </div>
@@ -55,8 +55,8 @@
         </div>
         <p class="mt-3 mb-4 text-muted small">Keratin, nem desteği, saç ve kafa derisi bakımı.</p>
         <div class="mt-auto d-flex gap-2">
-          <a href="/Appointments/New?serviceId=3" class="btn btn-primary">Randevu Al</a>
-          <a href="/Services/Details/3" class="btn btn-outline-secondary">Detay</a>
+          <a asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-serviceId="3" class="btn btn-primary">Randevu Al</a>
+          <a asp-area="Customer" asp-controller="Services" asp-action="Details" asp-route-id="3" class="btn btn-outline-secondary">Detay</a>
         </div>
       </div>
     </div>

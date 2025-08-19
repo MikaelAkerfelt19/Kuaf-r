@@ -5,8 +5,9 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Globalization;
 
-namespace Kuafor.Web.Controllers
+namespace Kuafor.Web.Areas.Customer.Controllers
 {
+    [Area("Customer")]
     public class AppointmentsController : Controller
     {
         private List<ServiceVm> MockServices => new()
@@ -35,7 +36,6 @@ namespace Kuafor.Web.Controllers
             return slots;
         }
 
-        [HttpGet("/Appointments/New")]
         public IActionResult New(int? serviceId, int? stylistId, string? start)
         {
             var vm = new AppointmentWizardViewModel
@@ -45,28 +45,14 @@ namespace Kuafor.Web.Controllers
                 TimeSlots = BuildSlots()
             };
 
-            if (serviceId.HasValue)
-            {
-                vm.SelectedServiceId = serviceId;
-                vm.Step = WizardStep.Stylist;
-            }
-
-            if (stylistId.HasValue)
-            {
-                vm.SelectedStylistId = stylistId;
-                vm.Step = WizardStep.Time;
-            }
-
+            if (serviceId.HasValue) { vm.SelectedServiceId = serviceId; vm.Step = WizardStep.Stylist; }
+            if (stylistId.HasValue) { vm.SelectedStylistId = stylistId; vm.Step = WizardStep.Time; }
             if (!string.IsNullOrEmpty(start) && DateTime.TryParse(start, out var dt))
-            {
-                vm.SelectedStart = dt;
-                vm.Step = WizardStep.Confirm;
-            }
+            { vm.SelectedStart = dt; vm.Step = WizardStep.Confirm; }
 
             return View(vm);
         }
 
-        [HttpGet("/Appointments")]
         public IActionResult Index()
         {
             // Mock listeler
@@ -85,7 +71,6 @@ namespace Kuafor.Web.Controllers
             return View();
         }
 
-        [HttpGet("/Appointments/Details/{id}")]
         public IActionResult Details(int id)
         {
             // Mock detay
@@ -100,12 +85,12 @@ namespace Kuafor.Web.Controllers
             };
             return View();
         }
-        
-        [HttpPost("/Appointments/Confirm")]
+
+        [HttpPost]
         public IActionResult Confirm(int serviceId, int stylistId, DateTime start)
         {
             // TODO: Backend geldiğinde kaydet
-            TempData["Booked"] = $"Randevu oluşturuldu: {start:dd MMM dddd, HH:mm} · {MockServices.First(s=>s.Id==serviceId).Name} · {MockStylists.First(s=>s.Id==stylistId).Name}";
+            TempData["Booked"] = $"Randevu oluşturuldu: {start:dd MMM dddd, HH:mm} · {MockServices.First(s => s.Id == serviceId).Name} · {MockStylists.First(s => s.Id == stylistId).Name}";
             return RedirectToAction("Index");
         }
     }

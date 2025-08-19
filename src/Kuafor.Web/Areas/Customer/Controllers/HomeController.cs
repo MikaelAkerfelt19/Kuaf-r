@@ -2,11 +2,12 @@ using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models;
 using System;
 
-namespace Kuafor.Web.Controllers
+namespace Kuafor.Web.Areas.Customer.Controllers
 {
     // Not: Bu controller sadece dashboard görünümünü göstermek içindir.
     // ViewModel, veri erişimi vb. kısımlar eklenecek.
-    public class CustomerController : Controller
+    [Area("Customer")]
+    public class HomeController : Controller
     {
         // GET: /Customer
         public IActionResult Index()

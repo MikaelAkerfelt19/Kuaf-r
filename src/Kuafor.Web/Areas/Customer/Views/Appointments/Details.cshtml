@@ -13,8 +13,8 @@
       <div><strong>Şube:</strong> @m.Branch</div>
       <div class="mt-3"><strong>Not:</strong> @m.Notes</div>
       <div class="mt-3 d-flex gap-2">
-        <a class="btn btn-outline-primary" href="/Appointments/Reschedule/@m.Id">Tarihi Değiştir</a>
-        <a class="btn btn-outline-danger" href="#">İptal Et</a>
+        <a class="btn btn-outline-primary" asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule" asp-route-id="@m.Id">Tarihi Değiştir</a>
+        <a class="btn btn-outline-danger" asp-area="Customer" asp-controller="Appointments" asp-action="Cancel" asp-route-id="@m.Id">İptal Et</a>
       </div>
     </div>
   </div>

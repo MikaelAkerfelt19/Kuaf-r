@@ -22,11 +22,11 @@
         <div class="d-flex gap-2">
             @if (Model?.HasAppointment == true && Model.AppointmentId.HasValue)
             {
-                <a href="/Appointments/Manage/@Model.AppointmentId" class="btn btn-outline-secondary">Detay</a>
-                <a href="/Appointments/Reschedule/@Model.AppointmentId" class="btn btn-outline-primary">Tarihi Değiştir</a>
+                <a asp-area="Customer" asp-controller="Appointments" asp-action="Details" asp-route-id="@Model.AppointmentId" class="btn btn-outline-secondary">Detay</a>
+                <a asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule" asp-route-id="@Model.AppointmentId" class="btn btn-outline-primary">Tarihi Değiştir</a>
             }
-            <a href="/Appointments/New" class="btn btn-primary btn-lg">Randevu Al</a>
-            <a href="/Appointments" class="btn btn-outline-secondary btn-lg">Randevularım</a>
+            <a asp-area="Customer" asp-controller="Appointments" asp-action="New" class="btn btn-primary btn-lg">Randevu Al</a>
+            <a asp-area="Customer" asp-controller="Appointments" asp-action="Index" class="btn btn-outline-secondary btn-lg">Randevularım</a>
         </div>
     </div>
 </div>

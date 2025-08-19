@@ -9,7 +9,7 @@
                     <div class="text-muted small">@s.DurationText</div>
                     <p class="mt-2 text-muted">@s.Description</p>
                     <div class="mt-auto">
-                        <a class="btn btn-primary" href="@Url.Action("New", "Appointments", new { serviceId = s.Id})">Seç ve Devam Et</a>
+                        <a class="btn btn-primary" asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-serviceId="@s.Id">Seç ve Devam Et</a>
                     </div>
                 </div>
             </div>

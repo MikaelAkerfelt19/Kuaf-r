@@ -11,7 +11,7 @@
   <div class="list-group mb-4">
     @foreach (var a in (IEnumerable<dynamic>)ViewBag.Upcoming)
     {
-      <a class="list-group-item list-group-item-action d-flex justify-content-between" href="/Appointments/Details/@a.Id">
+      <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
         <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
         <span class="text-muted">Detay →</span>
       </a>
@@ -22,7 +22,7 @@
   <div class="list-group">
     @foreach (var a in (IEnumerable<dynamic>)ViewBag.Past)
     {
-      <a class="list-group-item list-group-item-action d-flex justify-content-between" href="/Appointments/Details/@a.Id">
+      <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
         <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
         <span class="text-muted">Detay →</span>
       </a>
