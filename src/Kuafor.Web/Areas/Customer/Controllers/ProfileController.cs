@@ -34,6 +34,27 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     Email = true, Sms = true, Push = false, WhatsApp = true,
                     Reminders = true, Campaigns = true, Critical = true,
                     QuietFrom = new TimeSpan(22, 0, 0), QuietTo = new TimeSpan(8, 0, 0)
+                },
+                Preferences = new PreferencesViewModel
+                {
+                    PreferredBranch = "Merkez",
+                    PreferredStylist = "Ahmet Özdoğan",
+                    PreferredTimeBand = "Hafta içi 18:00-21:00",
+                    FlexMinutes = 15,
+                    BranchOptions = { "Merkez", "İldem", "Talas" },
+                    StylistOptions = { "Ahmet Özdoğan", "Ahmet Ülker", "İbrahim Taşkın" },
+                    TimeBandOptions =
+                    {
+                        "Hafta içi 10:00-13:00",
+                        "Hafta içi 13:00-17:00",
+                        "Hafta içi 18:00-21:00",
+                        "Hafta sonu 10:00-14:00"
+                    },
+                    QuickRebooks = {
+                                        // (<serviceId>, <stylistId>, <label>)
+                        new QuickRebookItem(1, 10, "Saç Kesimi · Ahmet Ö."),
+                        new QuickRebookItem(3, 12, "Bakım & Spa · İbrahim T."),
+                    }
                 }
             };
             return View(vm);
