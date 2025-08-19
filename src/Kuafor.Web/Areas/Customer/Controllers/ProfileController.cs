@@ -1,4 +1,6 @@
+using Kuafor.Web.Models.Profile;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
@@ -7,14 +9,28 @@ namespace Kuafor.Web.Areas.Customer.Controllers
     {
         public IActionResult Index()
         {
-            ViewBag.Profile = new
+            var vm = new ProfilePageViewModel
             {
-                FullName = User?.Identity?.Name ?? "Misafir Kullanıcı",
-                Email = "user@example.com",
-                Phone = "+90 5xx xxx xx xx",
-                Newsletter = true
+                Identity = new IdentityViewModel
+                {
+                    FullName = User?.Identity?.Name ?? "Misafir Kullanıcı",
+                    DisplayName = "feas",
+                    BirthDate = new DateTime(2003, 7, 15),
+                    Email = "user@example.com",
+                    Phone = "+90 5xx xxx xx xx",
+                    WhatsappOptIn = true,
+                    AvatarUrl = "/images/avatars/default.png"
+                },
+                Addresses = new AddressesViewModel
+                {
+                    Items =
+                    {
+                        new AddressItemVm(1,"Ev","Boğaçhan Sk. No:10/3","İstanbul","Kadıköy","34710",true),
+                        new AddressItemVm(2,"İş","Rıhtım Cd. No:21","İstanbul","Kadıköy","34716",false), 
+                    }
+                }
             };
-            return View();
+            return View(vm);
         }
     }
 }
