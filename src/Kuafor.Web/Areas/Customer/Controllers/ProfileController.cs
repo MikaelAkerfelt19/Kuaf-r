@@ -26,8 +26,14 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     Items =
                     {
                         new AddressItemVm(1,"Ev","Boğaçhan Sk. No:10/3","İstanbul","Kadıköy","34710",true),
-                        new AddressItemVm(2,"İş","Rıhtım Cd. No:21","İstanbul","Kadıköy","34716",false), 
+                        new AddressItemVm(2,"İş","Rıhtım Cd. No:21","İstanbul","Kadıköy","34716",false),
                     }
+                },
+                Notifications = new NotificationsViewModel
+                {
+                    Email = true, Sms = true, Push = false, WhatsApp = true,
+                    Reminders = true, Campaigns = true, Critical = true,
+                    QuietFrom = new TimeSpan(22, 0, 0), QuietTo = new TimeSpan(8, 0, 0)
                 }
             };
             return View(vm);
