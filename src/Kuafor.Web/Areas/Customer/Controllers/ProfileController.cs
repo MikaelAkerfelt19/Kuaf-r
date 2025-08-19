@@ -55,6 +55,35 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                         new QuickRebookItem(1, 10, "Saç Kesimi · Ahmet Ö."),
                         new QuickRebookItem(3, 12, "Bakım & Spa · İbrahim T."),
                     }
+                },
+                Loyalty = new LoyaltyViewModel
+                {
+                    Tier = "Gümüş",
+                    Points = 120,
+                    NextTierPoints = 200,
+                    Benefits =
+                    {
+                        "Randevu hatırlatmada öncelik",
+                        "Seçili hizmetlerde %5 indirim",
+                        "Doğum gününde ekstra kupon"
+                    }
+                },
+                Coupons = new CouponsViewModel
+                {
+                    Active =
+                    {
+                        new CouponVm("FEAS10","Hoş Geldin İndirimi","İlk randevunda geçerli",
+                                     DateTime.Today.AddDays(30),  null, "%10", false),
+                        new CouponVm("SPA50","Bakım Kampanyası","Bakım & Spa için",
+                                     DateTime.Today.AddDays(10),  300m, "₺50", false),
+                    },
+                    Expired =
+                    {
+                        new CouponVm("SUMMER15","Yaz İndirimi", "Belirli hizmetlerde",
+                                     DateTime.Today.AddDays(-3), null, "%15", false),
+                        new CouponVm("USED20","Kullanılmış Kupon", "Geçmiş sipariş",
+                                     DateTime.Today.AddDays(5),  null, "%20", true)
+                    }
                 }
             };
             return View(vm);
