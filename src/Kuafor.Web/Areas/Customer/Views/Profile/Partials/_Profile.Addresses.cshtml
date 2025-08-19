@@ -1,0 +1,93 @@
+@model Kuafor.Web.Models.Profile.AddressesViewModel
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h5 class="mb-0">Adresler</h5>
+  <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addrModal" onclick="window.addrNew()">Yeni Adres</button>
+</div>
+
+@if (Model.Items.Count == 0)
+{
+  <div class="alert alert-light border">Adres bulunamadı. İlk adresini ekle!</div>
+}
+else
+{
+  <div class="row g-3">
+    @foreach (var a in Model.Items)
+    {
+      <div class="col-12 col-md-6">
+        <div class="card border-0 shadow-sm h-100">
+          <div class="card-body d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start">
+              <div>
+                <div class="fw-semibold">
+                  @a.Title 
+                  @if (a.IsDefault) {
+                    <span class="badge bg-success ms-1">Varsayılan</span>
+                  }
+                </div>
+                <div class="text-muted">@a.Line1</div>
+                <div class="text-muted small">@a.District / @a.City @a.Zip</div>
+              </div>
+              <div class="btn-group">
+                <button class="btn btn-sm btn-outline-secondary" onclick="window.addrEdit(@a.Id)">Düzenle</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="window.addrDelete(@a.Id)">Sil</button>
+              </div>
+            </div>
+
+            <div class="mt-3">
+              <div class="form-check">
+                <input class="form-check-input" type="radio" name="defaultAddr"
+                       @(a.IsDefault ? "checked" : null)
+                       onclick="window.addrMakeDefault(@a.Id)"
+                       id="addrDefault_@a.Id" />
+                <label class="form-check-label" for="addrDefault_@a.Id">Varsayılan yap</label>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    }
+  </div>
+}
+
+<!-- Modal -->
+<div class="modal fade" id="addrModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog"><div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" id="addrModalLabel">Adres</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+    </div>
+    <div class="modal-body">
+      <div class="row g-3">
+        <div class="col-6">
+          <label class="form-label">Başlık</label>
+          <input id="addrTitle" class="form-control" placeholder="Ev / İş" />
+        </div>
+        <div class="col-12">
+          <label class="form-label">Adres Satırı</label>
+          <input id="addrLine1" class="form-control" placeholder="Sokak, No, Daire" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">İlçe</label>
+          <input id="addrDistrict" class="form-control" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">Şehir</label>
+          <input id="addrCity" class="form-control" />
+        </div>
+        <div class="col-6">
+          <label class="form-label">Posta Kodu</label>
+          <input id="addrZip" class="form-control" />
+        </div>
+        <div class="col-12 form-check">
+          <input id="addrDefault" type="checkbox" class="form-check-input" />
+          <label for="addrDefault" class="form-check-label">Varsayılan yap</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Kapat</button>
+      <button type="button" class="btn btn-primary" onclick="window.addrSave()">Kaydet</button>
+    </div>
+  </div></div>
+</div>
