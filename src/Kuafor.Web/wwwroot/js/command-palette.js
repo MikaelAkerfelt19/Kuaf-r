@@ -9,8 +9,8 @@
   const commands = [
     { icon:'✂️', title:'Yeni Randevu', desc:'Hızlıca yeni randevu oluştur', url:'/Appointments/New', keywords:'randevu olustur yeni create' },
     { icon:'🗓️', title:'Randevularım', desc:'Geçmiş ve yaklaşan randevular', url:'/Appointments', keywords:'randevularim liste gecmis yaklasan' },
-    { icon:'🧴', title:'Hizmetler', desc:'Tüm hizmetleri görüntüle', url:'/Services', keywords:'hizmetler servisler' },
     { icon:'🧑\u200d🦱', title:'Kuaförler', desc:'Usta listesi ve puanlar', url:'/Stylists', keywords:'kuaforler stilist usta' },
+    { icon:'🧴', title:'Hizmetler', desc:'Tüm hizmetleri görüntüle', url:'/Services', keywords:'hizmetler servisler' },
     { icon:'🎁', title:'Fırsatlar', desc:'Kupon ve kampanyalar', url:'/Coupons', keywords:'kupon kampanya indirim' },
     { icon:'⚙️', title:'Profil', desc:'Bilgilerini düzenle', url:'/Profile', keywords:'profil ayarlar hesap' },
     { icon:'❔', title:'Destek', desc:'Yardım & SSS', url:'/Support', keywords:'destek yardim sss' },
