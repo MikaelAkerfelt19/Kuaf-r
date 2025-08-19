@@ -1,0 +1,92 @@
+@model Kuafor.Web.Models.Profile.CouponsViewModel
+@using System.Globalization
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Kuponlar</h5>
+
+        <h6 class="mb-2">Aktif</h6>
+        @if (Model.Active.Count == 0)
+        {
+            <div class="text-muted mb-3">Aktif kupon bulunmamaktadır.</div>
+        }
+        else
+        {
+            <div class="row g-3 mb-3">
+                @foreach (var c in Model.Active)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="border rounded p-3 h-100 d-flex flex-column">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">@c.Title</div>
+                                    <div class="text-muted small">
+                                        @c.DiscountText
+                                        @if (c.MinSpend.HasValue)
+                                        {
+                                            @: · Min @c.MinSpend.Value.ToString("C0", CultureInfo.GetCultureInfo("tr-TR"))
+                                        }
+                                    </div>
+                                </div>
+                                <span class="badge bg-success">Aktif</span>
+                            </div>
+
+                            @if (!string.IsNullOrWhiteSpace(c.Description))
+                            {
+                                <div class="mt-2 text-muted small">@c.Description</div>
+                            }
+
+                            <div class="mt-auto d-flex flex-wrap gap-2 align-items-center">
+                                <code class="px-2 py-1 bg-light rounded" id="code_@c.Code">@c.Code</code>
+                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCouponCode('@c.Code')">Kodu Kopyala</button>
+                                <a class="btn btn-sm btn-primary"
+                                    asp-area="Customer" asp-controller="Appointments" asp-action="New"
+                                    asp-route-coupon="@c.Code">Uygula</a>
+                                @if (c.ExpiresAt.HasValue)
+                                {
+                                    <span class="ms-auto text-muted small">Son: @c.ExpiresAt.Value.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+
+        <h6 class="mb-2 mt-2">Süresi Dolan / Kullanılmış</h6>
+        @if (Model.Expired.Count == 0)
+        {
+            <div class="text-muted">Listelenecek kupon bulunmamaktadır.</div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var c in Model.Expired)
+                {
+                    <div class="col-12 col-md-6">
+                        <div class="border rounded p-3 h-100 d-flex flex-column opacity-75">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="fw-semibold">@c.Title</div>
+                                    <div class="text-muted small">@c.DiscountText</div>
+                                </div>
+                                <span class="badge bg-secondary">@((c.IsUsed) ? "Kullanıldı" : "Süresi Dolmuş")</span>
+                            </div>
+                            @if (!string.IsNullOrWhiteSpace(c.Description))
+                            {
+                                <div class="mt-2 text-muted small">@c.Description</div>
+                            }
+                            <div class="mt-auto d-flex flex-wrap gap-2 align-items-center">
+                                <code class="px-2 py-1 bg-light rounded">@c.Code</code>
+                                @if (c.ExpiresAt.HasValue)
+                                {
+                                    <span class="ms-auto text-muted small">Son: @c.ExpiresAt.Value.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>    
+</div>

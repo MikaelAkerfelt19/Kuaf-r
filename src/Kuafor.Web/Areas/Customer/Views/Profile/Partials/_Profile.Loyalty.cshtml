@@ -1,0 +1,62 @@
+@model Kuafor.Web.Models.Profile.LoyaltyViewModel
+@using System.Globalization
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">Sadakat</h5>
+            <span class="badge bg-primary">Seviye: @Model.Tier</span>
+        </div>
+
+        <div class="mt-3">
+            <div class="d-flex justify-content-between">
+                <div><strong>Puan:</strong> @Model.Points</div>
+                <div class="text-muted small">
+                    @if (Model.PointsToNext > 0)
+                    {
+                        @:Bir üst seviye için @Model.PointsToNext puan kaldı
+                    }
+                    else
+                    {
+                        @:En yüksek seviyedesiniz!
+                    }
+                </div>
+            </div>
+
+            @{
+                var pct = 0;
+                if (Model.NextTierPoints > 0)
+                {
+                    pct = (int)System.Math.Clamp(
+                        (double)Model.Points / (double)Model.NextTierPoints * 100.0, 0, 100);
+                }
+            }
+            <div class="progress mt-2" style="height: 10px;">
+                <div class="progress-bar" role="progressbar" style="width:@pct%;"></div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            <h6 class="mb-2">Faydalar</h6>
+            @if (Model.Benefits.Count == 0)
+            {
+                <div class="text-muted">Bu seviyede fayda bulunamadı.</div>
+            }
+            else
+            {
+                <ul class="list-unstyled mb-0">
+                    @foreach (var b in Model.Benefits)
+                    {
+                        <li class="d-flex align-items-center gap-2">
+                            <span class="badge bg-light text-dark">✓</span> <span>@b</span>
+                        </li>
+                    }
+                </ul>
+            }
+        </div>
+
+        <div class="mt-3">
+            <button type="button" class="btn btn-outline-primary btn-sm" onclick="window.loyaltyHowItWorks()">Nasıl Çalışır?</button>
+        </div>
+    </div>
+</div>
