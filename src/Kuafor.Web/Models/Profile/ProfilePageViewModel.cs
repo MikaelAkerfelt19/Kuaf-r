@@ -7,5 +7,6 @@ namespace Kuafor.Web.Models.Profile
     {
         public IdentityViewModel Identity { get; set; } = new();
         public AddressesViewModel Addresses { get; set; } = new();
+        public NotificationsViewModel Notifications { get; set; } = new();
     }
 }
