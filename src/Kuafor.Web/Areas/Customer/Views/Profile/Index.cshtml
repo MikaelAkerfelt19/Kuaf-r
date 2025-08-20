@@ -13,6 +13,7 @@
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-loyalty" type="button" role="tab">Sadakat & Kuponlar</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-security" type="button" role="tab">Güvenlik</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-payments" type="button" role="tab">Ödemeler</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-privacy" type="button" role="tab">Gizlilik / KVKK</button></li>
     </ul>
 
     <div class="tab-content pt-3">
@@ -39,6 +40,9 @@
         <div class="tab-pane fade" id="tab-payments" role="tabpanel">
             <partial name="Partials/_Profile.Payments" model="Model.Payments" />
         </div>
+        <div class="tab-pane fade" id="tab-privacy" role="tabpanel">
+            <partial name="Partials/_Profile.Privacy" model="Model.Privacy" />
+        </div>
     </div>
 </div>
 
@@ -51,4 +55,5 @@
     <script src="~/js/profile-coupons.js"></script>
     <script src="~/js/profile-security.js"></script>
     <script src="~/js/profile-payments.js"></script>
+    <script src="~/js/profile-privacy.js"></script>
 }

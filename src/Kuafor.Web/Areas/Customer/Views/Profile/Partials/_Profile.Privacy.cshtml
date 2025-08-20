@@ -1,0 +1,73 @@
+@model Kuafor.Web.Models.Profile.PrivacyViewModel
+@using System.Globalization
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Gizlilik / KVKK</h5>
+
+        <!-- Pazarlama İzinleri -->
+        <h6 class="mb-2">Pazarlama İzinleri (Açık Rıza)</h6>
+        <div class="row g-3 mb-2">
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" id="consEmail" type="checkbox" @(Model.ConsentEmail ? "checked" : null) />
+                <label class="form-check-label" for="consEmail">E-posta</label>
+            </div>
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" id="consSms" type="checkbox" @(Model.ConsentSms ? "checked" : null) />
+                <label class="form-check-label" for="consSms">SMS</label>
+            </div>
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" id="consPush" type="checkbox" @(Model.ConsentPush ? "checked" : null) />
+                <label class="form-check-label" for="consPush">Push (web)</label>
+            </div>
+            <div class="col-6 col-md-3 form-check">
+                <input class="form-check-input" id="consWa" type="checkbox" @(Model.ConsentWhatsApp ? "checked" : null) />
+                <label class="form-check-label" for="consWa">WhatsApp</label>
+            </div>
+        </div>
+        <div class="text-muted small mb-3">
+            @if (Model.ConsentedAt.HasValue)
+            {
+                <span>Son onay: @Model.ConsentedAt.Value.ToString("dd MMM yyyy HH:mm", CultureInfo.GetCultureInfo("tr-TR"))</span>
+                @: ·
+            }
+            <span>IP: @(Model.ConsentedIp ?? "-")</span>
+        </div>
+        <button class="btn btn-primary btn-sm" type="button" onclick="window.privacySaveConsents()">Kaydet</button>
+
+        <hr class="my-4" />
+
+        <!-- Verilerimi İndir -->
+        <h6 class="mb-2">Verilerimi İndir</h6>
+        <p class="text-muted small mb-2">Profil, randevular ve tercihlerin JSON/CSV olarak indirilebilir (mock).</p>
+        <div class="d-flex gap-2">
+            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.privacyExport('json')">JSON
+                indir</button>
+            <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.privacyExport('csv')">CSV
+                indir</button>
+            @if (!string.IsNullOrWhiteSpace(Model.LastExportFileName))
+            {
+                <span class="text-muted small ms-2">Son: @Model.LastExportFileName</span>
+            }
+        </div>
+
+        <hr class="my-4" />
+
+        <!-- Danger Zone -->
+        <div class="border border-danger rounded p-3">
+            <h6 class="mb-2 text-danger">Hesabı Kapat (Danger Zone)</h6>
+            <p class="text-muted small mb-2">Bu işlem geri alınamaz. Tüm kişisel verilerin silinmesini talep edersin
+                (mock). Gerçek işlem için tekrar onay istenir.</p>
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label">Onaylamak için <strong>KAPAT</strong> yaz:</label>
+                    <input id="dangerConfirm" class="form-control" placeholder="KAPAT" />
+                </div>
+                <div class="col-md-6">
+                    <button class="btn btn-outline-danger" type="button" onclick="window.privacyCloseAccount()">Hesabı
+                        Kapat (Mock)</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
