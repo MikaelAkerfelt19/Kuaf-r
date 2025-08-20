@@ -1,0 +1,128 @@
+@model Kuafor.Web.Models.Profile.SecurityViewModel
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body">
+        <h5 class="card-title mb-3">Güvenlik Ayarları</h5>
+
+        <div class="row g-4">
+            <!-- Password Change Section -->
+            <div class="col-12 col-lg-6">
+                <div class="border rounded p-3 h-100">
+                    <h6 class="mb-3">Şifre Değiştir</h6>
+                    <div class="mb-2">
+                        <label class="form-label">Mevcut Şifre</label>
+                        <input type="password" class="form-control" id="pwCurrent" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Yeni Şifre</label>
+                        <input type="password" class="form-control" id="pwNew" />
+                        <div class="form-text">En az 6 karakter, rakam ve harf içermesi önerilir.</div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Yeni Şifre (Tekrar)</label>
+                        <input type="password" class="form-control" id="pwConfirm" />
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="window.secChangePassword()">Kaydet</button>
+                </div>
+            </div>
+
+            <!-- Two-Factor Authentication Section -->
+            <div class="col-12 col-lg-6">
+                <div class="border rounded p-3 h-100">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">İki Aşamalı Doğrulama (TOTP)</h6>
+                        <span class="badge @(Model.TwoFactor.IsEnabled ? "bg-success" : "bg-secondary")">
+                            @(Model.TwoFactor.IsEnabled ? "Açık" : "Kapalı")
+                        </span>
+                    </div>
+
+                    @if (!Model.TwoFactor.IsEnabled)
+                    {
+                        <div class="mt-3">
+                            <ol class="mb-2 small">
+                                <li>Authenticator uygulaması (Google/Microsoft Authenticator vb.) indir.</li>
+                                <li>Uygulamada <strong>+</strong> → “<em>Enter a setup key</em>” seç.</li>
+                                <li>Aşağıdaki gizli anahtarı gir ve kod üret.</li>
+                            </ol>
+                            <div class="mb-2">
+                                <label class="form-label">Gizli Anahtar</label>
+                                <div class="input-group">
+                                    <input class="form-control" id="totpSecret" value="@Model.TwoFactor.SecretKey" readonly />
+                                    <button class="btn btn-outline-secondary" type="button" onclick="window.secCopy('totpSecret')">Kopyala</button>
+                                </div>
+                                <div class="form-text">Uygun otpauth URI: <code class="small">@Model.TwoFactor.OtpauthUri</code></div>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Uygulamadaki 6 haneli kod</label>
+                                <input id="totpCode" class="form-control" placeholder="123456" maxlength="6" />
+                            </div>
+                            <button class="btn btn-primary" type="button" onclick="window.secEnable2FA()">2FA’yı Etkinleştir (Mock)</button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="mt-3">
+                            <div class="alert alert-success py-2">2FA etkin.</div>
+                            <button class="btn btn-outline-danger btn-sm" type="button" onclick="window.secDisable2FA()">Devre Dışı Bırak (Mock)</button>
+                        </div>
+                    }
+
+                    <div class="mt-3">
+                        <label class="form-label">Kurtarma Kodları</label>
+                        @if (Model.TwoFactor.RecoveryCodes.Count == 0)
+                        {
+                            <div class="text-muted small">Henüz oluşturulmadı.</div>
+                        }
+                        else
+                        {
+                            <div class="d-flex flex-wrap gap-2">
+                                @foreach (var code in Model.TwoFactor.RecoveryCodes)
+                                {
+                                    <code class="bg-light rounded px-2 py-1">@code</code>
+                                }
+                            </div>
+                            <div class="mt-2">
+                                <button class="btn btn-outline-secondary btn-sm" type="button" onclick="window.secDownloadCodes()">Kodları İndir (txt)</button>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Sessions & Devices -->
+            <div class="col-12">
+                <div class="border rounded p-3">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">Aktif Oturumlar & Cihazlar</h6>
+                        <button class="btn btn-outline-danger btn-sm" type="button" onclick="window.secSignOutAll()">Tüm Oturumları Kapat (Mock)</button>
+                    </div>
+
+                    <div class="table-responsive mt-3">
+                        <table class="table align-middle">
+                            <thead>
+                                <tr><th>Cihaz</th><th>Tarayıcı</th><th>Son Erişim</th><th>Durum</th></tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var s in Model.ActiveSessions)
+                                {
+                                    <tr>
+                                        <td>@s.Device</td>
+                                        <td>@s.Browser</td>
+                                        <td>@s.LastAccess.ToString("dd MMM yyyy HH:mm")</td>
+                                        <td>@(s.IsCurrent ? "Bu cihaz" : "Diğer")</td>
+                                        <td class="text-end">
+                                            @if (!s.IsCurrent)
+                                            {
+                                                <button class="btn btn-sm btn-outline-danger" onclick="window.secSignOut('@s.Id')">Kapat</button>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
