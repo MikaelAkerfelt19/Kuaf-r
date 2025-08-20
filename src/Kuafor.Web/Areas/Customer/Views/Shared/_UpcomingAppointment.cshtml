@@ -13,6 +13,9 @@
                     <strong>@dt.ToString("dd MMM dddd, HH:mm", CultureInfo.GetCultureInfo("tr-TR"))</strong>
                     · @Model.ServiceName · <em>@Model.StylistName</em> (Şube: @Model.Branch)
                 </div>
+                <div class="text-muted small mt-1">
+                    Kalan Süre: <span id="up-next-countdown" data-start="@dt.ToString("o")">—</span>
+                </div>
             }
             else
             {

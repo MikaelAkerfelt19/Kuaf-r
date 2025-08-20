@@ -1,9 +1,10 @@
 @{
-    ViewData["Title"] = "Randevularım";
+  ViewData["Title"] = "Randevularım";
 }
 <div class="container py-4">
   <h3 class="mb-3">Randevularım</h3>
-  @if (TempData["Booked"] != null) {
+  @if (TempData["Booked"] != null)
+  {
     <div class="alert alert-success">@TempData["Booked"]</div>
   }
 
@@ -11,10 +12,22 @@
   <div class="list-group mb-4">
     @foreach (var a in (IEnumerable<dynamic>)ViewBag.Upcoming)
     {
-      <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
-        <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
-        <span class="text-muted">Detay →</span>
-      </a>
+      <div class="list-group-item">
+        <div class="d-flex justify-content-between align-items-center">
+          <a class="text-decoration-none" asp-area="Customer" asp-controller="Appointments" asp-action="Details"
+            asp-route-id="@a.Id">
+            <strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)
+          </a>
+          <div class="btn-group btn-group-sm" role="group" aria-label="Aksiyonlar">
+            <a class="btn btn-outline-primary" asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule"
+              asp-route-id="@a.Id">Ertele</a>
+            <form method="post" asp-area="Customer" asp-controller="Appointments" asp-action="Cancel" asp-route-id="@m.Id"
+              onsubmit="return confirm('Randevu iptal edilsin mi?');">
+              <button class="btn btn-outline-danger" type="submit">İptal Et</button>
+            </form>
+          </div>
+        </div>
+      </div>
     }
   </div>
 
@@ -22,7 +35,8 @@
   <div class="list-group">
     @foreach (var a in (IEnumerable<dynamic>)ViewBag.Past)
     {
-      <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer" asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
+      <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer"
+        asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
         <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
         <span class="text-muted">Detay →</span>
       </a>

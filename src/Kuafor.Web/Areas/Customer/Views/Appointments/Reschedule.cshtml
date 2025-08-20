@@ -1,0 +1,28 @@
+@model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
+@{
+    ViewData["Title"] = "Randevu Ertele";
+    var id = (int)ViewBag.RescheduleForId;
+}
+
+<div class="container py-4">
+    <h3 class="mb-3">Randevu Ertele (#@id)</h3>
+    <div class="mb-3 text-muted">Yeni bir tarih/saat seç:</div>
+
+    <div class="row g-2">
+        @foreach (var slot in Model.TimeSlots)
+        {
+            var disabled = !slot.IsAvailable;
+            <div class="col-6 col-md-3 col-lg-2">
+                <a class="btn btn-@(disabled ? "outline-secondary disabled" : "outline-primary") w-100" asp-area="Customer"
+                    asp-controller="Appointments" asp-action="Reschedule" asp-route-id="@id"
+                    asp-route-start="@slot.Start.ToString("yyyy-MM-dd HH:mm:ss")">
+                    @slot.Start.ToString("dd MMM HH:mm")
+                </a>
+            </div>
+        }
+    </div>
+
+    <div class="mt-3">
+        <a class="btn btn-link" href="@Url.Action("Index", "Appointments")">← Randevularım</a>
+    </div>
+</div>
