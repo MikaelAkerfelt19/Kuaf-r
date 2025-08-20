@@ -21,7 +21,7 @@
           <div class="btn-group btn-group-sm" role="group" aria-label="Aksiyonlar">
             <a class="btn btn-outline-primary" asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule"
               asp-route-id="@a.Id">Ertele</a>
-            <form method="post" asp-area="Customer" asp-controller="Appointments" asp-action="Cancel" asp-route-id="@m.Id"
+            <form method="post" asp-area="Customer" asp-controller="Appointments" asp-action="Cancel" asp-route-id="@a.Id"
               onsubmit="return confirm('Randevu iptal edilsin mi?');">
               <button class="btn btn-outline-danger" type="submit">İptal Et</button>
             </form>
