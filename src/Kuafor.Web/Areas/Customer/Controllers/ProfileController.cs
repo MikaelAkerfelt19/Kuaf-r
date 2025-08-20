@@ -111,6 +111,26 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                         new("s_1","iPhone 14","Safari iOS", DateTime.Now.AddHours(-2), false),
                         new("s_2","MacBook Pro","Safari macOS", DateTime.Now.AddDays(-1), false),
                     }
+                },
+                Payments = new PaymentsViewModel
+                {
+                    Cards =
+                    {
+                        new SavedCardVm(1, "1234-****-****-5678", "John Doe", 12, 2025, true),
+                        new SavedCardVm(2, "2345-****-****-6789", "Jane Doe", 11, 2024, false)
+                    },
+                    Billing = new BillingInfoViewModel
+                    {
+                        InvoiceType = "Bireysel",
+                        FullNameOrCompany = "John Doe",
+                        TaxNumber = "12345678901",
+                        AddressLine1 = "123 Main St",
+                        City = "Istanbul",
+                        District = "Kadikoy",
+                        Zip = "34700",
+                        Email = "john.doe@example.com",
+                        EInvoiceOptIn = true
+                    }
                 }
             };
             return View(vm);
