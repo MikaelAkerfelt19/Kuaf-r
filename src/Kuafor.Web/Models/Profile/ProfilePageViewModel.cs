@@ -12,5 +12,6 @@ namespace Kuafor.Web.Models.Profile
         public LoyaltyViewModel Loyalty { get; set; } = new();
         public CouponsViewModel Coupons { get; set; } = new();
         public SecurityViewModel Security { get; set; } = new();
+        public PaymentsViewModel Payments { get; set; } = new();
     }
 }
