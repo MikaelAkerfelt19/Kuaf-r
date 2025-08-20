@@ -1,9 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Appointments;
 using System;
-using System.Linq;
-using System.Collections.Generic;
-using System.Globalization;
 
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
@@ -92,6 +89,34 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             // TODO: Backend geldiğinde kaydet
             TempData["Booked"] = $"Randevu oluşturuldu: {start:dd MMM dddd, HH:mm} · {MockServices.First(s => s.Id == serviceId).Name} · {MockStylists.First(s => s.Id == stylistId).Name}";
             return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult Cancel(int id)
+        {
+            // TODO: Backend geldiğinde iptal et
+            TempData["Booked"] = $"Randevu iptal edildi: {id}";
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Reschedule(int id, string? start)
+        {
+            if (!string.IsNullOrWhiteSpace(start) && DateTime.TryParse(start, out var dt))
+            {
+                TempData["Booked"] = $"Randevu #{id} yeniden planlandı: {dt:dd MMM dddd, HH:mm}";
+                return RedirectToAction("Index");
+            }
+
+            // Saat seç ekranı (step3 benzeri)
+            var vm = new AppointmentWizardViewModel
+            {
+                Step = WizardStep.Time,
+                Services = MockServices,
+                Stylists = MockStylists,
+                TimeSlots = BuildSlots()
+            };
+            ViewBag.RescheduleForId = id;
+            return View("Reschedule", vm);
         }
     }
 }
