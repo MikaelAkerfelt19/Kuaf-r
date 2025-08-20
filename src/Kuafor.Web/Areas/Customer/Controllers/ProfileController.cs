@@ -131,6 +131,17 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                         Email = "john.doe@example.com",
                         EInvoiceOptIn = true
                     }
+                },
+                Privacy = new PrivacyViewModel
+                {
+                    ConsentEmail = true,
+                    ConsentSms = false,
+                    ConsentPush = false,
+                    ConsentWhatsApp = true,
+                    ConsentedAt = DateTime.Today.AddDays(-10),
+                    ConsentedIp = "203.0.113.42",
+                    ExportReady = true,
+                    LastExportFileName = "export_2023-03-15.json"
                 }
             };
             return View(vm);
