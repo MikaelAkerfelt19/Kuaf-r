@@ -31,9 +31,15 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 },
                 Notifications = new NotificationsViewModel
                 {
-                    Email = true, Sms = true, Push = false, WhatsApp = true,
-                    Reminders = true, Campaigns = true, Critical = true,
-                    QuietFrom = new TimeSpan(22, 0, 0), QuietTo = new TimeSpan(8, 0, 0)
+                    Email = true,
+                    Sms = true,
+                    Push = false,
+                    WhatsApp = true,
+                    Reminders = true,
+                    Campaigns = true,
+                    Critical = true,
+                    QuietFrom = new TimeSpan(22, 0, 0),
+                    QuietTo = new TimeSpan(8, 0, 0)
                 },
                 Preferences = new PreferencesViewModel
                 {
@@ -83,6 +89,27 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                                      DateTime.Today.AddDays(-3), null, "%15", false),
                         new CouponVm("USED20","Kullanılmış Kupon", "Geçmiş sipariş",
                                      DateTime.Today.AddDays(5),  null, "%20", true)
+                    }
+                },
+                Security = new SecurityViewModel
+                {
+                    ChangePassword = new ChangePasswordModel(),
+                    TwoFactor = new TwoFactorSetupModel
+                    {
+                        IsEnabled = false,
+                        SecretKey = "JBSWY3DPEHPK3PXP", // MOCK
+                        OtpauthUri = "otpauth://totp/xxx-hairdresser:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=xxx-hairdresser",
+                        RecoveryCodes = new List<string>
+                        {
+                            "5XK2-7QHT", "9LMP-2CVA", "R7QZ-3JTY", "Z9ND-4HKK",
+                            "PQ2N-8WLA", "T7YU-1MME", "V3SA-6QQD", "H2JD-5LLX"
+                        }
+                    },
+                    ActiveSessions = new List<ActiveSessionVm>
+                    {
+                        new("s_cur","Windows · PC","Chrome 126", DateTime.Now.AddMinutes(-5), true),
+                        new("s_1","iPhone 14","Safari iOS", DateTime.Now.AddHours(-2), false),
+                        new("s_2","MacBook Pro","Safari macOS", DateTime.Now.AddDays(-1), false),
                     }
                 }
             };
