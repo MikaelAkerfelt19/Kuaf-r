@@ -11,6 +11,7 @@
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-notifications" type="button" role="tab">Bildirimler</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-preferences" type="button" role="tab">Tercihler</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-loyalty" type="button" role="tab">Sadakat & Kuponlar</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-security" type="button" role="tab">Güvenlik</button></li>
     </ul>
 
     <div class="tab-content pt-3">
@@ -31,6 +32,9 @@
             <div class="my-3"></div>
             <partial name="Partials/_Profile.Coupons" model="Model.Coupons" />
         </div>
+        <div class="tab-pane fade" id="tab-security" role="tabpanel">
+            <partial name="Partials/_Profile.Security" model="Model.Security" />
+        </div>
     </div>
 </div>
 
@@ -41,4 +45,5 @@
     <script src="~/js/profile-preferences.js"></script>
     <script src="~/js/profile-loyalty.js"></script>
     <script src="~/js/profile-coupons.js"></script>
+    <script src="~/js/profile-security.js"></script>
 }
