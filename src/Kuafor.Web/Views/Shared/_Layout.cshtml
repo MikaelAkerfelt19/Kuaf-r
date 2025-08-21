@@ -38,5 +38,8 @@
     {
         <script>new bootstrap.Modal('#registerModal').show();</script>
     }
+    @await Html.PartialAsync("_Toast")
+    <script src="~/js/toast.js" asp-append-version="true"></script>
+    <script src="~/js/datetime-locale.js" asp-append-version="true"></script>
 </body>
 </html>
