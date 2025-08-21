@@ -1,0 +1,128 @@
+@model Kuafor.Web.Models.Admin.Reports.ReportsViewModel
+@{
+    ViewData["Title"] = "Raporlar";
+    Func<DateTime, string> d = x => x.ToString("yyyy-MM-dd");
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0">Raporlar</h2>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Bugün Randevu</div>
+                <div class="display-6 fw-bold">@Model.TodayAppointments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Bu Hafta Randevu</div>
+                <div class="display-6 fw-bold">@Model.WeekAppointments</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Bu Hafta Ciro (tahmini)</div>
+                <div class="display-6 fw-bold">@Model.WeekRevenueEstimate.ToString("0.##") ₺</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Aktif Kuaför</div>
+                <div class="display-6 fw-bold">@Model.ActiveStylists</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Aktif Şube</div>
+                <div class="display-6 fw-bold">@Model.ActiveBranches</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <div class="text-muted">Aktif Hizmet</div>
+                <div class="display-6 fw-bold">@Model.ActiveServices</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Önümüzdeki 7 Gün</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Tarih</th>
+                                <th class="text-end">Randevu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var day in Model.Next7Days)
+                            {
+                                <tr>
+                                    <td>@d(day.Day)</td>
+                                    <td class="text-end">@day.Count</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <div class="card h-100">
+            <div class="card-header">Bu Hafta En Yoğun Kuaförler</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Kuaför</th>
+                                <th class="text-end">Randevu</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopStylistsByWeek.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="2" class="text-muted text-center py-3">Kayıt yok</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var s in Model.TopStylistsByWeek)
+                                {
+                                    <tr>
+                                        <td>@s.Name</td>
+                                        <td class="text-end">@s.Count</td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
