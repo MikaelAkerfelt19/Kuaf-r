@@ -1,0 +1,73 @@
+@model Kuafor.Web.Models.Admin.Coupons.CouponFormModel
+@using Kuafor.Web.Models.Admin.Coupons
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="modal fade" id="couponModal" tabindex="-1" aria-labelledby="couponModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="couponForm" method="post" action="/Admin/Coupons/Create">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="couponModalLabel">Yeni Kupon</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label asp-for="Code" class="form-label">Kod</label>
+                            <input asp-for="Code" class="form-control" placeholder="Örn: YAZ10" />
+                            <span asp-validation-for="Code" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-8">
+                            <label asp-for="Title" class="form-label">Başlık</label>
+                            <input asp-for="Title" class="form-control" placeholder="Kupon başlığı" />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-4">
+                            <label asp-for="DiscountType" class="form-label">İndirim Tipi</label>
+                            <select asp-for="DiscountType" class="form-select">
+                                <option value="@((int)DiscountType.Percent)">%</option>
+                                <option value="@((int)DiscountType.Amount)">₺</option>
+                            </select>
+                            <span asp-validation-for="DiscountType" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Amount" class="form-label">Tutar</label>
+                            <input asp-for="Amount" type="number" step="0.01" min="0" class="form-control" />
+                            <span asp-validation-for="Amount" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MinSpend" class="form-label">Min. Harcama (₺)</label>
+                            <input asp-for="MinSpend" type="number" step="0.01" min="0" class="form-control" />
+                            <span asp-validation-for="MinSpend" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <div class="col-md-6">
+                            <label asp-for="ExpiresAt" class="form-label">Son Kullanım</label>
+                            <input asp-for="ExpiresAt" type="date" class="form-control" />
+                            <span asp-validation-for="ExpiresAt" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6 d-flex align-items-end">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="IsActive" />
+                                <label class="form-check-label" asp-for="IsActive">Aktif</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary" id="couponSubmitBtn">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
