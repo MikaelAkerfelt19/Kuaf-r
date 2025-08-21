@@ -1,0 +1,93 @@
+@model Kuafor.Web.Models.Admin.AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Pano";
+}
+<h3 class="mb-3">Pano</h3>
+
+<div class="row g-3">
+    @foreach (var k in Model.Kpis)
+    {
+        <div class="col-6 col-md-3">
+            <div class="card border-0 shadow-sm h-100">
+                <div class="card-body">
+                    <div class="text-muted small">@k.Label</div>
+                    <div class="fs-4 fw-semibold">@k.Value</div>
+                    <div class="d-flex justify-content-between">
+                        <div class="text-muted small">@k.SubText</div>
+                        @if (!string.IsNullOrEmpty(k.Badge))
+                        {
+                            <span class="badge bg-light text-dark">@k.Badge</span>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<div class="row g-3 mt-1">
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                    <h5 class="mb-0">Bugünün Randevuları</h5>
+                    <a class="btn btn-sm btn-outline-secondary" asp-area="Admin" asp-controller="Appointments"
+                        asp-action="Index">Tümü</a>
+                </div>
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Saat</th>
+                                <th>Müşteri</th>
+                                <th>Hizmet</th>
+                                <th>Kuaför</th>
+                                <th>Şube</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in Model.Upcoming)
+                            {
+                                <tr>
+                                    <td>@a.When.ToString("HH:mm")</td>
+                                    <td>@a.Customer</td>
+                                    <td>@a.Service</td>
+                                    <td>@a.Stylist</td>
+                                    <td>@a.Branch</td>
+                                    <td class="text-end">
+                                        <a class="btn btn-sm btn-outline-primary" asp-area="Admin"
+                                            asp-controller="Appointments" asp-action="Details"
+                                            asp-route-id="@a.Id">Detay</a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <h5 class="mb-2">En Çok Tercih Edilen Hizmetler</h5>
+                <ul class="list-group list-group-flush">
+                    @foreach (var s in Model.TopServices)
+                    {
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            <span>@s.Service</span>
+                            <span class="badge bg-primary rounded-pill">@s.Count</span>
+                        </li>
+                    }
+                </ul>
+                <div class="text-muted small mt-2">Günlük toplam rezervasyon adedi.</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/admin-dashboard.js"></script>
+}
