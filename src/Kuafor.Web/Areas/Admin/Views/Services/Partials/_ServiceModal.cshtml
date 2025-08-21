@@ -1,0 +1,44 @@
+@model Kuafor.Web.Models.Admin.Services.ServiceFormModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="modal fade" id="serviceModal" tabindex="-1" aria-labelledby="serviceModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="serviceForm" method="post" action="/Admin/Services/Create">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="serviceModalLabel">Yeni Hizmet</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">Ad</label>
+                        <input asp-for="Name" class="form-control" placeholder="Örn: Saç Kesimi" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+                    <div class="row g-3">
+                        <div class="col">
+                            <label asp-for="DurationMin" class="form-label">Süre (dk)</label>
+                            <input asp-for="DurationMin" type="number" min="5" max="480" class="form-control" />
+                            <span asp-validation-for="DurationMin" class="text-danger small"></span>
+                        </div>
+                        <div class="col">
+                            <label asp-for="Price" class="form-label">Fiyat (₺)</label>
+                            <input asp-for="Price" type="number" step="0.01" min="0" class="form-control" />
+                            <span asp-validation-for="Price" class="text-danger small"></span>
+                        </div>
+                    </div>
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" asp-for="IsActive" />
+                        <label class="form-check-label" asp-for="IsActive">Aktif</label>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary" id="serviceSubmitBtn">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

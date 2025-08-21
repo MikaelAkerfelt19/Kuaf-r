@@ -1,0 +1,97 @@
+@model List<Kuafor.Web.Models.Admin.Services.ServiceDto>
+@{
+    ViewData["Title"] = "Hizmetler";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0">Hizmetler</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#serviceModal"
+        data-mode="create">Yeni Hizmet</button>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @err
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:80px">#</th>
+                        <th>Ad</th>
+                        <th style="width:140px">Süre (dk)</th>
+                        <th style="width:140px">Fiyat (₺)</th>
+                        <th style="width:120px">Durum</th>
+                        <th style="width:160px" class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Kayıt bulunamadı.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var s in Model)
+                        {
+                            <tr>
+                                <td>@s.Id</td>
+                                <td>@s.Name</td>
+                                <td>@s.DurationMin</td>
+                                <td>@s.Price.ToString("0.##")</td>
+                                <td>
+                                    @if (s.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
+                                        data-bs-target="#serviceModal" data-mode="edit" data-id="@s.Id" data-name="@s.Name"
+                                        data-duration="@s.DurationMin" data-price="@s.Price"
+                                        data-active="@(s.IsActive ? "true" : "false")">
+                                        Düzenle
+                                    </button>
+
+                                    <form method="post" action="/Admin/Services/Delete" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@s.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Silmek istediğinize emin misiniz?');">
+                                            Sil
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Partials/_ServiceModal", new Kuafor.Web.Models.Admin.Services.ServiceFormModel())
+
+@section Scripts {
+    <script src="~/js/admin-services.js" asp-append-version="true"></script>
+}
