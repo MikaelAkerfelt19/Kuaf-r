@@ -1,0 +1,47 @@
+@model Kuafor.Web.Models.Admin.Branches.BranchFormModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="modal fade" id="branchModal" tabindex="-1" aria-labelledby="branchModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form id="branchForm" method="post" action="/Admin/Branches/Create">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="branchModalLabel">Yeni Şube</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+
+                    <div class="mb-3">
+                        <label asp-for="Name" class="form-label">Ad</label>
+                        <input asp-for="Name" class="form-control" placeholder="Örn: Merkez Şube" />
+                        <span asp-validation-for="Name" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-3">
+                        <label asp-for="Address" class="form-label">Adres</label>
+                        <input asp-for="Address" class="form-control" placeholder="Adres" />
+                        <span asp-validation-for="Address" class="text-danger small"></span>
+                    </div>
+
+                    <div class="mb-2">
+                        <label asp-for="Phone" class="form-label">Telefon</label>
+                        <input asp-for="Phone" class="form-control" placeholder="Örn: 0212 000 00 00" />
+                        <span asp-validation-for="Phone" class="text-danger small"></span>
+                    </div>
+
+                    <div class="form-check mt-2">
+                        <input class="form-check-input" asp-for="IsActive" />
+                        <label class="form-check-label" asp-for="IsActive">Aktif</label>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary" id="branchSubmitBtn">Kaydet</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

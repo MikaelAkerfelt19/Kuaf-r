@@ -1,0 +1,97 @@
+@model List<Kuafor.Web.Models.Admin.Branches.BranchDto>
+@{
+    ViewData["Title"] = "Şubeler";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0">Şubeler</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#branchModal"
+        data-mode="create">Yeni Şube</button>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @err
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:80px">#</th>
+                        <th>Ad</th>
+                        <th>Adres</th>
+                        <th style="width:170px">Telefon</th>
+                        <th style="width:120px">Durum</th>
+                        <th style="width:160px" class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">Kayıt bulunamadı.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var b in Model)
+                        {
+                            <tr>
+                                <td>@b.Id</td>
+                                <td>@b.Name</td>
+                                <td class="text-truncate" style="max-width:420px;">@(!string.IsNullOrWhiteSpace(b.Address) ? b.Address : "-")</td>
+                                <td>@(string.IsNullOrWhiteSpace(b.Phone) ? "-" : b.Phone)</td>
+                                <td>
+                                    @if (b.IsActive)
+                                    {
+                                        <span class="badge bg-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary">Pasif</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
+                                        data-bs-target="#branchModal" data-mode="edit" data-id="@b.Id" data-name="@b.Name"
+                                        data-address="@b.Address" data-phone="@b.Phone"
+                                        data-active="@(b.IsActive ? "true" : "false")">
+                                        Düzenle
+                                    </button>
+
+                                    <form method="post" action="/Admin/Branches/Delete" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@b.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger"
+                                            onclick="return confirm('Silmek istediğinize emin misiniz?');">
+                                            Sil
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Partials/_BranchModal", new Kuafor.Web.Models.Admin.Branches.BranchFormModel())
+
+@section Scripts {
+    <script src="~/js/admin-branches.js" asp-append-version="true"></script>
+}
