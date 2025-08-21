@@ -1,0 +1,54 @@
+@{
+    var title = ViewData["Title"] as string ?? "Admin";
+}
+<!DOCTYPE html>
+<html lang="tr" data-bs-theme="light">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@title · Admin · xxx-hairdresser</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" />
+</head>
+
+<body>
+    <div class="admin-shell">
+        <aside class="admin-aside p-3">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="fs-4">✂️</span>
+                <strong>xxx-hairdresser</strong>
+            </div>
+            <nav class="nav nav-pills flex-column gap-1">
+                <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : null)"
+                    asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Pano</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Services" asp-action="Index">Hizmetler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Stylists" asp-action="Index">Kuaförler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Branches" asp-action="Index">Şubeler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Coupons" asp-action="Index">Kuponlar</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Appointments" asp-action="Index">Randevular</a>
+                <hr />
+                <a class="nav-link" asp-area="" asp-controller="Customer" asp-action="Index">↩︎ Müşteri Paneli</a>
+            </nav>
+        </aside>
+        <main class="admin-main">
+            <header class="admin-top p-2 px-3 d-flex align-items-center justify-content-between">
+                <div class="text-muted">Admin</div>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge bg-secondary">Mock</span>
+                    <a class="btn btn-sm btn-outline-secondary" href="/">Site</a>
+                </div>
+            </header>
+
+            <div class="container-fluid p-4">
+                @RenderBody()
+            </div>
+        </main>
+    </div>
+
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/admin-common.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+
+</html>
