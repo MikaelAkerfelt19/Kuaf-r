@@ -1,0 +1,31 @@
+@model Kuafor.Web.Models.Admin.Appointments.CancelForm
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="/Admin/Appointments/Cancel" id="cancelForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="cancelModalLabel">Randevu İptal</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label class="form-label">İptal Nedeni (isteğe bağlı)</label>
+                        <input asp-for="Reason" class="form-control" placeholder="Kısa açıklama..." />
+                        <span asp-validation-for="Reason" class="text-danger small"></span>
+                    </div>
+                    <div class="alert alert-warning mb-0">
+                        Bu randevu <strong>İptal</strong> olarak işaretlenecek.
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-danger">İptal Et</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

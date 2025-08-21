@@ -1,0 +1,33 @@
+@model Kuafor.Web.Models.Admin.Appointments.RescheduleForm
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="/Admin/Appointments/Reschedule" id="rescheduleForm">
+                @Html.AntiForgeryToken()
+                <div class="modal-header">
+                    <h5 class="modal-title" id="rescheduleModalLabel">Randevu Ertele</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+                </div>
+                <div class="modal-body">
+                    <input type="hidden" asp-for="Id" />
+                    <div class="mb-3">
+                        <label class="form-label">Yeni Tarih/Saat</label>
+                        <input asp-for="NewStartAt" type="datetime-local" class="form-control" />
+                        <span asp-validation-for="NewStartAt" class="text-danger small"></span>
+                    </div>
+                    <div>
+                        <label class="form-label">Süre (dk)</label>
+                        <input asp-for="DurationMin" type="number" min="5" max="480" class="form-control" />
+                        <span asp-validation-for="DurationMin" class="text-danger small"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Vazgeç</button>
+                    <button type="submit" class="btn btn-primary">Güncelle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

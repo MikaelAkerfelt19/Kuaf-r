@@ -1,0 +1,189 @@
+@model Kuafor.Web.Models.Admin.Appointments.AppointmentsPageViewModel
+@using Kuafor.Web.Models.Admin.Appointments
+
+@{
+    ViewData["Title"] = "Randevular";
+    Func<AppointmentStatus, string> statusBadge = s => s switch
+    {
+        AppointmentStatus.Scheduled => "bg-primary",
+        AppointmentStatus.Completed => "bg-success",
+        AppointmentStatus.Cancelled => "bg-danger",
+        AppointmentStatus.Rescheduled => "bg-warning text-dark",
+        _ => "bg-secondary"
+    };
+    Func<DateTime, string> toLocal = d => d.ToString("yyyy-MM-dd HH:mm");
+}
+
+<div class="d-flex align-items-center justify-content-between mb-3">
+    <h2 class="mb-0">Randevular</h2>
+</div>
+
+@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @ok
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @err
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    </div>
+}
+
+<form method="get" class="card mb-3">
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Başlangıç</label>
+                <input name="From" type="date" class="form-control"
+                    value="@(Model.Filter.From?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Bitiş</label>
+                <input name="To" type="date" class="form-control"
+                    value="@(Model.Filter.To?.ToString("yyyy-MM-dd") ?? "")" />
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Şube</label>
+                <select name="BranchId" class="form-select">
+                    <option value="">Tümü</option>
+                    @foreach (var kv in Model.BranchNames.OrderBy(k => k.Value))
+                    {
+                        @if (Model.Filter.BranchId == kv.Key)
+                        {
+                            <option value="@kv.Key" selected>@kv.Value</option>
+                        }
+                        else
+                        {
+                            <option value="@kv.Key">@kv.Value</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Kuaför</label>
+                <select name="StylistId" class="form-select">
+                    <option value="">Tümü</option>
+                    @foreach (var kv in Model.StylistNames.OrderBy(k => k.Value))
+                    {
+                        @if (Model.Filter.StylistId == kv.Key)
+                        {
+                            <option value="@kv.Key" selected>@kv.Value</option>
+                        }
+                        else
+                        {
+                            <option value="@kv.Key">@kv.Value</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Durum</label>
+                <select name="Status" class="form-select">
+                    <option value="">Tümü</option>
+                    @foreach (var v in Enum.GetValues(typeof(AppointmentStatus)).Cast<AppointmentStatus>())
+                    {
+                        @if (Model.Filter.Status == v)
+                        {
+                            <option value="@((int)v)" selected>@v</option>
+                        }
+                        else
+                        {
+                            <option value="@((int)v)">@v</option>
+                        }
+                    }
+                </select>
+            </div>
+            <div class="col-md-9 d-flex align-items-end justify-content-end">
+                <div>
+                    <a href="/Admin/Appointments" class="btn btn-light me-2">Temizle</a>
+                    <button type="submit" class="btn btn-primary">Filtrele</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+
+<div class="card">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:80px">#</th>
+                        <th style="width:180px">Tarih/Saat</th>
+                        <th>Müşteri</th>
+                        <th>Hizmet</th>
+                        <th style="width:140px">Şube</th>
+                        <th style="width:140px">Kuaför</th>
+                        <th style="width:120px">Süre</th>
+                        <th style="width:120px">Fiyat</th>
+                        <th style="width:140px">Durum</th>
+                        <th style="width:260px" class="text-end">İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Items.Count == 0)
+                    {
+                        <tr>
+                            <td colspan="10" class="text-center text-muted py-4">Kayıt bulunamadı.</td>
+                        </tr>
+                    }
+                    else
+                    {
+                        foreach (var a in Model.Items)
+                        {
+                            var bname = Model.BranchNames.TryGetValue(a.BranchId, out var _bn) ? _bn : $"#{a.BranchId}";
+                            var sname = Model.StylistNames.TryGetValue(a.StylistId, out var _sn) ? _sn : $"#{a.StylistId}";
+                            <tr>
+                                <td>@a.Id</td>
+                                <td>@toLocal(a.StartAt)</td>
+                                <td>@a.CustomerName</td>
+                                <td>@a.ServiceName</td>
+                                <td>@bname</td>
+                                <td>@sname</td>
+                                <td>@a.DurationMin dk</td>
+                                <td>@a.Price.ToString("0.##") ₺</td>
+                                <td>
+                                    <span class="badge @statusBadge(a.Status)">@a.Status</span>
+                                </td>
+                                <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal"
+                                        data-bs-target="#appointmentDetailModal" data-id="@a.Id" data-when="@toLocal(a.StartAt)"
+                                        data-duration="@a.DurationMin" data-customer="@a.CustomerName"
+                                        data-service="@a.ServiceName" data-branch="@bname" data-stylist="@sname"
+                                        data-price="@a.Price.ToString("0.##")" data-status="@a.Status"
+                                        data-note="@(a.Note ?? "")">
+                                        Detay
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
+                                        data-bs-target="#rescheduleModal" data-id="@a.Id"
+                                        data-current="@a.StartAt.ToString("yyyy-MM-ddTHH:mm")" data-duration="@a.DurationMin">
+                                        Ertele
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#cancelModal" data-id="@a.Id">
+                                        İptal
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@await Html.PartialAsync("Partials/_AppointmentDetailModal")
+@await Html.PartialAsync("Partials/_RescheduleModal", new Kuafor.Web.Models.Admin.Appointments.RescheduleForm())
+@await Html.PartialAsync("Partials/_CancelModal", new Kuafor.Web.Models.Admin.Appointments.CancelForm())
+
+@section Scripts {
+    <script src="~/js/admin-appointments.js" asp-append-version="true"></script>
+}
