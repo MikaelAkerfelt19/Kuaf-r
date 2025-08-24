@@ -2,13 +2,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace Kuafor.Web.Models.Admin.Appointments
 {
-    public enum AppointmentStatus
-    {
-        Scheduled = 1,   // Planlandı
-        Completed = 2,   // Tamamlandı
-        Cancelled = 3,   // İptal
-        Rescheduled = 4  // Ertelendi
-    }
+    // AppointmentStatus enum'u kaldırıldı, string kullanılıyor
 
     // Liste/tabloda gösterilecek temel DTO
     public class AppointmentDto
@@ -26,7 +20,7 @@ namespace Kuafor.Web.Models.Admin.Appointments
         [Required, StringLength(80)]
         public string ServiceName { get; set; } = string.Empty;
 
-        public AppointmentStatus Status { get; set; } = AppointmentStatus.Scheduled;
+        public string Status { get; set; } = "Scheduled";
 
         // Kolaylık için (tabloya hızlı yansıtmak üzere)
         public decimal Price { get; set; } = 0m;
@@ -44,7 +38,7 @@ namespace Kuafor.Web.Models.Admin.Appointments
 
         public int? BranchId { get; set; }
         public int? StylistId { get; set; }
-        public AppointmentStatus? Status { get; set; }
+        public string? Status { get; set; }
     }
 
     // Ertele formu

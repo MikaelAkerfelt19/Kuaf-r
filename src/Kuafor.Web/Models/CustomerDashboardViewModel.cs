@@ -14,5 +14,14 @@ namespace Kuafor.Web.Models
     public class CustomerDashboardViewModel
     {
         public UpcomingAppointmentVm Upcoming { get; set; } = new();
+        public int TotalAppointments { get; set; }
+        public List<RecentServiceVm> RecentServices { get; set; } = new();
+    }
+
+    public class RecentServiceVm
+    {
+        public string Name { get; set; } = string.Empty;
+        public DateTime LastUsed { get; set; }
+        public int UsageCount { get; set; }
     }
 }
