@@ -1,103 +1,102 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Admin.Services;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Authorize(Roles = "Admin")]
     public class ServicesController : Controller
     {
-        // In-memory mock store (thread-safe basit kullanım)
-        private static readonly object _lock = new();
-        private static List<ServiceDto> _services = new()
-        {
-            new ServiceDto { Id = 1, Name = "Saç Kesimi", DurationMin = 30, Price = 250, IsActive = true },
-            new ServiceDto { Id = 2, Name = "Sakal Traşı", DurationMin = 20, Price = 150, IsActive = true },
-            new ServiceDto { Id = 3, Name = "Fön",        DurationMin = 15, Price = 120, IsActive = false },
-        };
+        private readonly IServiceService _serviceService;
 
-        // GET: /Admin/Services
-        public IActionResult Index()
+        public ServicesController(IServiceService serviceService)
         {
-            var list = _services.OrderBy(s => s.Id).ToList();
-            return View(list);
+            _serviceService = serviceService;
         }
 
-        // POST: /Admin/Services/Create
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Create(ServiceFormModel form)
+        public async Task<IActionResult> Index()
         {
-            if (!ModelState.IsValid)
+            var services = await _serviceService.GetAllAsync();
+            
+            // Service entity'lerini ServiceDto'ya dönüştür
+            var serviceDtos = services.Select(s => new ServiceDto
             {
-                TempData["Error"] = "Form hatalı. Lütfen alanları kontrol edin.";
-                return Redirect("/Admin/Services");
-            }
-
-            lock (_lock)
-            {
-                var nextId = _services.Count == 0 ? 1 : _services.Max(x => x.Id) + 1;
-                _services.Add(new ServiceDto
-                {
-                    Id = nextId,
-                    Name = form.Name.Trim(),
-                    DurationMin = form.DurationMin,
-                    Price = form.Price,
-                    IsActive = form.IsActive
-                });
-            }
-
-            TempData["Success"] = "Hizmet eklendi.";
-            return Redirect("/Admin/Services");
+                Id = s.Id,
+                Name = s.Name,
+                DurationMin = s.DurationMin,
+                Price = s.Price,
+                IsActive = s.IsActive
+            }).ToList();
+            
+            return View(serviceDtos);
         }
 
-        // POST: /Admin/Services/Edit
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public IActionResult Edit(ServiceFormModel form)
+        public IActionResult Create()
         {
-            if (!ModelState.IsValid || form.Id <= 0)
-            {
-                TempData["Error"] = "Form hatalı. Lütfen alanları kontrol edin.";
-                return Redirect("/Admin/Services");
-            }
-
-            lock (_lock)
-            {
-                var entity = _services.FirstOrDefault(s => s.Id == form.Id);
-                if (entity == null)
-                {
-                    TempData["Error"] = "Kayıt bulunamadı.";
-                    return Redirect("/Admin/Services");
-                }
-
-                entity.Name = form.Name.Trim();
-                entity.DurationMin = form.DurationMin;
-                entity.Price = form.Price;
-                entity.IsActive = form.IsActive;
-            }
-
-            TempData["Success"] = "Hizmet güncellendi.";
-            return Redirect("/Admin/Services");
+            return View(new Service());
         }
 
-        // POST: /Admin/Services/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Create(Service service)
         {
-            if (id <= 0)
+            if (ModelState.IsValid)
             {
-                TempData["Error"] = "Geçersiz istek.";
-                return Redirect("/Admin/Services");
+                await _serviceService.CreateAsync(service);
+                TempData["Success"] = "Hizmet başarıyla oluşturuldu.";
+                return RedirectToAction(nameof(Index));
             }
+            return View(service);
+        }
 
-            lock (_lock)
+        public async Task<IActionResult> Edit(int id)
+        {
+            var service = await _serviceService.GetByIdAsync(id);
+            if (service == null)
+                return NotFound();
+            return View(service);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Service service)
+        {
+            if (id != service.Id)
+                return NotFound();
+
+            if (ModelState.IsValid)
             {
-                _services = _services.Where(s => s.Id != id).ToList();
+                await _serviceService.UpdateAsync(service);
+                TempData["Success"] = "Hizmet başarıyla güncellendi.";
+                return RedirectToAction(nameof(Index));
             }
+            return View(service);
+        }
 
-            TempData["Success"] = "Hizmet silindi.";
-            return Redirect("/Admin/Services");
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            await _serviceService.DeleteAsync(id);
+            TempData["Success"] = "Hizmet başarıyla silindi.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleHomePageVisibility(int id)
+        {
+            await _serviceService.ToggleHomePageVisibilityAsync(id);
+            return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateDisplayOrder(int id, int newOrder)
+        {
+            await _serviceService.UpdateDisplayOrderAsync(id, newOrder);
+            return Json(new { success = true });
         }
     }
 }

@@ -1,88 +1,63 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Admin.Appointments;
+using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Entities;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Route("Admin/[controller]")]
     public class AppointmentsController : Controller
     {
-        private static readonly object _lock = new();
+        private readonly IAppointmentService _appointmentService;
+        private readonly IServiceService _serviceService;
+        private readonly IStylistService _stylistService;
+        private readonly ICustomerService _customerService;
+        private readonly IBranchService _branchService;
 
-        // Mock referans verileri (id/ad eşlemleri)
-        private static readonly Dictionary<int, string> _branches = new()
+        public AppointmentsController(
+            IAppointmentService appointmentService,
+            IServiceService serviceService,
+            IStylistService stylistService,
+            ICustomerService customerService,
+            IBranchService branchService)
         {
-            { 1, "Merkez Şube" }, { 2, "Kadıköy" }, { 3, "Beşiktaş" }
-        };
-        private static readonly Dictionary<int, string> _stylists = new()
-        {
-            { 1, "Ali Yılmaz" }, { 2, "Ece Demir" }, { 3, "Mert Kaya" }
-        };
-
-        // In-memory randevu listesi
-        private static List<AppointmentDto> _appointments = new()
-        {
-            new AppointmentDto {
-                Id = 1, StartAt = DateTime.Today.AddHours(11), DurationMin = 30,
-                CustomerName = "Burak A.", BranchId = 1, StylistId = 1,
-                ServiceName = "Saç Kesimi", Price = 250, Status = AppointmentStatus.Scheduled,
-                Note = "Yanlar kısa, üst doğal."
-            },
-            new AppointmentDto {
-                Id = 2, StartAt = DateTime.Today.AddHours(13), DurationMin = 45,
-                CustomerName = "Dilara K.", BranchId = 2, StylistId = 2,
-                ServiceName = "Renklendirme", Price = 900, Status = AppointmentStatus.Scheduled
-            },
-            new AppointmentDto {
-                Id = 3, StartAt = DateTime.Today.AddDays(-1).AddHours(18), DurationMin = 20,
-                CustomerName = "Emre S.", BranchId = 3, StylistId = 3,
-                ServiceName = "Sakal Traşı", Price = 150, Status = AppointmentStatus.Completed
-            },
-            new AppointmentDto {
-                Id = 4, StartAt = DateTime.Today.AddDays(2).AddHours(10), DurationMin = 30,
-                CustomerName = "Gizem T.", BranchId = 1, StylistId = 2,
-                ServiceName = "Fön", Price = 120, Status = AppointmentStatus.Rescheduled,
-                Note = "Toplantı öncesi."
-            },
-            new AppointmentDto {
-                Id = 5, StartAt = DateTime.Today.AddDays(3).AddHours(16), DurationMin = 60,
-                CustomerName = "Onur N.", BranchId = 2, StylistId = 1,
-                ServiceName = "Renk Açma", Price = 450, Status = AppointmentStatus.Cancelled
-            }
-        };
+            _appointmentService = appointmentService;
+            _serviceService = serviceService;
+            _stylistService = stylistService;
+            _customerService = customerService;
+            _branchService = branchService;
+        }
 
         // GET: /Admin/Appointments
-        public IActionResult Index([FromQuery] AppointmentFilter filter)
+        public async Task<IActionResult> Index()
         {
-            IEnumerable<AppointmentDto> query = _appointments;
+            var appointments = await _appointmentService.GetAllAsync();
+            
+            // Mock referans verileri yerine gerçek veritabanı verilerini kullanalım
+            var services = await _serviceService.GetAllAsync();
+            var stylists = await _stylistService.GetAllAsync();
+            var customers = await _customerService.GetAllAsync();
+            var branches = await _branchService.GetAllAsync();
 
-            if (filter.From.HasValue)
+            var vm = appointments.Select(a => new AppointmentDto
             {
-                var from = filter.From.Value.Date;
-                query = query.Where(a => a.StartAt.Date >= from);
-            }
-            if (filter.To.HasValue)
-            {
-                var to = filter.To.Value.Date;
-                query = query.Where(a => a.StartAt.Date <= to);
-            }
-            if (filter.BranchId.HasValue)
-                query = query.Where(a => a.BranchId == filter.BranchId.Value);
+                Id = a.Id,
+                StartAt = a.StartAt,
+                DurationMin = 30, // Default duration
+                CustomerName = $"{a.Customer?.FirstName} {a.Customer?.LastName}",
+                ServiceName = a.Service?.Name ?? "",
+                Status = a.Status,
+                Price = a.TotalPrice,
+                Note = a.Notes,
+                BranchId = a.BranchId,
+                StylistId = a.StylistId
+            }).ToList();
 
-            if (filter.StylistId.HasValue)
-                query = query.Where(a => a.StylistId == filter.StylistId.Value);
-
-            if (filter.Status.HasValue)
-                query = query.Where(a => a.Status == filter.Status.Value);
-
-            var list = query.OrderBy(a => a.StartAt).ToList();
-
-            var vm = new AppointmentsPageViewModel
-            {
-                Filter = filter,
-                Items = list,
-                BranchNames = new Dictionary<int, string>(_branches),
-                StylistNames = new Dictionary<int, string>(_stylists)
-            };
+            ViewBag.Services = services;
+            ViewBag.Stylists = stylists;
+            ViewBag.Customers = customers;
+            ViewBag.Branches = branches;
 
             return View(vm);
         }
@@ -90,7 +65,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         // POST: /Admin/Appointments/Reschedule
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Reschedule(RescheduleForm form)
+        public async Task<IActionResult> Reschedule(RescheduleForm form)
         {
             if (!ModelState.IsValid)
             {
@@ -98,53 +73,138 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Appointments");
             }
 
-            lock (_lock)
+            try
             {
-                var entity = _appointments.FirstOrDefault(x => x.Id == form.Id);
-                if (entity == null)
-                {
-                    TempData["Error"] = "Kayıt bulunamadı.";
-                    return Redirect("/Admin/Appointments");
-                }
-
-                entity.StartAt = form.NewStartAt;
-                entity.DurationMin = form.DurationMin;
-                entity.Status = AppointmentStatus.Rescheduled;
+                var appointment = await _appointmentService.RescheduleAsync(form.Id, form.NewStartAt);
+                TempData["Success"] = "Randevu başarıyla yeniden planlandı.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Hata: {ex.Message}";
             }
 
-            TempData["Success"] = "Randevu ertelendi.";
             return Redirect("/Admin/Appointments");
         }
 
         // POST: /Admin/Appointments/Cancel
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Cancel(CancelForm form)
+        public async Task<IActionResult> Cancel(int id, string? reason = null)
         {
-            if (!ModelState.IsValid)
+            try
             {
-                TempData["Error"] = "Geçersiz istek.";
-                return Redirect("/Admin/Appointments");
+                var appointment = await _appointmentService.CancelAsync(id, reason);
+                TempData["Success"] = "Randevu başarıyla iptal edildi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Hata: {ex.Message}";
             }
 
-            lock (_lock)
-            {
-                var entity = _appointments.FirstOrDefault(x => x.Id == form.Id);
-                if (entity == null)
-                {
-                    TempData["Error"] = "Kayıt bulunamadı.";
-                    return Redirect("/Admin/Appointments");
-                }
-                entity.Status = AppointmentStatus.Cancelled;
-                // Notu formdan ekleyebiliriz (mock)
-                if (!string.IsNullOrWhiteSpace(form.Reason))
-                {
-                    entity.Note = $"(İptal) {form.Reason}".Trim();
-                }
-            }
-
-            TempData["Success"] = "Randevu iptal edildi.";
             return Redirect("/Admin/Appointments");
+        }
+
+        // POST: /Admin/Appointments/UpdateStatus
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> UpdateStatus(int id, string status)
+        {
+            try
+            {
+                var appointment = await _appointmentService.GetByIdAsync(id);
+                if (appointment != null)
+                {
+                    appointment.Status = status;
+                    appointment.UpdatedAt = DateTime.UtcNow;
+                    await _appointmentService.UpdateAsync(appointment);
+                    TempData["Success"] = "Randevu durumu güncellendi.";
+                }
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Hata: {ex.Message}";
+            }
+
+            return Redirect("/Admin/Appointments");
+        }
+
+        // GET: /Admin/Appointments/Details/5
+        public async Task<IActionResult> Details(int id)
+        {
+            var appointment = await _appointmentService.GetByIdAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            return View(appointment);
+        }
+
+        // GET: /Admin/Appointments/Edit/5
+        public async Task<IActionResult> Edit(int id)
+        {
+            var appointment = await _appointmentService.GetByIdAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Services = await _serviceService.GetAllAsync();
+            ViewBag.Stylists = await _stylistService.GetAllAsync();
+            ViewBag.Customers = await _customerService.GetAllAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+
+            return View(appointment);
+        }
+
+        // POST: /Admin/Appointments/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, Appointment appointment)
+        {
+            if (id != appointment.Id)
+            {
+                return NotFound();
+            }
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    await _appointmentService.UpdateAsync(appointment);
+                    TempData["Success"] = "Randevu başarıyla güncellendi.";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    TempData["Error"] = $"Hata: {ex.Message}";
+                }
+            }
+
+            ViewBag.Services = await _serviceService.GetAllAsync();
+            ViewBag.Stylists = await _stylistService.GetAllAsync();
+            ViewBag.Customers = await _customerService.GetAllAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+
+            return View(appointment);
+        }
+
+        // POST: /Admin/Appointments/Delete/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                await _appointmentService.DeleteAsync(id);
+                TempData["Success"] = "Randevu başarıyla silindi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Hata: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
     }
 }

@@ -1,32 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Admin.Coupons;
+using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Entities;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     public class CouponsController : Controller
     {
-        private static readonly object _lock = new();
+        private readonly ICouponService _couponService;
 
-        // In-memory mock kupon listesi
-        private static List<CouponDto> _coupons = new()
+        public CouponsController(ICouponService couponService)
         {
-            new CouponDto { Id = 1, Code = "YAZ10", Title = "Yaz İndirimi %10", DiscountType = DiscountType.Percent, Amount = 10,  MinSpend = 200, ExpiresAt = DateTime.Today.AddDays(30), IsActive = true },
-            new CouponDto { Id = 2, Code = "HOSGELDIN50", Title = "Hoşgeldin 50 ₺", DiscountType = DiscountType.Amount, Amount = 50, MinSpend = null, ExpiresAt = null, IsActive = true },
-            new CouponDto { Id = 3, Code = "PASIF20", Title = "Pasif Kupon %20", DiscountType = DiscountType.Percent, Amount = 20, MinSpend = 300, ExpiresAt = DateTime.Today.AddDays(-3), IsActive = false },
-        };
+            _couponService = couponService;
+        }
 
         // GET: /Admin/Coupons
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var list = _coupons.OrderBy(c => c.Id).ToList();
+            var coupons = await _couponService.GetAllAsync();
+            var list = coupons.Select(c => new CouponDto
+            {
+                Id = c.Id,
+                Code = c.Code,
+                Title = c.Title,
+                DiscountType = (DiscountType)Enum.Parse(typeof(DiscountType), c.DiscountType),
+                Amount = c.Amount,
+                MinSpend = c.MinSpend,
+                ExpiresAt = c.ExpiresAt,
+                IsActive = c.IsActive
+            }).OrderBy(c => c.Id).ToList();
+            
             return View(list);
         }
 
         // POST: /Admin/Coupons/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(CouponFormModel form)
+        public async Task<IActionResult> Create(CouponFormModel form)
         {
             if (!ModelState.IsValid)
             {
@@ -34,37 +45,41 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Coupons");
             }
 
-            lock (_lock)
+            try
             {
-                // Kod tekilliği (mock kontrol)
-                if (_coupons.Any(c => c.Code.Equals(form.Code.Trim(), StringComparison.OrdinalIgnoreCase)))
+                // Kod tekilliği kontrolü
+                if (await _couponService.ExistsByCodeAsync(form.Code.Trim()))
                 {
                     TempData["Error"] = "Bu kupon kodu zaten mevcut.";
                     return Redirect("/Admin/Coupons");
                 }
 
-                var nextId = _coupons.Count == 0 ? 1 : _coupons.Max(x => x.Id) + 1;
-                _coupons.Add(new CouponDto
+                var coupon = new Coupon
                 {
-                    Id = nextId,
                     Code = form.Code.Trim(),
                     Title = form.Title.Trim(),
-                    DiscountType = form.DiscountType,
+                    DiscountType = form.DiscountType.ToString(),
                     Amount = form.Amount,
                     MinSpend = form.MinSpend,
                     ExpiresAt = form.ExpiresAt,
                     IsActive = form.IsActive
-                });
+                };
+
+                await _couponService.CreateAsync(coupon);
+                TempData["Success"] = "Kupon eklendi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Kupon eklenirken hata oluştu: " + ex.Message;
             }
 
-            TempData["Success"] = "Kupon eklendi.";
             return Redirect("/Admin/Coupons");
         }
 
         // POST: /Admin/Coupons/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(CouponFormModel form)
+        public async Task<IActionResult> Edit(CouponFormModel form)
         {
             if (!ModelState.IsValid || form.Id <= 0)
             {
@@ -72,39 +87,45 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Coupons");
             }
 
-            lock (_lock)
+            try
             {
-                var entity = _coupons.FirstOrDefault(c => c.Id == form.Id);
-                if (entity == null)
+                var existingCoupon = await _couponService.GetByIdAsync(form.Id);
+                if (existingCoupon == null)
                 {
                     TempData["Error"] = "Kayıt bulunamadı.";
                     return Redirect("/Admin/Coupons");
                 }
 
-                // Kod tekilliği (kendi dışında)
-                if (_coupons.Any(c => c.Id != form.Id && c.Code.Equals(form.Code.Trim(), StringComparison.OrdinalIgnoreCase)))
+                // Kod tekilliği kontrolü 
+                if (await _couponService.ExistsByCodeAsync(form.Code.Trim(), form.Id))
                 {
                     TempData["Error"] = "Bu kupon kodu başka bir kayıtta var.";
                     return Redirect("/Admin/Coupons");
                 }
 
-                entity.Code = form.Code.Trim();
-                entity.Title = form.Title.Trim();
-                entity.DiscountType = form.DiscountType;
-                entity.Amount = form.Amount;
-                entity.MinSpend = form.MinSpend;
-                entity.ExpiresAt = form.ExpiresAt;
-                entity.IsActive = form.IsActive;
+                existingCoupon.Code = form.Code.Trim();
+                existingCoupon.Title = form.Title.Trim();
+                existingCoupon.DiscountType = form.DiscountType.ToString();
+                existingCoupon.Amount = form.Amount;
+                existingCoupon.MinSpend = form.MinSpend;
+                existingCoupon.ExpiresAt = form.ExpiresAt;
+                existingCoupon.IsActive = form.IsActive;
+
+                await _couponService.UpdateAsync(existingCoupon);
+                TempData["Success"] = "Kupon güncellendi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Kupon güncellenirken hata oluştu: " + ex.Message;
             }
 
-            TempData["Success"] = "Kupon güncellendi.";
             return Redirect("/Admin/Coupons");
         }
 
         // POST: /Admin/Coupons/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (id <= 0)
             {
@@ -112,12 +133,16 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Coupons");
             }
 
-            lock (_lock)
+            try
             {
-                _coupons = _coupons.Where(c => c.Id != id).ToList();
+                await _couponService.DeleteAsync(id);
+                TempData["Success"] = "Kupon silindi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Kupon silinirken hata oluştu: " + ex.Message;
             }
 
-            TempData["Success"] = "Kupon silindi.";
             return Redirect("/Admin/Coupons");
         }
     }

@@ -1,45 +1,43 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Appointments;
-using System;
+using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Entities;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize(Roles = "Customer")]
     public class AppointmentsController : Controller
     {
-        private List<ServiceVm> MockServices => new()
-        {
-            new(1, "Saç Kesimi", "30 dakika", "Temel kesim, model önerisi"),
-            new(2, "Boya & Röfle", "90-150 dakika", "Renk değişimi, röfle"),
-            new(3, "Bakım & Spa", "45-60 dakika", "Keratin, nem desteği"),
-        };
+        private readonly IAppointmentService _appointmentService;
+        private readonly IServiceService _serviceService;
+        private readonly IStylistService _stylistService;
+        private readonly IBranchService _branchService;
+        private readonly ICustomerService _customerService;
 
-        private List<StylistVm> MockStylists => new()
+        public AppointmentsController(
+            IAppointmentService appointmentService,
+            IServiceService serviceService,
+            IStylistService stylistService,
+            IBranchService branchService,
+            ICustomerService customerService)
         {
-            new(10, "Ahmet Özdoğan", 4.5, "Kesim ve stil uzmanı"),
-            new(11, "Ahmet Ülker", 4.8, "Renk ve bakım"),
-            new(12, "İbrahim Taşkın", 4.2, "Erkek kesim ve sakal"),
-        };
-
-        private List<TimeSlotVm> BuildSlots()
-        {
-            var start = DateTime.Today.AddDays(2).AddHours(10); // 2 gün sonrası, sabah 10
-            var slots = new List<TimeSlotVm>();
-            for (int i = 0; i < 16; i++) // 10:00-18:00 arası her 30 dk
-            {
-                var t = start.AddMinutes(30 * i);
-                slots.Add(new TimeSlotVm(t, IsAvailable: i % 5 != 0)); // her 5'te 1 dolu
-            }
-            return slots;
+            _appointmentService = appointmentService;
+            _serviceService = serviceService;
+            _stylistService = stylistService;
+            _branchService = branchService;
+            _customerService = customerService;
         }
 
-        public IActionResult New(int? serviceId, int? stylistId, string? start)
+        public async Task<IActionResult> New(int? serviceId, int? stylistId, string? start)
         {
             var vm = new AppointmentWizardViewModel
             {
-                Services = MockServices,
-                Stylists = MockStylists,
-                TimeSlots = BuildSlots()
+                Services = (await _serviceService.GetAllAsync()).Select(s => new ServiceVm(s.Id, s.Name, $"{s.DurationMin} dakika", "")).ToList(),
+                Stylists = (await _stylistService.GetAllAsync()).Select(s => new StylistVm(s.Id, $"{s.FirstName} {s.LastName}", (double)s.Rating, s.Bio ?? "")).ToList(),
+                TimeSlots = await BuildAvailableSlotsAsync(stylistId, serviceId)
             };
 
             if (serviceId.HasValue) { vm.SelectedServiceId = serviceId; vm.Step = WizardStep.Stylist; }
@@ -50,73 +48,241 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             return View(vm);
         }
 
-        public IActionResult Index()
+        [HttpPost]
+        public async Task<IActionResult> Confirm(int serviceId, int stylistId, DateTime start)
         {
-            // Mock listeler
-            var upcomings = new[]
+            try
             {
-                new { Id = 501, When = DateTime.Today.AddDays(3).AddHours(14).AddMinutes(30), Service = "Saç Kesimi", Stylist = "Ahmet Özdoğan", Branch = "Merkez" },
-                new { Id = 502, When = DateTime.Today.AddDays(7).AddHours(11), Service = "Boya & Röfle", Stylist = "Ahmet Ülker", Branch = "Merkez" },
-            };
-            var past = new[]
-            {
-                new { Id = 401, When = DateTime.Today.AddDays(-10).AddHours(16), Service = "Bakım & Spa", Stylist = "İbrahim Taşkın", Branch = "Merkez" }
-            };
+                var service = await _serviceService.GetByIdAsync(serviceId);
+                var stylist = await _stylistService.GetByIdAsync(stylistId);
+                
+                if (service == null || stylist == null)
+                    return BadRequest("Geçersiz hizmet veya kuaför");
 
-            ViewBag.Upcoming = upcomings;
+                var customerId = await GetCurrentCustomerId();
+                if (customerId == 0)
+                    return BadRequest("Müşteri bilgisi bulunamadı");
+
+                var appointment = new Appointment
+                {
+                    ServiceId = serviceId,
+                    StylistId = stylistId,
+                    BranchId = stylist.BranchId,
+                    CustomerId = customerId,
+                    StartAt = start.ToUniversalTime(),
+                    EndAt = start.AddMinutes(service.DurationMin).ToUniversalTime(),
+                    Status = "Scheduled"
+                };
+
+                var created = await _appointmentService.CreateAsync(appointment);
+                
+                TempData["Success"] = $"Randevu oluşturuldu: {start:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName}";
+                return RedirectToAction("Index");
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("New", new { serviceId, stylistId, start = start.ToString("yyyy-MM-ddTHH:mm") });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            try
+            {
+                await _appointmentService.CancelAsync(id, "Müşteri tarafından iptal edildi");
+                TempData["Success"] = "Randevu iptal edildi";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Randevu iptal edilemedi: " + ex.Message;
+            }
+            return RedirectToAction("Index");
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == 0)
+            {
+                TempData["Error"] = "Müşteri bilgisi bulunamadı";
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
+            
+            var appointments = await _appointmentService.GetByCustomerAsync(customerId);
+            
+            var upcoming = appointments.Where(a => a.StartAt > DateTime.UtcNow && a.Status != "Cancelled").OrderBy(a => a.StartAt);
+            var past = appointments.Where(a => a.StartAt <= DateTime.UtcNow || a.Status == "Cancelled").OrderByDescending(a => a.StartAt);
+
+            ViewBag.Upcoming = upcoming;
             ViewBag.Past = past;
             return View();
         }
 
-        public IActionResult Details(int id)
+        // GET: /Customer/Appointments/Details/5
+        public async Task<IActionResult> Details(int id)
         {
-            // Mock detay
-            ViewBag.Model = new
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == 0)
             {
-                Id = id,
-                When = DateTime.Today.AddDays(3).AddHours(14).AddMinutes(30),
-                Service = "Saç Kesimi",
-                Stylist = "Ahmet Özdoğan",
-                Branch = "Merkez",
-                Notes = "Omuz hizası kesim, katlı."
-            };
-            return View();
-        }
+                TempData["Error"] = "Müşteri bilgisi bulunamadı";
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
 
-        [HttpPost]
-        public IActionResult Confirm(int serviceId, int stylistId, DateTime start)
-        {
-            // TODO: Backend geldiğinde kaydet
-            TempData["Booked"] = $"Randevu oluşturuldu: {start:dd MMM dddd, HH:mm} · {MockServices.First(s => s.Id == serviceId).Name} · {MockStylists.First(s => s.Id == stylistId).Name}";
-            return RedirectToAction("Index");
-        }
-
-        [HttpPost]
-        public IActionResult Cancel(int id)
-        {
-            // TODO: Backend geldiğinde iptal et
-            TempData["Booked"] = $"Randevu iptal edildi: {id}";
-            return RedirectToAction("Index");
-        }
-
-        public IActionResult Reschedule(int id, string? start)
-        {
-            if (!string.IsNullOrWhiteSpace(start) && DateTime.TryParse(start, out var dt))
+            var appointment = await _appointmentService.GetByIdAsync(id);
+            if (appointment == null || appointment.CustomerId != customerId)
             {
-                TempData["Booked"] = $"Randevu #{id} yeniden planlandı: {dt:dd MMM dddd, HH:mm}";
+                TempData["Error"] = "Randevu bulunamadı";
                 return RedirectToAction("Index");
             }
 
-            // Saat seç ekranı (step3 benzeri)
-            var vm = new AppointmentWizardViewModel
+            // Randevu detayları için gerekli bilgileri yükle
+            var service = await _serviceService.GetByIdAsync(appointment.ServiceId);
+            var stylist = await _stylistService.GetByIdAsync(appointment.StylistId);
+            var branch = await _branchService.GetByIdAsync(appointment.BranchId);
+
+            var vm = new AppointmentDetailViewModel
             {
-                Step = WizardStep.Time,
-                Services = MockServices,
-                Stylists = MockStylists,
-                TimeSlots = BuildSlots()
+                Appointment = appointment,
+                Service = service,
+                Stylist = stylist,
+                Branch = branch,
             };
-            ViewBag.RescheduleForId = id;
-            return View("Reschedule", vm);
+
+            return View(vm);
+        }
+
+        // GET: /Customer/Appointments/Reschedule/5
+        public async Task<IActionResult> Reschedule(int id)
+        {
+            var customerId = await GetCurrentCustomerId();
+            if (customerId == 0)
+            {
+                TempData["Error"] = "Müşteri bilgisi bulunamadı";
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
+
+            var appointment = await _appointmentService.GetByIdAsync(id);
+            if (appointment == null || appointment.CustomerId != customerId)
+            {
+                TempData["Error"] = "Randevu bulunamadı";
+                return RedirectToAction("Index");
+            }
+
+            if (appointment.Status == "Cancelled")
+            {
+                TempData["Error"] = "İptal edilmiş randevu yeniden planlanamaz";
+                return RedirectToAction("Index");
+            }
+
+            // Mevcut zaman dilimlerini al
+            var availableSlots = await BuildAvailableSlotsAsync(appointment.StylistId, appointment.ServiceId);
+            
+            var vm = new RescheduleViewModel
+            {
+                AppointmentId = id,
+                CurrentStartTime = appointment.StartAt,
+                CurrentEndTime = appointment.EndAt,
+                ServiceName = (await _serviceService.GetByIdAsync(appointment.ServiceId))?.Name ?? "",
+                StylistName = (await _stylistService.GetByIdAsync(appointment.StylistId))?.FirstName + " " + 
+                             (await _stylistService.GetByIdAsync(appointment.StylistId))?.LastName ?? "",
+                AvailableTimeSlots = availableSlots
+            };
+
+            return View(vm);
+        }
+
+        // POST: /Customer/Appointments/Reschedule
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Reschedule(RescheduleViewModel model)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Form hatalı. Lütfen alanları kontrol edin.";
+                return RedirectToAction("Reschedule", new { id = model.AppointmentId });
+            }
+
+            try
+            {
+                var customerId = await GetCurrentCustomerId();
+                if (customerId == 0)
+                {
+                    TempData["Error"] = "Müşteri bilgisi bulunamadı";
+                    return RedirectToAction("Index", "Home", new { area = "" });
+                }
+
+                var appointment = await _appointmentService.GetByIdAsync(model.AppointmentId);
+                if (appointment == null || appointment.CustomerId != customerId)
+                {
+                    TempData["Error"] = "Randevu bulunamadı";
+                    return RedirectToAction("Index");
+                }
+
+                // Zaman çakışması kontrolü
+                if (await _appointmentService.HasTimeConflictAsync(
+                    appointment.StylistId, model.NewStartTime, model.NewStartTime.AddMinutes((int)(appointment.EndAt - appointment.StartAt).TotalMinutes)))
+                {
+                    TempData["Error"] = "Seçilen zaman diliminde başka bir randevu bulunmaktadır";
+                    return RedirectToAction("Reschedule", new { id = model.AppointmentId });
+                }
+
+                // Randevuyu güncelle
+                appointment.StartAt = model.NewStartTime.ToUniversalTime();
+                appointment.EndAt = model.NewStartTime.AddMinutes((int)(appointment.EndAt - appointment.StartAt).TotalMinutes).ToUniversalTime();
+                appointment.Status = "Rescheduled";
+                appointment.UpdatedAt = DateTime.UtcNow;
+
+                await _appointmentService.UpdateAsync(appointment);
+                
+                TempData["Success"] = "Randevu başarıyla yeniden planlandı";
+                return RedirectToAction("Details", new { id = model.AppointmentId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Randevu yeniden planlanamadı: " + ex.Message;
+                return RedirectToAction("Reschedule", new { id = model.AppointmentId });
+            }
+        }
+
+        private async Task<List<TimeSlotVm>> BuildAvailableSlotsAsync(int? stylistId, int? serviceId)
+        {
+            if (!stylistId.HasValue || !serviceId.HasValue)
+                return new List<TimeSlotVm>();
+
+            var service = await _serviceService.GetByIdAsync(serviceId.Value);
+            var stylist = await _stylistService.GetByIdAsync(stylistId.Value);
+            
+            if (service == null || stylist == null)
+                return new List<TimeSlotVm>();
+
+            var start = DateTime.Today.AddDays(2).AddHours(10);
+            var slots = new List<TimeSlotVm>();
+            
+            for (int i = 0; i < 16; i++)
+            {
+                var slotStart = start.AddMinutes(30 * i);
+                var slotEnd = slotStart.AddMinutes(service.DurationMin);
+                
+                var isAvailable = !await _appointmentService.HasTimeConflictAsync(
+                    stylistId.Value, slotStart, slotEnd);
+                    
+                slots.Add(new TimeSlotVm(slotStart, isAvailable));
+            }
+            
+            return slots;
+        }
+
+        private async Task<int> GetCurrentCustomerId()
+        {
+            // Identity User ID'den Customer ID'yi bul
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return 0;
+
+            var customer = await _customerService.GetByUserIdAsync(userId);
+            return customer?.Id ?? 0;
         }
     }
 }

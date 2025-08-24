@@ -1,49 +1,42 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models;
 using Microsoft.AspNetCore.OutputCaching;
+using Kuafor.Web.Services.Interfaces;
 
 namespace Kuafor.Web.Controllers;
 
 public class HomeController : Controller
 {
-    // Basit bir ön bellek: 60sn (performans için)
-    [OutputCache(Duration = 60)]
-    public IActionResult Index()
+    private readonly IServiceService _serviceService;
+    private readonly ITestimonialService _testimonialService;
+    private readonly IBranchService _branchService;
+
+    public HomeController(
+        IServiceService serviceService,
+        ITestimonialService testimonialService,
+        IBranchService branchService)
+    {
+        _serviceService = serviceService;
+        _testimonialService = testimonialService;
+        _branchService = branchService;
+    }
+
+    [OutputCache(Duration = 300)] // 5 dakika cache
+    public async Task<IActionResult> Index()
     {
         var vm = new HomeViewModel
         {
             IsAuthenticated = User?.Identity?.IsAuthenticated ?? false,
-            Services = new()
-            {
-                new ServiceItem
-                {
-                    Title = "Saç Kesimi",
-                    Description = "Kişiye özel modern kesim.",
-                    PriceFrom = 250,
-                    IconSvg = "<i class='bi bi-scissors'></i>"
-                },
-                new ServiceItem
-                {
-                    Title = "Sakal Tıraşı",
-                    Description = "Cilt tipine uygun bakım.",
-                    PriceFrom = 150,
-                    IconSvg = "<i class='bi bi-beard'></i>"
-                },
-                new ServiceItem
-                {
-                    Title = "Boya",
-                    Description = "Profesyonel renk uygulamaları.",
-                    PriceFrom = 600,
-                    IconSvg = "<i class='bi bi-pallette'></i>"
-                }
-            },
-            Testimonials = new()
-            {
-                new Testimonial { Name = "Elif K.", Message = "Tam istediğim gibi oldu, çok memnun kaldım!", Rating = 5 },
-                new Testimonial { Name = "Murat A.", Message = "Hızlı ve temiz iş, tavsiye ederim.", Rating = 4 },
-                new Testimonial { Name = "Cem S.", Message = "Personel güler yüzlü, ortam ferah.", Rating = 5 },
-            }
+            Services = await _serviceService.GetForHomePageAsync(),
+            Testimonials = await _testimonialService.GetApprovedForHomePageAsync(),
+            Branches = await _branchService.GetForHomePageAsync()
         };
         return View(vm);
+    }
+
+    // GET: /Home/Contact
+    public IActionResult Contact()
+    {
+        return View();
     }
 }

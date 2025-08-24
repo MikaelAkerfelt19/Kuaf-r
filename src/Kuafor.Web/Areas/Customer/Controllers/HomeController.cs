@@ -1,31 +1,64 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Kuafor.Web.Models;
-using System;
+using Kuafor.Web.Services.Interfaces;
+using System.Security.Claims;
 
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
     // Not: Bu controller sadece dashboard görünümünü göstermek içindir.
     // ViewModel, veri erişimi vb. kısımlar eklenecek.
     [Area("Customer")]
+    [Authorize(Roles = "Customer")]
     public class HomeController : Controller
     {
-        // GET: /Customer
-        public IActionResult Index()
+        private readonly IAppointmentService _appointmentService;
+        private readonly IServiceService _serviceService;
+        private readonly ICustomerService _customerService;
+
+        public HomeController(IAppointmentService appointmentService, IServiceService serviceService, ICustomerService customerService)
         {
+            _appointmentService = appointmentService;
+            _serviceService = serviceService;
+            _customerService = customerService;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var customerId = GetCurrentCustomerId();
+            var upcomingAppointments = await _appointmentService.GetUpcomingAsync(customerId);
+
             var vm = new CustomerDashboardViewModel
             {
-                Upcoming = new UpcomingAppointmentVm
+                Upcoming = upcomingAppointments.Any() ? new UpcomingAppointmentVm
                 {
-                    HasAppointment = true, // Boş durumu görmek için false yapılabilir.
-                    StartTime = DateTime.Today.AddDays(2).AddHours(14).AddMinutes(30),
-                    ServiceName = "Saç Kesimi",
-                    StylistName = "Ahmet Özdoğan",
-                    Branch = "Merkez",
-                    AppointmentId = 123
-                }
+                    HasAppointment = true,
+                    StartTime = upcomingAppointments.First().StartAt,
+                    ServiceName = upcomingAppointments.First().Service.Name,
+                    StylistName = $"{upcomingAppointments.First().Stylist.FirstName} {upcomingAppointments.First().Stylist.LastName}",
+                    Branch = upcomingAppointments.First().Branch.Name,
+                    AppointmentId = upcomingAppointments.First().Id
+                } : new UpcomingAppointmentVm { HasAppointment = false },
+                TotalAppointments = upcomingAppointments.Count()
             };
-            // TODO: Kullanıcıya ait yaklaşan randevular vb. ViewModel ile doldurulacak.
+
             return View(vm);
+        }
+
+        private async Task<int> GetCurrentCustomerIdAsync()
+        {
+            var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userId))
+                return 0;
+
+            var customer = await _customerService.GetByUserIdAsync(userId);
+            return customer?.Id ?? 0;
+        }
+
+        private int GetCurrentCustomerId()
+        {
+            // Geçici olarak - register sonrası customer oluşturulacak
+            return 1;
         }
     }
 }

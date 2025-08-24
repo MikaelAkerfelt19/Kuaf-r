@@ -1,6 +1,5 @@
 using Kuafor.Web.Models.Profile;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.Templates.BlazorIdentity.Pages.Manage;
 
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
@@ -146,5 +145,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             };
             return View(vm);
         }
+
+        // Security action'ı kaldırıldı - yanlış model kullanımı nedeniyle
     }
 }

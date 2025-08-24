@@ -1,32 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Admin.Branches;
+using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Entities;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
     public class BranchesController : Controller
     {
-        private static readonly object _lock = new();
+        private readonly IBranchService _branchService;        
 
-        // Mock şube listesi (Stylists modülündeki örneklerle uyumlu)
-        private static List<BranchDto> _branches = new()
+        public BranchesController(IBranchService branchService)
         {
-            new BranchDto { Id = 1, Name = "Merkez Şube", IsActive = true,  Address = "İstiklal Cad. 10", Phone = "0212 000 00 00" },
-            new BranchDto { Id = 2, Name = "Kadıköy",     IsActive = true,  Address = "Bahariye 25",       Phone = "0216 000 00 00" },
-            new BranchDto { Id = 3, Name = "Beşiktaş",    IsActive = false, Address = "Barbaros 5",        Phone = "0212 111 11 11" }
-        };
+            _branchService = branchService;
+        }
 
         // GET: /Admin/Branches
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var list = _branches.OrderBy(b => b.Id).ToList();
+            var branches = await _branchService.GetAllAsync();
+            var list = branches.Select(b => new BranchDto
+            {
+                Id = b.Id,
+                Name = b.Name,
+                Address = b.Address?.Trim() ?? string.Empty,
+                Phone = b.Phone?.Trim() ?? string.Empty,
+                IsActive = b.IsActive
+            }).OrderBy(b => b.Id).ToList();
+            
             return View(list);
         }
 
         // POST: /Admin/Branches/Create
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(BranchFormModel form)
+        public async Task<IActionResult> Create(BranchFormModel form)
         {
             if (!ModelState.IsValid)
             {
@@ -34,27 +42,31 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Branches");
             }
 
-            lock (_lock)
+            try
             {
-                var nextId = _branches.Count == 0 ? 1 : _branches.Max(x => x.Id) + 1;
-                _branches.Add(new BranchDto
+                var branch = new Branch
                 {
-                    Id = nextId,
                     Name = form.Name.Trim(),
                     Address = form.Address?.Trim() ?? string.Empty,
                     Phone = form.Phone?.Trim() ?? string.Empty,
                     IsActive = form.IsActive
-                });
+                };
+                
+                await _branchService.CreateAsync(branch);
+                TempData["Success"] = "Şube eklendi.";
             }
-
-            TempData["Success"] = "Şube eklendi.";
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Şube eklenirken hata oluştu: {ex.Message}";
+            }
+            
             return Redirect("/Admin/Branches");
         }
 
         // POST: /Admin/Branches/Edit
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(BranchFormModel form)
+        public async Task<IActionResult> Edit(BranchFormModel form)
         {
             if (!ModelState.IsValid || form.Id <= 0)
             {
@@ -62,29 +74,35 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Branches");
             }
 
-            lock (_lock)
+            try
             {
-                var entity = _branches.FirstOrDefault(b => b.Id == form.Id);
-                if (entity == null)
+                var branch = await _branchService.GetByIdAsync(form.Id);
+                if (branch == null)
                 {
                     TempData["Error"] = "Kayıt bulunamadı.";
                     return Redirect("/Admin/Branches");
                 }
 
-                entity.Name = form.Name.Trim();
-                entity.Address = form.Address?.Trim() ?? string.Empty;
-                entity.Phone = form.Phone?.Trim() ?? string.Empty;
-                entity.IsActive = form.IsActive;
+                branch.Name = form.Name.Trim();
+                branch.Address = form.Address?.Trim() ?? string.Empty;
+                branch.Phone = form.Phone?.Trim() ?? string.Empty;
+                branch.IsActive = form.IsActive;
+                
+                await _branchService.UpdateAsync(branch);
+                TempData["Success"] = "Şube güncellendi.";
             }
-
-            TempData["Success"] = "Şube güncellendi.";
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Şube güncellenirken hata oluştu: {ex.Message}";
+            }
+            
             return Redirect("/Admin/Branches");
         }
 
         // POST: /Admin/Branches/Delete
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
             if (id <= 0)
             {
@@ -92,12 +110,16 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Redirect("/Admin/Branches");
             }
 
-            lock (_lock)
+            try
             {
-                _branches = _branches.Where(b => b.Id != id).ToList();
+                await _branchService.DeleteAsync(id);
+                TempData["Success"] = "Şube silindi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Şube silinirken hata oluştu: {ex.Message}";
             }
 
-            TempData["Success"] = "Şube silindi.";
             return Redirect("/Admin/Branches");
         }
     }
