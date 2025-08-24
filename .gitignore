@@ -23,6 +23,13 @@ bld/
 [Ll]og/
 [Ll]ogs/
 
+# Environment variables
+.env
+.env.local
+.env.development
+.env.production
+*.env
+
 # .NET Core
 project.lock.json
 project.fragment.lock.json
