@@ -54,3 +54,52 @@
         });
     }
 })();
+
+function loadAppointments() {
+    $.ajax({
+        url: '/api/v1/appointments',
+        method: 'GET',
+        success: function(data) {
+            renderAppointments(data);
+        },
+        error: function(xhr) {
+            showError('Randevular yüklenemedi: ' + xhr.responseText);
+        }
+    });
+}
+
+function createAppointment() {
+    var formData = $('#createAppointmentForm').serialize();
+    
+    $.ajax({
+        url: '/api/v1/appointments',
+        method: 'POST',
+        data: formData,
+        success: function(data) {
+            showSuccess('Randevu başarıyla oluşturuldu');
+            $('#createAppointmentModal').modal('hide');
+            loadAppointments();
+        },
+        error: function(xhr) {
+            showError('Randevu oluşturulamadı: ' + xhr.responseText);
+        }
+    });
+}
+
+function cancelAppointment(appointmentId) {
+    if (confirm('Bu randevuyu iptal etmek istediğinizden emin misiniz?')) {
+        $.ajax({
+            url: `/api/v1/appointments/${appointmentId}/cancel`,
+            method: 'POST',
+            data: JSON.stringify({ reason: 'Admin tarafından iptal edildi' }),
+            contentType: 'application/json',
+            success: function(data) {
+                showSuccess('Randevu iptal edildi');
+                loadAppointments();
+            },
+            error: function(xhr) {
+                showError('Randevu iptal edilemedi: ' + xhr.responseText);
+            }
+        });
+    }
+}
