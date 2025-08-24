@@ -1,0 +1,273 @@
+@model Kuafor.Web.Models.Appointments.CreateAppointmentViewModel
+@{
+    ViewData["Title"] = "Yeni Randevu";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-plus me-2"></i>
+                        Yeni Randevu Oluştur
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form asp-action="New" method="post" id="appointmentForm">
+                        <div class="row">
+                            <!-- Şube Seçimi -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BranchId" class="form-label">Şube</label>
+                                <select asp-for="BranchId" class="form-select" id="branchSelect" required>
+                                    <option value="">Şube seçiniz...</option>
+                                    @foreach (var branch in Model.Branches)
+                                    {
+                                        <option value="@branch.Id">@branch.Name - @branch.Address</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="BranchId" class="text-danger"></span>
+                            </div>
+
+                            <!-- Hizmet Seçimi -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ServiceId" class="form-label">Hizmet</label>
+                                <select asp-for="ServiceId" class="form-select" id="serviceSelect" required>
+                                    <option value="">Hizmet seçiniz...</option>
+                                    @foreach (var service in Model.Services)
+                                    {
+                                        <option value="@service.Id" data-duration="@service.DurationMin" data-price="@service.Price">
+                                            @service.Name - @service.Price.ToString("C") (@service.DurationMin dk)
+                                        </option>
+                                    }
+                                </select>
+                                <span asp-validation-for="ServiceId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <!-- Kuaför Seçimi -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StylistId" class="form-label">Kuaför</label>
+                                <select asp-for="StylistId" class="form-select" id="stylistSelect" required disabled>
+                                    <option value="">Önce şube seçiniz...</option>
+                                </select>
+                                <span asp-validation-for="StylistId" class="text-danger"></span>
+                            </div>
+
+                            <!-- Tarih Seçimi -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="StartAt" class="form-label">Randevu Tarihi</label>
+                                <input asp-for="StartAt" type="date" class="form-control" id="dateSelect" 
+                                       min="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                                <span asp-validation-for="StartAt" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <!-- Saat Seçimi -->
+                        <div class="mb-3">
+                            <label class="form-label">Uygun Saatler</label>
+                            <div id="availableSlots" class="d-flex flex-wrap gap-2">
+                                <div class="text-muted">Önce kuaför ve tarih seçiniz...</div>
+                            </div>
+                            <input type="hidden" id="selectedTime" name="SelectedTime" />
+                        </div>
+
+                        <!-- Süre -->
+                        <div class="mb-3">
+                            <label asp-for="DurationMin" class="form-label">Süre (Dakika)</label>
+                            <input asp-for="DurationMin" type="number" class="form-control" readonly />
+                        </div>
+
+                        <!-- Notlar -->
+                        <div class="mb-3">
+                            <label asp-for="Notes" class="form-label">Notlar (İsteğe bağlı)</label>
+                            <textarea asp-for="Notes" class="form-control" rows="3" 
+                                      placeholder="Özel isteklerinizi buraya yazabilirsiniz..."></textarea>
+                            <span asp-validation-for="Notes" class="text-danger"></span>
+                        </div>
+
+                        <!-- Özet -->
+                        <div class="card bg-light mb-3" id="appointmentSummary" style="display: none;">
+                            <div class="card-body">
+                                <h6 class="card-title">Randevu Özeti</h6>
+                                <div id="summaryContent"></div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Index" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>
+                                Geri Dön
+                            </a>
+                            <button type="submit" class="btn btn-primary" id="submitBtn" disabled>
+                                <i class="fas fa-check me-1"></i>
+                                Randevu Oluştur
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            let selectedTime = null;
+            
+            // Şube değiştiğinde kuaförleri yükle
+            $('#branchSelect').change(function() {
+                const branchId = $(this).val();
+                const stylistSelect = $('#stylistSelect');
+                
+                if (branchId) {
+                    $.get('/api/v1/stylists/branch/' + branchId)
+                        .done(function(data) {
+                            stylistSelect.empty().append('<option value="">Kuaför seçiniz...</option>');
+                            data.forEach(function(stylist) {
+                                stylistSelect.append(`<option value="${stylist.id}">${stylist.firstName} ${stylist.lastName}</option>`);
+                            });
+                            stylistSelect.prop('disabled', false);
+                        })
+                        .fail(function() {
+                            alert('Kuaförler yüklenirken hata oluştu.');
+                        });
+                } else {
+                    stylistSelect.empty().append('<option value="">Önce şube seçiniz...</option>').prop('disabled', true);
+                }
+                
+                clearAvailableSlots();
+            });
+            
+            // Hizmet değiştiğinde süreyi güncelle
+            $('#serviceSelect').change(function() {
+                const selectedOption = $(this).find('option:selected');
+                const duration = selectedOption.data('duration') || 30;
+                $('#DurationMin').val(duration);
+                
+                loadAvailableSlots();
+                updateSummary();
+            });
+            
+            // Kuaför veya tarih değiştiğinde uygun saatleri yükle
+            $('#stylistSelect, #dateSelect').change(function() {
+                loadAvailableSlots();
+            });
+            
+            function loadAvailableSlots() {
+                const stylistId = $('#stylistSelect').val();
+                const date = $('#dateSelect').val();
+                const duration = $('#DurationMin').val() || 30;
+                
+                if (stylistId && date) {
+                    $.get('/Appointments/GetAvailableSlots', {
+                        stylistId: stylistId,
+                        date: date,
+                        durationMin: duration
+                    })
+                    .done(function(slots) {
+                        displayAvailableSlots(slots);
+                    })
+                    .fail(function() {
+                        $('#availableSlots').html('<div class="text-danger">Uygun saatler yüklenirken hata oluştu.</div>');
+                    });
+                } else {
+                    clearAvailableSlots();
+                }
+            }
+            
+            function displayAvailableSlots(slots) {
+                const container = $('#availableSlots');
+                container.empty();
+                
+                if (slots.length === 0) {
+                    container.html('<div class="text-warning">Bu tarih için uygun saat bulunmamaktadır.</div>');
+                    return;
+                }
+                
+                slots.forEach(function(slot) {
+                    const button = $(`<button type="button" class="btn btn-outline-primary slot-btn" data-time="${slot}">${slot}</button>`);
+                    container.append(button);
+                });
+                
+                // Saat seçimi
+                $('.slot-btn').click(function() {
+                    $('.slot-btn').removeClass('btn-primary').addClass('btn-outline-primary');
+                    $(this).removeClass('btn-outline-primary').addClass('btn-primary');
+                    
+                    selectedTime = $(this).data('time');
+                    $('#selectedTime').val(selectedTime);
+                    
+                    updateStartAt();
+                    updateSummary();
+                    checkFormValidity();
+                });
+            }
+            
+            function clearAvailableSlots() {
+                $('#availableSlots').html('<div class="text-muted">Önce kuaför ve tarih seçiniz...</div>');
+                selectedTime = null;
+                $('#selectedTime').val('');
+                checkFormValidity();
+            }
+            
+            function updateStartAt() {
+                const date = $('#dateSelect').val();
+                if (date && selectedTime) {
+                    const startAt = new Date(date + 'T' + selectedTime + ':00');
+                    $('#StartAt').val(startAt.toISOString().slice(0, 16));
+                }
+            }
+            
+            function updateSummary() {
+                const branchName = $('#branchSelect option:selected').text();
+                const serviceName = $('#serviceSelect option:selected').text();
+                const stylistName = $('#stylistSelect option:selected').text();
+                const date = $('#dateSelect').val();
+                
+                if (branchName !== 'Şube seçiniz...' && serviceName !== 'Hizmet seçiniz...' && 
+                    stylistName !== 'Kuaför seçiniz...' && date && selectedTime) {
+                    
+                    const formattedDate = new Date(date).toLocaleDateString('tr-TR');
+                    
+                    const summaryHtml = `
+                        <div class="row">
+                            <div class="col-sm-6"><strong>Şube:</strong> ${branchName.split(' - ')[0]}</div>
+                            <div class="col-sm-6"><strong>Hizmet:</strong> ${serviceName.split(' - ')[0]}</div>
+                            <div class="col-sm-6"><strong>Kuaför:</strong> ${stylistName}</div>
+                            <div class="col-sm-6"><strong>Tarih:</strong> ${formattedDate}</div>
+                            <div class="col-sm-6"><strong>Saat:</strong> ${selectedTime}</div>
+                            <div class="col-sm-6"><strong>Süre:</strong> ${$('#DurationMin').val()} dakika</div>
+                        </div>
+                    `;
+                    
+                    $('#summaryContent').html(summaryHtml);
+                    $('#appointmentSummary').show();
+                } else {
+                    $('#appointmentSummary').hide();
+                }
+            }
+            
+            function checkFormValidity() {
+                const isValid = $('#branchSelect').val() && $('#serviceSelect').val() && 
+                               $('#stylistSelect').val() && $('#dateSelect').val() && selectedTime;
+                
+                $('#submitBtn').prop('disabled', !isValid);
+            }
+            
+            // Form gönderimi
+            $('#appointmentForm').submit(function(e) {
+                if (!selectedTime) {
+                    e.preventDefault();
+                    alert('Lütfen bir saat seçiniz.');
+                    return false;
+                }
+                
+                updateStartAt();
+            });
+        });
+    </script>
+}

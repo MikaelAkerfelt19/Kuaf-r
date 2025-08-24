@@ -1,0 +1,339 @@
+@model Kuafor.Web.Models.Entities.Appointment
+@{
+    ViewData["Title"] = "Randevu Detayı";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                    <h4 class="mb-0">
+                        <i class="fas fa-calendar-alt me-2"></i>
+                        Randevu Detayı
+                    </h4>
+                    @{
+                        var statusBadge = Model.Status switch
+                        {
+                            "Scheduled" => "badge bg-light text-primary",
+                            "Completed" => "badge bg-light text-success",
+                            "Cancelled" => "badge bg-light text-danger",
+                            "Rescheduled" => "badge bg-light text-warning",
+                            _ => "badge bg-light text-secondary"
+                        };
+                        
+                        var statusText = Model.Status switch
+                        {
+                            "Scheduled" => "Planlandı",
+                            "Completed" => "Tamamlandı",
+                            "Cancelled" => "İptal Edildi",
+                            "Rescheduled" => "Yeniden Planlandı",
+                            _ => Model.Status
+                        };
+                    }
+                    <span class="@statusBadge">@statusText</span>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Sol Kolon -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-cut me-2"></i>
+                                    Hizmet Bilgileri
+                                </h6>
+                                <div class="ps-3">
+                                    <div class="mb-2">
+                                        <strong>Hizmet:</strong> @Model.Service?.Name
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Ücret:</strong> @Model.Service?.Price.ToString("C")
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Süre:</strong> @Model.Service?.DurationMin dakika
+                                    </div>
+
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-user-tie me-2"></i>
+                                    Kuaför Bilgileri
+                                </h6>
+                                <div class="ps-3">
+                                    <div class="mb-2">
+                                        <strong>Ad Soyad:</strong> @Model.Stylist?.FirstName @Model.Stylist?.LastName
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(Model.Stylist?.Phone))
+                                    {
+                                        <div class="mb-2">
+                                            <strong>Telefon:</strong> @Model.Stylist.Phone
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Stylist?.Email))
+                                    {
+                                        <div class="mb-2">
+                                            <strong>E-posta:</strong> @Model.Stylist.Email
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Sağ Kolon -->
+                        <div class="col-md-6">
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-calendar-check me-2"></i>
+                                    Randevu Bilgileri
+                                </h6>
+                                <div class="ps-3">
+                                    <div class="mb-2">
+                                        <strong>Tarih:</strong> @Model.StartAt.ToString("dd MMMM yyyy dddd", new System.Globalization.CultureInfo("tr-TR"))
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Başlangıç:</strong> @Model.StartAt.ToString("HH:mm")
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Bitiş:</strong> @Model.EndAt.ToString("HH:mm")
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Oluşturulma:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")
+                                    </div>
+                                    @if (Model.UpdatedAt.HasValue)
+                                    {
+                                        <div class="mb-2">
+                                            <strong>Güncellenme:</strong> @Model.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm")
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                            
+                            <div class="mb-4">
+                                <h6 class="text-muted mb-2">
+                                    <i class="fas fa-map-marker-alt me-2"></i>
+                                    Şube Bilgileri
+                                </h6>
+                                <div class="ps-3">
+                                    <div class="mb-2">
+                                        <strong>Şube:</strong> @Model.Branch?.Name
+                                    </div>
+                                    <div class="mb-2">
+                                        <strong>Adres:</strong> @Model.Branch?.Address
+                                    </div>
+                                    @if (!string.IsNullOrEmpty(Model.Branch?.Phone))
+                                    {
+                                        <div class="mb-2">
+                                            <strong>Telefon:</strong> @Model.Branch.Phone
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="mb-4">
+                            <h6 class="text-muted mb-2">
+                                <i class="fas fa-sticky-note me-2"></i>
+                                Notlar
+                            </h6>
+                            <div class="ps-3">
+                                <div class="alert alert-info">
+                                    @Model.Notes
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    
+                    <!-- Durum Bilgisi -->
+                    <div class="mb-4">
+                        <h6 class="text-muted mb-2">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Durum Bilgisi
+                        </h6>
+                        <div class="ps-3">
+                            @if (Model.Status == "Scheduled")
+                            {
+                                var timeUntilAppointment = Model.StartAt.Subtract(DateTime.Now);
+                                if (timeUntilAppointment.TotalDays > 1)
+                                {
+                                    <div class="alert alert-info">
+                                        <i class="fas fa-clock me-2"></i>
+                                        Randevunuza @((int)timeUntilAppointment.TotalDays) gün @timeUntilAppointment.Hours saat kaldı.
+                                    </div>
+                                }
+                                else if (timeUntilAppointment.TotalHours > 1)
+                                {
+                                    <div class="alert alert-warning">
+                                        <i class="fas fa-clock me-2"></i>
+                                        Randevunuza @((int)timeUntilAppointment.TotalHours) saat @timeUntilAppointment.Minutes dakika kaldı.
+                                    </div>
+                                }
+                                else if (timeUntilAppointment.TotalMinutes > 0)
+                                {
+                                    <div class="alert alert-danger">
+                                        <i class="fas fa-exclamation-triangle me-2"></i>
+                                        Randevunuza @((int)timeUntilAppointment.TotalMinutes) dakika kaldı!
+                                    </div>
+                                }
+                                else
+                                {
+                                    <div class="alert alert-success">
+                                        <i class="fas fa-check me-2"></i>
+                                        Randevu zamanı geldi!
+                                    </div>
+                                }
+                            }
+                            else if (Model.Status == "Completed")
+                            {
+                                <div class="alert alert-success">
+                                    <i class="fas fa-check-circle me-2"></i>
+                                    Randevunuz başarıyla tamamlandı.
+                                </div>
+                            }
+                            else if (Model.Status == "Cancelled")
+                            {
+                                <div class="alert alert-danger">
+                                    <i class="fas fa-times-circle me-2"></i>
+                                    Randevunuz iptal edildi.
+                                </div>
+                            }
+                            else if (Model.Status == "Rescheduled")
+                            {
+                                <div class="alert alert-warning">
+                                    <i class="fas fa-calendar-alt me-2"></i>
+                                    Randevunuz yeniden planlandı.
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="card-footer bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a asp-action="Index" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i>
+                            Randevularım
+                        </a>
+                        
+                        <div>
+                            @if (Model.Status == "Scheduled" && Model.StartAt > DateTime.Now)
+                            {
+                                var canCancel = Model.StartAt.Subtract(DateTime.Now).TotalHours >= 2;
+                                
+                                if (canCancel)
+                                {
+                                    <button type="button" class="btn btn-outline-danger me-2" 
+                                            onclick="cancelAppointment(@Model.Id)">
+                                        <i class="fas fa-times me-1"></i>
+                                        İptal Et
+                                    </button>
+                                }
+                                
+                                <button type="button" class="btn btn-outline-warning" 
+                                        onclick="rescheduleAppointment(@Model.Id)">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Yeniden Planla
+                                </button>
+                            }
+                            
+                            @if (Model.Status == "Completed")
+                            {
+                                <button type="button" class="btn btn-outline-primary" 
+                                        onclick="rateAppointment(@Model.Id)">
+                                    <i class="fas fa-star me-1"></i>
+                                    Değerlendir
+                                </button>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İptal Onay Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Randevu İptali
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu randevuyu iptal etmek istediğinizden emin misiniz?</p>
+                <div class="mb-3">
+                    <label for="cancelReason" class="form-label">İptal Nedeni (İsteğe bağlı)</label>
+                    <textarea id="cancelReason" class="form-control" rows="3" 
+                              placeholder="İptal nedeninizi belirtebilirsiniz..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Vazgeç
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmCancel">
+                    <i class="fas fa-check me-1"></i>
+                    İptal Et
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function cancelAppointment(appointmentId) {
+            $('#cancelModal').modal('show');
+            
+            $('#confirmCancel').off('click').on('click', function() {
+                const reason = $('#cancelReason').val();
+                
+                $.ajax({
+                    url: '/Appointments/Cancel',
+                    type: 'POST',
+                    data: {
+                        id: appointmentId,
+                        reason: reason
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            alert('Randevu iptal edilirken hata oluştu: ' + result.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Randevu iptal edilirken hata oluştu.');
+                    }
+                });
+                
+                $('#cancelModal').modal('hide');
+            });
+        }
+        
+        function rescheduleAppointment(appointmentId) {
+            // Yeniden planlama özelliği gelecekte eklenebilir
+            alert('Yeniden planlama özelliği yakında eklenecek.');
+        }
+        
+        function rateAppointment(appointmentId) {
+            // Değerlendirme özelliği gelecekte eklenebilir
+            alert('Değerlendirme özelliği yakında eklenecek.');
+        }
+        
+        // Modal kapandığında temizle
+        $('#cancelModal').on('hidden.bs.modal', function() {
+            $('#cancelReason').val('');
+        });
+    </script>
+}

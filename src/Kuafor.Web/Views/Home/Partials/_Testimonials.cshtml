@@ -1,18 +1,18 @@
-@model IEnumerable<Kuafor.Web.Models.Testimonial>
+@model IEnumerable<Kuafor.Web.Models.Entities.Testimonial>
 <section id="testimonials" class="py-5 bg-body-secondary">
   <div class="container">
     <h2 class="h3 fw-bold mb-4">Müşteri Yorumları</h2>
     <div class="row g-3">
-      @foreach (var t in Model)
+      @foreach (var t in Model.OrderBy(x => x.DisplayOrder))
       {
         <div class="col-md-4">
           <div class="card h-100 shadow-sm">
             <div class="card-body">
               <div class="mb-1">
-                @for (int i = 0; i < t.Rating; i++) { <i class="bi bi-star-fill"></i> }
-                @for (int i = t.Rating; i < 5; i++) { <i class="bi bi-star"></i> }
+                @for (int i = 0; i < t.Rating; i++) { <i class="bi bi-star-fill text-warning"></i> }
+                @for (int i = t.Rating; i < 5; i++) { <i class="bi bi-star text-muted"></i> }
               </div>
-              <p class="mb-2">“@t.Message”</p>
+              <p class="mb-2">"@t.Message"</p>
               <div class="small text-muted">— @t.Name</div>
             </div>
           </div>

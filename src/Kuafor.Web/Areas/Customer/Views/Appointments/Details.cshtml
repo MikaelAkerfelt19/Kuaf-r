@@ -1,25 +1,91 @@
+@model Kuafor.Web.Models.Appointments.AppointmentDetailViewModel
 @{
-  ViewData["Title"] = "Randevu Detayı";
-  var m = ViewBag.Model;
+    ViewData["Title"] = "Randevu Detayları";
 }
+
 <div class="container py-4">
-  <h3 class="mb-3">Randevu Detayı</h3>
-  <div class="card border-0 shadow-sm">
-    <div class="card-body">
-      <div><strong>ID:</strong> @m.Id</div>
-      <div><strong>Tarih & Saat:</strong> @m.When</div>
-      <div><strong>Hizmet:</strong> @m.Service</div>
-      <div><strong>Kuaför:</strong> @m.Stylist</div>
-      <div><strong>Şube:</strong> @m.Branch</div>
-      <div class="mt-3"><strong>Not:</strong> @m.Notes</div>
-      <div class="mt-3 d-flex gap-2">
-        <a class="btn btn-outline-primary" asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule"
-          asp-route-id="@m.Id">Tarihi Değiştir</a>
-        <form method="post" asp-area="Customer" asp-controller="Appointments" asp-action="Cancel" asp-route-id="@m.Id"
-          onsubmit="return confirm('Randevu iptal edilsin mi?');">
-          <button class="btn btn-outline-danger" type="submit">İptal Et</button>
-        </form>
-      </div>
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4 class="mb-0">Randevu Detayları</h4>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Hizmet</h6>
+                            <p class="h5">@Model.Service.Name</p>
+                            <p class="text-muted">@Model.Service.DurationMin dakika</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Kuaför</h6>
+                            <p class="h5">@Model.Stylist.FirstName @Model.Stylist.LastName</p>
+                            <p class="text-muted">@Model.Branch.Name</p>
+                        </div>
+                    </div>
+                    
+                    <hr>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Tarih & Saat</h6>
+                            <p class="h5">@Model.Appointment.StartAt.ToString("dd MMMM yyyy, dddd")</p>
+                            <p class="text-muted">@Model.Appointment.StartAt.ToString("HH:mm") - @Model.Appointment.EndAt.ToString("HH:mm")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Durum</h6>
+                            <span class="badge bg-@(Model.Appointment.Status switch {
+                                "Scheduled" => "primary",
+                                "Confirmed" => "info",
+                                "Completed" => "success",
+                                "Cancelled" => "danger",
+                                "Rescheduled" => "warning",
+                                _ => "secondary"
+                            })">@Model.Appointment.Status</span>
+                        </div>
+                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Appointment.Notes))
+                    {
+                        <hr>
+                        <div>
+                            <h6 class="text-muted">Notlar</h6>
+                            <p>@Model.Appointment.Notes</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">İşlemler</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Appointment.Status == "Scheduled" || Model.Appointment.Status == "Confirmed")
+                    {
+                        <a href="@Url.Action("Reschedule", new { id = Model.Appointment.Id })" 
+                           class="btn btn-warning btn-lg w-100 mb-2">
+                            <i class="bi bi-calendar-event"></i> Yeniden Planla
+                        </a>
+                        
+                        <form method="post" action="@Url.Action("Cancel", new { id = Model.Appointment.Id })" 
+                              onsubmit="return confirm('Randevuyu iptal etmek istediğinizden emin misiniz?')">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-danger btn-lg w-100">
+                                <i class="bi bi-x-circle"></i> İptal Et
+                            </button>
+                        </form>
+                    }
+                    
+                    <hr>
+                    
+                    <a href="@Url.Action("Index")" class="btn btn-outline-secondary w-100">
+                        <i class="bi bi-arrow-left"></i> Randevularıma Dön
+                    </a>
+                </div>
+            </div>
+        </div>
     </div>
-  </div>
 </div>

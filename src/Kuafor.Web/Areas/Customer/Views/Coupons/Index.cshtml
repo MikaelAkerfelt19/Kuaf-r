@@ -1,0 +1,41 @@
+@model IEnumerable<Kuafor.Web.Models.Entities.Coupon>
+
+@{
+    ViewData["Title"] = "Kuponlarımız";
+}
+
+<div class="container mt-4">
+    <h2>Kuponlarımız</h2>
+    
+    <div class="row">
+        @foreach (var coupon in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="card-title mb-0">@coupon.Code</h5>
+                    </div>
+                    <div class="card-body">
+                      
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="badge bg-success">
+                                @if (coupon.DiscountType == "Percentage")
+                                {
+                                    @coupon.Amount
+                                }
+                                else
+                                {
+                                    @coupon.Amount
+                                }
+                                İndirim
+                            </span>
+                            <small class="text-muted">
+                                Son Kullanım: @coupon.ExpiresAt?.ToString("dd.MM.yyyy")
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

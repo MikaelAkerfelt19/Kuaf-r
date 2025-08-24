@@ -1,103 +1,166 @@
-@model Kuafor.Web.Models.Admin.Stylists.StylistsPageViewModel
+@model IEnumerable<Kuafor.Web.Models.Admin.Stylists.StylistDto>
+
 @{
-    ViewData["Title"] = "Kuaförler";
+    ViewData["Title"] = "Kuaför Yönetimi";
+    Layout = "_Layout.Admin";
 }
 
-<div class="d-flex align-items-center justify-content-between mb-3">
-    <h2 class="mb-0">Kuaförler</h2>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#stylistModal"
-        data-mode="create">Yeni Kuaför</button>
-</div>
-
-@if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
-{
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        @ok
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Kuaför Yönetimi</h1>
+        <a href="@Url.Action("Create")" class="btn btn-primary">
+            <i class="fas fa-plus"></i> Yeni Kuaför
+        </a>
     </div>
-}
-@if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-{
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        @err
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
-    </div>
-}
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:80px">#</th>
-                        <th>Ad</th>
-                        <th style="width:160px">Şube</th>
-                        <th style="width:140px">Puan</th>
-                        <th>Biyografi</th>
-                        <th style="width:120px">Durum</th>
-                        <th style="width:160px" class="text-end">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Stylists.Count == 0)
-                    {
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Kuaför Listesi</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">Kayıt bulunamadı.</td>
+                            <th>ID</th>
+                            <th>Ad Soyad</th>
+                            <th>Şube</th>
+                            <th>Puan</th>
+                            <th>Durum</th>
+                            <th>İşlemler</th>
                         </tr>
-                    }
-                    else
-                    {
-                        foreach (var s in Model.Stylists)
+                    </thead>
+                    <tbody>
+                        @foreach (var stylist in Model)
                         {
-                            var branchName = Model.BranchNames.TryGetValue(s.BranchId, out var bn) ? bn : $"#{s.BranchId}";
+                            var branches = ViewBag.Branches as List<Kuafor.Web.Models.Admin.Stylists.BranchDto>;
+                            var branch = branches?.FirstOrDefault(b => b.Id == stylist.BranchId);
                             <tr>
-                                <td>@s.Id</td>
-                                <td>@s.Name</td>
-                                <td>@branchName</td>
-                                <td>@s.Rating.ToString("0.0")</td>
-                                <td class="text-truncate" style="max-width:360px;">
-                                    @(!string.IsNullOrWhiteSpace(s.Bio) ? s.Bio : "-")
+                                <td>@stylist.Id</td>
+                                <td>
+                                    <strong>@stylist.Name</strong>
+                                    @if (!string.IsNullOrEmpty(stylist.Bio))
+                                    {
+                                        <br><small class="text-muted">@stylist.Bio</small>
+                                    }
                                 </td>
                                 <td>
-                                    @if (s.IsActive)
+                                    @if (branch != null)
                                     {
-                                        <span class="badge bg-success">Aktif</span>
+                                        <span class="badge badge-info">@branch.Name</span>
                                     }
                                     else
                                     {
-                                        <span class="badge bg-secondary">Pasif</span>
+                                        <span class="text-muted">Şube atanmamış</span>
                                     }
                                 </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
-                                        data-bs-target="#stylistModal" data-mode="edit" data-id="@s.Id" data-name="@s.Name"
-                                        data-rating="@s.Rating" data-bio="@s.Bio" data-branchid="@s.BranchId"
-                                        data-active="@(s.IsActive ? "true" : "false")">
-                                        Düzenle
-                                    </button>
-
-                                    <form method="post" action="/Admin/Stylists/Delete" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@s.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Silmek istediğinize emin misiniz?');">
-                                            Sil
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i <= stylist.Rating)
+                                            {
+                                                <i class="fas fa-star text-warning"></i>
+                                            }
+                                            else
+                                            {
+                                                <i class="far fa-star text-muted"></i>
+                                            }
+                                        }
+                                        <span class="ml-2">@stylist.Rating/5</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    @if (stylist.IsActive)
+                                    {
+                                        <span class="badge badge-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">Pasif</span>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="btn-group" role="group">
+                                        <a href="@Url.Action("Details", new { id = stylist.Id })" 
+                                           class="btn btn-sm btn-info" title="Detaylar">
+                                            <i class="fas fa-eye"></i>
+                                        </a>
+                                        <a href="@Url.Action("Edit", new { id = stylist.Id })" 
+                                           class="btn btn-sm btn-warning" title="Düzenle">
+                                            <i class="fas fa-edit"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-danger" title="Sil"
+                                                onclick="deleteStylist(@stylist.Id)">
+                                            <i class="fas fa-trash"></i>
                                         </button>
-                                    </form>
+                                    </div>
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                    </tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
 
-@await Html.PartialAsync("Partials/_StylistModal", new Kuafor.Web.Models.Admin.Stylists.StylistFormModel { BranchOptions
-= Model.BranchOptions })
+<!-- Silme Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Kuaför Sil</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <p>Bu kuaförü silmek istediğinizden emin misiniz?</p>
+                <p class="text-danger"><strong>Bu işlem geri alınamaz!</strong></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                <form id="deleteForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">Sil</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
-    <script src="~/js/admin-stylists.js" asp-append-version="true"></script>
+    <script>
+        function deleteStylist(id) {
+            if (confirm('Bu kuaförü silmek istediğinizden emin misiniz?')) {
+                var form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Delete")';
+                
+                var token = document.createElement('input');
+                token.type = 'hidden';
+                token.name = '__RequestVerificationToken';
+                token.value = $('input[name="__RequestVerificationToken"]').val();
+                
+                var idInput = document.createElement('input');
+                idInput.type = 'hidden';
+                idInput.name = 'id';
+                idInput.value = id;
+                
+                form.appendChild(token);
+                form.appendChild(idInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        $(document).ready(function() {
+            $('#dataTable').DataTable({
+                language: {
+                    url: '//cdn.datatables.net/plug-ins/1.10.24/i18n/Turkish.json'
+                }
+            });
+        });
+    </script>
 }

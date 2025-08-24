@@ -1,0 +1,106 @@
+
+
+
+@model Kuafor.Web.Models.Services.ServicesIndexViewModel
+@{
+    ViewData["Title"] = "Hizmetlerimiz";
+}
+
+<div class="container py-4">
+    <div class="text-center mb-5">
+        <h1 class="display-4">Hizmetlerimiz</h1>
+        <p class="lead text-muted">Profesyonel kuaför hizmetlerimizi keşfedin</p>
+    </div>
+
+    <!-- Hizmet Kategorileri -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-center">
+                <div class="btn-group" role="group">
+                    <button type="button" class="btn btn-outline-primary active" data-category="all">Tümü</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="haircut">Saç Kesimi</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="coloring">Renklendirme</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="styling">Şekillendirme</button>
+                    <button type="button" class="btn btn-outline-primary" data-category="beard">Sakal Traşı</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hizmetler Grid -->
+    <div class="row g-4">
+        @foreach (var service in Model.Services)
+        {
+            <div class="col-md-6 col-lg-4" data-category="@service.Category?.ToLower()">
+                <div class="card h-100 service-card">
+                    <div class="card-body text-center">
+                        <div class="service-icon mb-3">
+                            <i class="@(service.IconClass ?? "bi bi-scissors") fa-3x text-primary"></i>
+                        </div>
+                        <h5 class="card-title">@service.Name</h5>
+                        <p class="card-text text-muted">@service.Description</p>
+                        <div class="service-details">
+                            <span class="badge bg-light text-dark me-2">
+                                <i class="bi bi-clock"></i> @service.DurationMin dk
+                            </span>
+                            <span class="badge bg-primary">@service.Price.ToString("0.##") ₺</span>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-0 text-center">
+                        <a href="@Url.Action("Details", new { id = service.Id })" 
+                           class="btn btn-outline-primary">
+                            Detaylar & Randevu
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Şubeler -->
+    <div class="mt-5">
+        <h3 class="text-center mb-4">Şubelerimiz</h3>
+        <div class="row g-4">
+            @foreach (var branch in Model.Branches)
+            {
+                <div class="col-md-6 col-lg-4">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">@branch.Name</h5>
+                            <p class="card-text text-muted">@branch.Address</p>
+                            <p class="card-text">
+                                <small class="text-muted">
+                                    <i class="bi bi-telephone"></i> @branch.Phone
+                                </small>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Kategori filtreleme
+        document.querySelectorAll('[data-category]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const category = this.dataset.category;
+                
+                // Aktif buton güncelle
+                document.querySelectorAll('[data-category]').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Hizmetleri filtrele
+                document.querySelectorAll('.service-card').forEach(card => {
+                    if (category === 'all' || card.dataset.category === category) {
+                        card.style.display = 'block';
+                    } else {
+                        card.style.display = 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

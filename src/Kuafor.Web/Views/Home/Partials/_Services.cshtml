@@ -1,19 +1,23 @@
-@model IEnumerable<Kuafor.Web.Models.ServiceItem>
+@model IEnumerable<Kuafor.Web.Models.Entities.Service>
 <section id="services" class="py-5">
   <div class="container">
     <h2 class="h3 fw-bold mb-4">Hizmetler</h2>
     <div class="row g-3">
-      @foreach (var s in Model)
+      @foreach (var s in Model.OrderBy(x => x.DisplayOrder))
       {
         <div class="col-6 col-md-4 col-lg-3">
           <div class="card h-100 shadow-sm service-card">
             <div class="card-body">
-              <div class="fs-1 mb-2">@Html.Raw(s.IconSvg)</div>
-              <h3 class="h6 mb-1">@s.Title</h3>
+              <div class="fs-1 mb-2"><i class="@s.IconClass"></i></div>
+              <h3 class="h6 mb-1">@s.Name</h3>
               <p class="text-muted small mb-2">@s.Description</p>
-              @if (s.PriceFrom is not null)
+              @if (s.PriceFrom.HasValue)
               {
                   <div class="fw-semibold">Başlangıç: @s.PriceFrom₺</div>
+              }
+              else if (s.Price > 0)
+              {
+                  <div class="fw-semibold">@s.Price₺</div>
               }
             </div>
           </div>

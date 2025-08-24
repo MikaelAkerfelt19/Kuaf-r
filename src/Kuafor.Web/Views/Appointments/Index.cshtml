@@ -1,0 +1,220 @@
+@model IEnumerable<Kuafor.Web.Models.Entities.Appointment>
+@{
+    ViewData["Title"] = "Randevularım";
+    Layout = "_Layout";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2>
+            <i class="fas fa-calendar-alt me-2"></i>
+            Randevularım
+        </h2>
+        <a asp-action="New" class="btn btn-primary">
+            <i class="fas fa-plus me-1"></i>
+            Yeni Randevu
+        </a>
+    </div>
+
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5">
+            <div class="mb-4">
+                <i class="fas fa-calendar-times fa-4x text-muted"></i>
+            </div>
+            <h4 class="text-muted">Henüz randevunuz bulunmamaktadır</h4>
+            <p class="text-muted mb-4">İlk randevunuzu oluşturmak için aşağıdaki butona tıklayın.</p>
+            <a asp-action="New" class="btn btn-primary btn-lg">
+                <i class="fas fa-plus me-2"></i>
+                İlk Randevunu Oluştur
+            </a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var appointment in Model.OrderBy(a => a.StartAt))
+            {
+                var statusClass = appointment.Status switch
+                {
+                    "Scheduled" => "border-primary",
+                    "Completed" => "border-success",
+                    "Cancelled" => "border-danger",
+                    "Rescheduled" => "border-warning",
+                    _ => "border-secondary"
+                };
+                
+                var statusBadge = appointment.Status switch
+                {
+                    "Scheduled" => "badge bg-primary",
+                    "Completed" => "badge bg-success",
+                    "Cancelled" => "badge bg-danger",
+                    "Rescheduled" => "badge bg-warning text-dark",
+                    _ => "badge bg-secondary"
+                };
+                
+                var statusText = appointment.Status switch
+                {
+                    "Scheduled" => "Planlandı",
+                    "Completed" => "Tamamlandı",
+                    "Cancelled" => "İptal Edildi",
+                    "Rescheduled" => "Yeniden Planlandı",
+                    _ => appointment.Status
+                };
+                
+                var isPast = appointment.StartAt < DateTime.Now;
+                var canCancel = !isPast && appointment.Status == "Scheduled" && 
+                               appointment.StartAt.Subtract(DateTime.Now).TotalHours >= 2;
+
+                <div class="col-md-6 col-lg-4 mb-4">
+                    <div class="card h-100 @statusClass">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">@appointment.Service?.Name</h6>
+                            <span class="@statusBadge">@statusText</span>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-2">
+                                <i class="fas fa-user-tie me-2 text-muted"></i>
+                                <strong>@appointment.Stylist?.FirstName @appointment.Stylist?.LastName</strong>
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-map-marker-alt me-2 text-muted"></i>
+                                @appointment.Branch?.Name
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-calendar me-2 text-muted"></i>
+                                @appointment.StartAt.ToString("dd MMMM yyyy", new System.Globalization.CultureInfo("tr-TR"))
+                            </div>
+                            <div class="mb-2">
+                                <i class="fas fa-clock me-2 text-muted"></i>
+                                @appointment.StartAt.ToString("HH:mm") - @appointment.EndAt.ToString("HH:mm")
+                            </div>
+                            @if (appointment.Service != null)
+                            {
+                                <div class="mb-2">
+                                    <i class="fas fa-tag me-2 text-muted"></i>
+                                    @appointment.Service.Price.ToString("C")
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(appointment.Notes))
+                            {
+                                <div class="mb-2">
+                                    <i class="fas fa-sticky-note me-2 text-muted"></i>
+                                    <small class="text-muted">@appointment.Notes</small>
+                                </div>
+                            }
+                        </div>
+                        <div class="card-footer bg-transparent">
+                            <div class="d-flex justify-content-between">
+                                <a asp-action="Details" asp-route-id="@appointment.Id" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    <i class="fas fa-eye me-1"></i>
+                                    Detay
+                                </a>
+                                
+                                @if (canCancel)
+                                {
+                                    <button type="button" class="btn btn-outline-danger btn-sm" 
+                                            onclick="cancelAppointment(@appointment.Id)">
+                                        <i class="fas fa-times me-1"></i>
+                                        İptal Et
+                                    </button>
+                                }
+                                else if (appointment.Status == "Scheduled" && !isPast)
+                                {
+                                    <small class="text-muted align-self-center">
+                                        İptal için 2 saat önceden haber verin
+                                    </small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        <!-- Sayfalama için yer tutucu -->
+        <nav aria-label="Randevu sayfalama" class="mt-4">
+            <ul class="pagination justify-content-center">
+                <!-- Sayfalama burada eklenebilir -->
+            </ul>
+        </nav>
+    }
+</div>
+
+<!-- İptal Onay Modal -->
+<div class="modal fade" id="cancelModal" tabindex="-1" aria-labelledby="cancelModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelModalLabel">
+                    <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                    Randevu İptali
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Bu randevuyu iptal etmek istediğinizden emin misiniz?</p>
+                <div class="mb-3">
+                    <label for="cancelReason" class="form-label">İptal Nedeni (İsteğe bağlı)</label>
+                    <textarea id="cancelReason" class="form-control" rows="3" 
+                              placeholder="İptal nedeninizi belirtebilirsiniz..."></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times me-1"></i>
+                    Vazgeç
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmCancel">
+                    <i class="fas fa-check me-1"></i>
+                    İptal Et
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let appointmentToCancel = null;
+        
+        function cancelAppointment(appointmentId) {
+            appointmentToCancel = appointmentId;
+            $('#cancelModal').modal('show');
+        }
+        
+        $('#confirmCancel').click(function() {
+            if (appointmentToCancel) {
+                const reason = $('#cancelReason').val();
+                
+                $.ajax({
+                    url: '/Appointments/Cancel',
+                    type: 'POST',
+                    data: {
+                        id: appointmentToCancel,
+                        reason: reason
+                    },
+                    success: function(result) {
+                        if (result.success) {
+                            location.reload();
+                        } else {
+                            alert('Randevu iptal edilirken hata oluştu: ' + result.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Randevu iptal edilirken hata oluştu.');
+                    }
+                });
+                
+                $('#cancelModal').modal('hide');
+            }
+        });
+        
+        // Modal kapandığında temizle
+        $('#cancelModal').on('hidden.bs.modal', function() {
+            appointmentToCancel = null;
+            $('#cancelReason').val('');
+        });
+    </script>
+}

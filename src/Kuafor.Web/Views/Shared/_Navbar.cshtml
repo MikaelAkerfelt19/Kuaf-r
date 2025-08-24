@@ -1,5 +1,5 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
-<header>
+<header data-user-authenticated="@(User?.Identity?.IsAuthenticated ?? false)">
     <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
         <div class="container justify-content-center">
             <!-- Mobile toggler + Mobil Offcanvas (yalnızca mobilde) -->
@@ -42,15 +42,22 @@
                             {
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hesap</a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profilim</a>
-                                    </li>
-                                    <li><a class="dropdown-item" asp-controller="Appointment"
-                                            asp-action="List">Randevularım</a></li>
-                                    <li>
-                                        <hr class="dropdown-divider" />
-                                    </li>
-                                    <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
-                                    </li>
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-area="Admin">
+                                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                    }
+                                    @if (User.IsInRole("Customer"))
+                                    {
+                                        <li><a class="dropdown-item" asp-controller="Home" asp-action="Index" asp-area="Customer">
+                                            <i class="fas fa-user me-2"></i>Müşteri Dashboard</a></li>
+                                        <li><a class="dropdown-item" asp-controller="Appointments" asp-action="Index" asp-area="Customer">
+                                            <i class="fas fa-calendar me-2"></i>Randevularım</a></li>
+                                        <li><hr class="dropdown-divider" /></li>
+                                    }
+                                    <li><a class="dropdown-item" asp-controller="Auth" asp-action="Logout">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap</a></li>
                                 </ul>
                             }
                             else
@@ -102,14 +109,26 @@
                         {
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hesap</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Profile">Profilim</a>
-                                </li>
-                                <li><a class="dropdown-item" asp-controller="Appointment"
-                                        asp-action="List">Randevularım</a></li>
+                                @if (User.IsInRole("Admin"))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-area="Admin">
+                                        <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                }
+                                @if (User.IsInRole("Customer"))
+                                {
+                                    <li><a class="dropdown-item" asp-controller="Home" asp-action="Index" asp-area="Customer">
+                                        <i class="fas fa-user me-2"></i>Müşteri Dashboard</a></li>
+                                    <li><a class="dropdown-item" asp-controller="Appointments" asp-action="Index" asp-area="Customer">
+                                        <i class="fas fa-calendar me-2"></i>Randevularım</a></li>
+                                    <li><hr class="dropdown-divider" /></li>
+                                }
                                 <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
-                                <li><a class="dropdown-item" asp-controller="Account" asp-action="Logout">Çıkış Yap</a>
+                                    <form method="post" asp-controller="Auth" asp-action="Logout" style="display: inline;">
+                                        <button type="submit" class="dropdown-item" style="background: none; border: none; text-align: left; width: 100%; cursor: pointer;">
+                                            <i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap
+                                        </button>
+                                    </form>
                                 </li>
                             </ul>
                         }

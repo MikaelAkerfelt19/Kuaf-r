@@ -5,7 +5,7 @@
       <h2 class="mb-3">Yeni bir görünüm için hazırsın!</h2>
       @if (Model)
       {
-          <a class="btn btn-light btn-lg" asp-controller="Randevu" asp-action="Olustur">Hemen Randevu Al</a>
+          <a class="btn btn-light btn-lg" asp-area="Customer" asp-controller="Appointments" asp-action="New">Hemen Randevu Al</a>
       }
       else
       {

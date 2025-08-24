@@ -1,0 +1,145 @@
+@model StylistDashboardViewModel
+@{
+    ViewData["Title"] = "Kuaför Paneli";
+}
+
+<div class="container py-4">
+    <h2 class="mb-4">Kuaför Paneli</h2>
+
+    @if (TempData["Success"] is string success && !string.IsNullOrEmpty(success))
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @success
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] is string error && !string.IsNullOrEmpty(error))
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @error
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+        </div>
+    }
+
+    <div class="row g-4">
+        <!-- Bugünkü Randevular -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Bugünkü Randevular</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.TodayAppointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Saat</th>
+                                        <th>Müşteri</th>
+                                        <th>Hizmet</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in Model.TodayAppointments.OrderBy(a => a.StartTime))
+                                    {
+                                        <tr>
+                                            <td>@appointment.FormattedTime</td>
+                                            <td>@appointment.CustomerName</td>
+                                            <td>@appointment.ServiceName</td>
+                                            <td>
+                                                <span class="badge @appointment.StatusBadgeClass">
+                                                    @appointment.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm">
+                                                    <a asp-area="Stylist" asp-controller="Appointments" asp-action="Details" 
+                                                       asp-route-id="@appointment.Id" class="btn btn-outline-primary">
+                                                        Detay
+                                                    </a>
+                                                    @if (appointment.Status.ToLower() == "scheduled")
+                                                    {
+                                                        <a asp-area="Stylist" asp-controller="Appointments" asp-action="Complete" 
+                                                           asp-route-id="@appointment.Id" class="btn btn-outline-success">
+                                                            Tamamla
+                                                        </a>
+                                                    }
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted">Bugün için planlanmış randevunuz bulunmuyor.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Gelecek Randevular -->
+        <div class="col-12">
+            <div class="card shadow-sm">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Gelecek Randevular</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.UpcomingAppointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Saat</th>
+                                        <th>Müşteri</th>
+                                        <th>Hizmet</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in Model.UpcomingAppointments.OrderBy(a => a.StartTime))
+                                    {
+                                        <tr>
+                                            <td>@appointment.StartTime.ToString("dd MMM ddd")</td>
+                                            <td>@appointment.FormattedTime</td>
+                                            <td>@appointment.CustomerName</td>
+                                            <td>@appointment.ServiceName</td>
+                                            <td>
+                                                <span class="badge @appointment.StatusBadgeClass">
+                                                    @appointment.Status
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <a asp-area="Stylist" asp-controller="Appointments" asp-action="Details" 
+                                                   asp-route-id="@appointment.Id" class="btn btn-sm btn-outline-primary">
+                                                    Detay
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <p class="text-muted">Gelecek günler için planlanmış randevunuz bulunmuyor.</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

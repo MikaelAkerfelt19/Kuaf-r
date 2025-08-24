@@ -16,7 +16,7 @@
         <div class="d-flex justify-content-between align-items-center">
           <a class="text-decoration-none" asp-area="Customer" asp-controller="Appointments" asp-action="Details"
             asp-route-id="@a.Id">
-            <strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)
+            <strong>@a.StartAt.ToString("dd MMM ddd HH:mm")</strong> · @a.Service.Name · @a.Stylist.FirstName @a.Stylist.LastName · (@a.Branch.Name)
           </a>
           <div class="btn-group btn-group-sm" role="group" aria-label="Aksiyonlar">
             <a class="btn btn-outline-primary" asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule"
@@ -37,7 +37,7 @@
     {
       <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer"
         asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
-        <span><strong>@a.When.ToString("dd MMM ddd HH:mm")</strong> · @a.Service · @a.Stylist · (@a.Branch)</span>
+        <span><strong>@a.StartAt.ToString("dd MMM ddd HH:mm")</strong> · @a.Service.Name · @a.Stylist.FirstName @a.Stylist.LastName · (@a.Branch.Name)</span>
         <span class="text-muted">Detay →</span>
       </a>
     }

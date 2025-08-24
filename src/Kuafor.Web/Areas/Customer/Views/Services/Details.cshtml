@@ -1,0 +1,171 @@
+@model Kuafor.Web.Models.Services.ServiceDetailsViewModel
+@{
+    ViewData["Title"] = Model.Service.Name;
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-lg-8">
+            <!-- Hizmet Detayları -->
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h1 class="h2 mb-3">@Model.Service.Name</h1>
+                            <p class="lead text-muted">@Model.Service.Description</p>
+                            
+                            <div class="row mb-4">
+                                <div class="col-6">
+                                    <h6 class="text-muted">Süre</h6>
+                                    <p class="h5">@Model.Service.DurationMin dakika</p>
+                                </div>
+                                <div class="col-6">
+                                    <h6 class="text-muted">Fiyat</h6>
+                                    <p class="h5 text-primary">@Model.Service.Price.ToString("0.##") ₺</p>
+                                </div>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.Service.Description))
+                            {
+                                <div class="mb-4">
+                                    <h6>Detaylı Açıklama</h6>
+                                    <p>@Model.Service.DetailedDescription</p>
+                                </div>
+                            }
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <div class="service-icon-large mb-3">
+                                <i class="@(Model.Service.IconClass ?? "bi bi-scissors") fa-5x text-primary"></i>
+                            </div>
+                            <a href="@Url.Action("New", "Appointments", new { serviceId = Model.Service.Id })" 
+                               class="btn btn-primary btn-lg">
+                                <i class="bi bi-calendar-plus"></i> Randevu Al
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bu Hizmeti Sunan Kuaförler -->
+            @if (Model.Stylists.Any())
+            {
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">Bu Hizmeti Sunan Kuaförler</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach (var stylist in Model.Stylists)
+                            {
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="flex-shrink-0 me-3">
+                                            <div class="stylist-avatar">
+                                                <i class="bi bi-person-circle fa-2x text-muted"></i>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@stylist.FirstName @stylist.LastName</h6>
+                                            <div class="d-flex align-items-center mb-1">
+                                                <div class="text-warning me-2">
+                                                    @for (int i = 1; i <= 5; i++)
+                                                    {
+                                                        if (i <= stylist.Rating)
+                                                        {
+                                                            <i class="bi bi-star-fill"></i>
+                                                        }
+                                                        else
+                                                        {
+                                                            <i class="bi bi-star"></i>
+                                                        }
+                                                    }
+                                                </div>
+                                                <small class="text-muted">(@stylist.Rating.ToString("0.1"))</small>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(stylist.Bio))
+                                            {
+                                                <small class="text-muted">@stylist.Bio</small>
+                                            }
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <a href="@Url.Action("New", "Appointments", new { serviceId = Model.Service.Id, stylistId = stylist.Id })" 
+                                               class="btn btn-outline-primary btn-sm">
+                                                Seç
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Benzer Hizmetler -->
+            @if (Model.RelatedServices.Any())
+            {
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Benzer Hizmetler</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row g-3">
+                            @foreach (var relatedService in Model.RelatedServices)
+                            {
+                                <div class="col-md-6">
+                                    <div class="d-flex align-items-center p-3 border rounded">
+                                        <div class="flex-shrink-0 me-3">
+                                            <i class="@(relatedService.IconClass ?? "bi bi-scissors") fa-2x text-primary"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-1">@relatedService.Name</h6>
+                                            <p class="mb-1 text-muted small">@relatedService.DurationMin dakika</p>
+                                            <p class="mb-0 text-primary fw-bold">@relatedService.Price.ToString("0.##") ₺</p>
+                                        </div>
+                                        <div class="flex-shrink-0">
+                                            <a href="@Url.Action("Details", new { id = relatedService.Id })" 
+                                               class="btn btn-outline-secondary btn-sm">
+                                                Detay
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="col-lg-4">
+            <!-- Hızlı Randevu -->
+            <div class="card sticky-top" style="top: 2rem;">
+                <div class="card-header">
+                    <h5 class="mb-0">Hızlı Randevu</h5>
+                </div>
+                <div class="card-body">
+                    <form action="@Url.Action("New", "Appointments")" method="get">
+                        <input type="hidden" name="serviceId" value="@Model.Service.Id">
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Kuaför Seçin</label>
+                            <select name="stylistId" class="form-select" required>
+                                <option value="">Kuaför seçin...</option>
+                                @foreach (var stylist in Model.Stylists)
+                                {
+                                    <option value="@stylist.Id">@stylist.FirstName @stylist.LastName</option>
+                                }
+                            </select>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-calendar-plus"></i> Randevu Al
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
