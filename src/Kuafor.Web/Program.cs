@@ -13,7 +13,7 @@ using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using DotNetEnv;
 
 
-var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
+var envPath = Path.Combine(Directory.GetCurrentDirectory(), ".env");
 Console.WriteLine($"Looking for .env file at: {envPath}");
 Console.WriteLine($"File exists: {File.Exists(envPath)}");
 
@@ -37,12 +37,6 @@ var dbServer = Env.GetString("DB_SERVER");
 var dbDatabase = Env.GetString("DB_DATABASE");
 var dbUserId = Env.GetString("DB_USER_ID");
 var dbPassword = Env.GetString("DB_PASSWORD");
-
-// Debug: Environment variables kontrol et
-Console.WriteLine($"DB_SERVER: {dbServer}");
-Console.WriteLine($"DB_DATABASE: {dbDatabase}");
-Console.WriteLine($"DB_USER_ID: {dbUserId}");
-Console.WriteLine($"DB_PASSWORD: {dbPassword}");
 
 var connectionString = $"Server={dbServer};" +
                       $"Database={dbDatabase};" +
@@ -205,11 +199,7 @@ app.MapStaticAssets();
 // Areas için genel route
 app.MapControllerRoute(
     name: "areas",
-    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
+    pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}"
 );
 
 // Varsayılan kök
