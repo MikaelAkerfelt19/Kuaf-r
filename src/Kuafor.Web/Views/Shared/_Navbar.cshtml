@@ -45,13 +45,13 @@
                                     @if (User.IsInRole("Admin"))
                                     {
                                         <li><a class="dropdown-item" asp-controller="Dashboard" asp-action="Index" asp-area="Admin">
-                                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard</a></li>
+                                            <i class="fas fa-tachometer-alt me-2"></i>Admin Paneli</a></li>
                                         <li><hr class="dropdown-divider" /></li>
                                     }
                                     @if (User.IsInRole("Customer"))
                                     {
                                         <li><a class="dropdown-item" asp-controller="Home" asp-action="Index" asp-area="Customer">
-                                            <i class="fas fa-user me-2"></i>Müşteri Dashboard</a></li>
+                                            <i class="fas fa-user me-2"></i>Müşteri Paneli</a></li>
                                         <li><a class="dropdown-item" asp-controller="Appointments" asp-action="Index" asp-area="Customer">
                                             <i class="fas fa-calendar me-2"></i>Randevularım</a></li>
                                         <li><hr class="dropdown-divider" /></li>
