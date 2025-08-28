@@ -88,18 +88,28 @@ function createAppointment() {
 
 function cancelAppointment(appointmentId) {
     if (confirm('Bu randevuyu iptal etmek istediğinizden emin misiniz?')) {
-        $.ajax({
-            url: `/api/v1/appointments/${appointmentId}/cancel`,
-            method: 'POST',
-            data: JSON.stringify({ reason: 'Admin tarafından iptal edildi' }),
-            contentType: 'application/json',
-            success: function(data) {
-                showSuccess('Randevu iptal edildi');
-                loadAppointments();
-            },
-            error: function(xhr) {
-                showError('Randevu iptal edilemedi: ' + xhr.responseText);
-            }
-        });
+        // Form oluştur ve submit et
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Admin/Appointments/Cancel';
+        
+        // CSRF token ekle
+        const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '__RequestVerificationToken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Appointment ID ekle
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = appointmentId;
+        form.appendChild(idInput);
+        
+        // Formu sayfaya ekle ve submit et
+        document.body.appendChild(form);
+        form.submit();
     }
 }
