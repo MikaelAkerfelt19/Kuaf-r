@@ -1,28 +1,70 @@
-@model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
+@model Kuafor.Web.Models.Appointments.RescheduleViewModel
 @{
     ViewData["Title"] = "Randevu Ertele";
-    var id = (int)ViewBag.RescheduleForId;
 }
 
 <div class="container py-4">
-    <h3 class="mb-3">Randevu Ertele (#@id)</h3>
-    <div class="mb-3 text-muted">Yeni bir tarih/saat seç:</div>
-
-    <div class="row g-2">
-        @foreach (var slot in Model.TimeSlots)
-        {
-            var disabled = !slot.IsAvailable;
-            <div class="col-6 col-md-3 col-lg-2">
-                <a class="btn btn-@(disabled ? "outline-secondary disabled" : "outline-primary") w-100" asp-area="Customer"
-                    asp-controller="Appointments" asp-action="Reschedule" asp-route-id="@id"
-                    asp-route-start="@slot.Start.ToString("yyyy-MM-dd HH:mm:ss")">
-                    @slot.Start.ToString("dd MMM HH:mm")
-                </a>
-            </div>
-        }
+    <h3 class="mb-3">Randevu Ertele (#@Model.AppointmentId)</h3>
+    
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5 class="card-title">Mevcut Randevu Bilgileri</h5>
+            <p class="mb-2"><strong>Hizmet:</strong> @Model.ServiceName</p>
+            <p class="mb-2"><strong>Kuaför:</strong> @Model.StylistName</p>
+            <p class="mb-0"><strong>Mevcut Tarih/Saat:</strong> @Model.CurrentStartTime.ToString("dd MMM yyyy, dddd, HH:mm")</p>
+        </div>
     </div>
 
-    <div class="mt-3">
-        <a class="btn btn-link" href="@Url.Action("Index", "Appointments")">← Randevularım</a>
+    <div class="mb-3">
+        <h5>Yeni Tarih/Saat Seçin:</h5>
+        <p class="text-muted">Aşağıdaki zaman dilimlerinden birini seçerek randevunuzu yeniden planlayabilirsiniz.</p>
     </div>
+
+    <form method="post" asp-action="Reschedule">
+        <input type="hidden" asp-for="AppointmentId" />
+        
+        <div class="row g-3 mb-4">
+            @foreach (var slot in Model.AvailableTimeSlots)
+            {
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="NewStartTime" 
+                               id="slot_@slot.Start.ToString("yyyyMMddHHmm")" 
+                               value="@slot.Start.ToString("yyyy-MM-ddTHH:mm")" 
+                               @(slot.IsAvailable ? "" : "disabled")>
+                        <label class="form-check-label" for="slot_@slot.Start.ToString("yyyyMMddHHmm")">
+                            <div class="d-flex flex-column">
+                                <span class="fw-bold">@slot.Start.ToString("dd MMM")</span>
+                                <span class="text-muted">@slot.Start.ToString("HH:mm")</span>
+                                @if (!slot.IsAvailable)
+                                {
+                                    <small class="text-danger">Dolu</small>
+                                }
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary" id="rescheduleBtn" disabled>
+                Randevuyu Yeniden Planla
+            </button>
+            <a class="btn btn-outline-secondary" href="@Url.Action("Index", "Appointments")">
+                ← Randevularım
+            </a>
+        </div>
+    </form>
 </div>
+
+@section Scripts {
+    <script>
+        // Radio button seçildiğinde submit butonunu aktif et
+        document.querySelectorAll('input[name="NewStartTime"]').forEach(radio => {
+            radio.addEventListener('change', function() {
+                document.getElementById('rescheduleBtn').disabled = false;
+            });
+        });
+    </script>
+}

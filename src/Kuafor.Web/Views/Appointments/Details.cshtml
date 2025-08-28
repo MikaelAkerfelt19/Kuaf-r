@@ -1,4 +1,5 @@
 @model Kuafor.Web.Models.Entities.Appointment
+@using Kuafor.Web.Models.Enums
 @{
     ViewData["Title"] = "Randevu Detayı";
     Layout = "_Layout";
@@ -16,20 +17,20 @@
                     @{
                         var statusBadge = Model.Status switch
                         {
-                            "Scheduled" => "badge bg-light text-primary",
-                            "Completed" => "badge bg-light text-success",
-                            "Cancelled" => "badge bg-light text-danger",
-                            "Rescheduled" => "badge bg-light text-warning",
+                            AppointmentStatus.Confirmed => "badge bg-light text-primary",
+                            AppointmentStatus.Completed => "badge bg-light text-success",
+                            AppointmentStatus.Cancelled => "badge bg-light text-danger",
+                            AppointmentStatus.Rescheduled => "badge bg-light text-warning",
                             _ => "badge bg-light text-secondary"
                         };
                         
                         var statusText = Model.Status switch
                         {
-                            "Scheduled" => "Planlandı",
-                            "Completed" => "Tamamlandı",
-                            "Cancelled" => "İptal Edildi",
-                            "Rescheduled" => "Yeniden Planlandı",
-                            _ => Model.Status
+                            AppointmentStatus.Confirmed => "Planlandı",
+                            AppointmentStatus.Completed => "Tamamlandı",
+                            AppointmentStatus.Cancelled => "İptal Edildi",
+                            AppointmentStatus.Rescheduled => "Yeniden Planlandı",
+                            _ => Model.Status.ToString()
                         };
                     }
                     <span class="@statusBadge">@statusText</span>
@@ -156,7 +157,7 @@
                             Durum Bilgisi
                         </h6>
                         <div class="ps-3">
-                            @if (Model.Status == "Scheduled")
+                            @if (Model.Status == AppointmentStatus.Confirmed)
                             {
                                 var timeUntilAppointment = Model.StartAt.Subtract(DateTime.Now);
                                 if (timeUntilAppointment.TotalDays > 1)
@@ -188,21 +189,21 @@
                                     </div>
                                 }
                             }
-                            else if (Model.Status == "Completed")
+                            else if (Model.Status == AppointmentStatus.Completed)
                             {
                                 <div class="alert alert-success">
                                     <i class="fas fa-check-circle me-2"></i>
                                     Randevunuz başarıyla tamamlandı.
                                 </div>
                             }
-                            else if (Model.Status == "Cancelled")
+                            else if (Model.Status == AppointmentStatus.Cancelled)
                             {
                                 <div class="alert alert-danger">
                                     <i class="fas fa-times-circle me-2"></i>
                                     Randevunuz iptal edildi.
                                 </div>
                             }
-                            else if (Model.Status == "Rescheduled")
+                            else if (Model.Status == AppointmentStatus.Rescheduled)
                             {
                                 <div class="alert alert-warning">
                                     <i class="fas fa-calendar-alt me-2"></i>
@@ -221,7 +222,7 @@
                         </a>
                         
                         <div>
-                            @if (Model.Status == "Scheduled" && Model.StartAt > DateTime.Now)
+                            @if (Model.Status == AppointmentStatus.Confirmed && Model.StartAt > DateTime.Now)
                             {
                                 var canCancel = Model.StartAt.Subtract(DateTime.Now).TotalHours >= 2;
                                 
@@ -241,7 +242,7 @@
                                 </button>
                             }
                             
-                            @if (Model.Status == "Completed")
+                            @if (Model.Status == AppointmentStatus.Completed)
                             {
                                 <button type="button" class="btn btn-outline-primary" 
                                         onclick="rateAppointment(@Model.Id)">

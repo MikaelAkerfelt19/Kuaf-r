@@ -1,4 +1,5 @@
 @model Kuafor.Web.Models.Appointments.AppointmentDetailViewModel
+@using Kuafor.Web.Models.Enums
 @{
     ViewData["Title"] = "Randevu Detayları";
 }
@@ -35,11 +36,11 @@
                         <div class="col-md-6">
                             <h6 class="text-muted">Durum</h6>
                             <span class="badge bg-@(Model.Appointment.Status switch {
-                                "Scheduled" => "primary",
-                                "Confirmed" => "info",
-                                "Completed" => "success",
-                                "Cancelled" => "danger",
-                                "Rescheduled" => "warning",
+                                AppointmentStatus.Confirmed => "info",
+                                AppointmentStatus.Completed => "success",
+                                AppointmentStatus.Cancelled => "danger",
+                                AppointmentStatus.Rescheduled => "warning",
+                                AppointmentStatus.Pending => "primary",
                                 _ => "secondary"
                             })">@Model.Appointment.Status</span>
                         </div>
@@ -63,7 +64,7 @@
                     <h5 class="mb-0">İşlemler</h5>
                 </div>
                 <div class="card-body">
-                    @if (Model.Appointment.Status == "Scheduled" || Model.Appointment.Status == "Confirmed")
+                    @if (Model.Appointment.Status == AppointmentStatus.Confirmed)
                     {
                         <a href="@Url.Action("Reschedule", new { id = Model.Appointment.Id })" 
                            class="btn btn-warning btn-lg w-100 mb-2">

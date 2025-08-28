@@ -3,7 +3,7 @@
     ViewData["Title"] = "Pano";
     var name = User?.Identity?.IsAuthenticated == true && !string.IsNullOrEmpty(User?.Identity?.Name)
         ? User.Identity.Name
-        : "Misafir"; // TODO: Backend sonrası gerçek ad/soyad bilgisi eklenecek.
+        : "Misafir"; 
 }
 
 <div class="container py-4">
@@ -17,7 +17,40 @@
         </div>
     </div>
 
-    <partial name="_UpcomingAppointment" model="Model?.Upcoming" />
+@if (Model.UpcomingAppointments != null && Model.UpcomingAppointments.Any())
+{
+    <div class="card mb-4">
+        <div class="card-header bg-primary text-white">
+            Yaklaşan Randevularım
+        </div>
+        <ul class="list-group list-group-flush">
+            @foreach (var appointment in Model.UpcomingAppointments)
+            {
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>@appointment.ServiceName</strong>
+                        <span class="text-muted">- @appointment.BranchName</span>
+                        <div class="small text-muted">
+                            @appointment.StartAt.ToLocalTime().ToString("dd MMMM yyyy HH:mm")
+                        </div>
+                        <div class="small text-muted">
+                            Stilist: @appointment.StylistName
+                        </div>
+                    </div>
+                    <span class="badge bg-success">
+                        @appointment.Status
+                    </span>
+                </li>
+            }
+        </ul>
+    </div>
+}
+else
+{
+    <div class="alert alert-info mb-4">
+        Yaklaşan bir randevunuz bulunmamaktadır.
+    </div>
+}
     <div class="my-4"><partial name="_QuickActions" /></div>
     <div class="mt-4"><partial name="_ServicesGrid" /></div>
 </div>

@@ -1,4 +1,5 @@
 @model IEnumerable<Kuafor.Web.Models.Entities.Appointment>
+@using Kuafor.Web.Models.Enums
 @{
     ViewData["Title"] = "Randevularım";
     Layout = "_Layout";
@@ -37,33 +38,33 @@
             {
                 var statusClass = appointment.Status switch
                 {
-                    "Scheduled" => "border-primary",
-                    "Completed" => "border-success",
-                    "Cancelled" => "border-danger",
-                    "Rescheduled" => "border-warning",
+                    AppointmentStatus.Confirmed => "border-primary",
+                    AppointmentStatus.Completed => "border-success",
+                    AppointmentStatus.Cancelled => "border-danger",
+                    AppointmentStatus.Rescheduled => "border-warning",
                     _ => "border-secondary"
                 };
                 
                 var statusBadge = appointment.Status switch
                 {
-                    "Scheduled" => "badge bg-primary",
-                    "Completed" => "badge bg-success",
-                    "Cancelled" => "badge bg-danger",
-                    "Rescheduled" => "badge bg-warning text-dark",
+                    AppointmentStatus.Confirmed => "badge bg-primary",
+                    AppointmentStatus.Completed => "badge bg-success",
+                    AppointmentStatus.Cancelled => "badge bg-danger",
+                    AppointmentStatus.Rescheduled => "badge bg-warning text-dark",
                     _ => "badge bg-secondary"
                 };
                 
                 var statusText = appointment.Status switch
                 {
-                    "Scheduled" => "Planlandı",
-                    "Completed" => "Tamamlandı",
-                    "Cancelled" => "İptal Edildi",
-                    "Rescheduled" => "Yeniden Planlandı",
-                    _ => appointment.Status
+                    AppointmentStatus.Confirmed => "Planlandı",
+                    AppointmentStatus.Completed => "Tamamlandı",
+                    AppointmentStatus.Cancelled => "İptal Edildi",
+                    AppointmentStatus.Rescheduled => "Yeniden Planlandı",
+                    _ => appointment.Status.ToString()
                 };
                 
                 var isPast = appointment.StartAt < DateTime.Now;
-                var canCancel = !isPast && appointment.Status == "Scheduled" && 
+                var canCancel = !isPast && appointment.Status == AppointmentStatus.Confirmed && 
                                appointment.StartAt.Subtract(DateTime.Now).TotalHours >= 2;
 
                 <div class="col-md-6 col-lg-4 mb-4">
@@ -120,7 +121,7 @@
                                         İptal Et
                                     </button>
                                 }
-                                else if (appointment.Status == "Scheduled" && !isPast)
+                                else if (appointment.Status == AppointmentStatus.Confirmed && !isPast)
                                 {
                                     <small class="text-muted align-self-center">
                                         İptal için 2 saat önceden haber verin

@@ -1,0 +1,131 @@
+@model Kuafor.Web.Models.Entities.Stylist
+
+@{
+    ViewData["Title"] = "Kuaför Düzenle";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Kuaför Düzenle</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Kuaför Bilgileri</h6>
+        </div>
+        <div class="card-body">
+            @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @err
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
+
+            <form method="post" asp-action="Edit">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label">Ad <span class="text-danger">*</span></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Kuaförün adı" required />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label">Soyad <span class="text-danger">*</span></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Kuaförün soyadı" required />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">E-posta</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="ornek@email.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label">Telefon</label>
+                            <input asp-for="Phone" class="form-control" placeholder="0555 123 45 67" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="BranchId" class="form-label">Şube <span class="text-danger">*</span></label>
+                            <select asp-for="BranchId" class="form-select" required>
+                                <option value="">Şube Seçin</option>
+                                @foreach (var branch in ViewBag.Branches)
+                                {
+                                    if (branch.Id == Model.BranchId)
+                                    {
+                                        <option value="@branch.Id" selected>@branch.Name</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@branch.Id">@branch.Name</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="BranchId" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Rating" class="form-label">Puan</label>
+                            <select asp-for="Rating" class="form-select">
+                                <option value="0">0 - Yeni</option>
+                                <option value="1">1 - Başlangıç</option>
+                                <option value="2">2 - Gelişmekte</option>
+                                <option value="3">3 - İyi</option>
+                                <option value="4">4 - Çok İyi</option>
+                                <option value="5">5 - Mükemmel</option>
+                            </select>
+                            <span asp-validation-for="Rating" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Bio" class="form-label">Biyografi</label>
+                    <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Kuaför hakkında kısa bilgi...">@Model.Bio</textarea>
+                    <span asp-validation-for="Bio" class="text-danger"></span>
+                    <div class="form-text">Maksimum 500 karakter</div>
+                </div>
+
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label">
+                            Kuaför aktif olarak çalışıyor
+                        </label>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                        <i class="fas fa-times"></i> İptal
+                    </a>
+                    <button type="submit" class="btn btn-warning">
+                        <i class="fas fa-save"></i> Güncelle
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

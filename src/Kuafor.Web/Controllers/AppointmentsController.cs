@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Models.Appointments;
 using System.Security.Claims;
 
@@ -101,7 +102,7 @@ public class AppointmentsController : Controller
                 StartAt = model.StartAt.ToUniversalTime(),
                 EndAt = model.StartAt.AddMinutes(model.DurationMin).ToUniversalTime(),
                 Notes = model.Notes,
-                Status = "Scheduled"
+                Status = AppointmentStatus.Confirmed
             };
 
             await _appointmentService.CreateAsync(appointment);
@@ -157,7 +158,7 @@ public class AppointmentsController : Controller
             return RedirectToAction("Index");
         }
 
-        if (appointment.Status == "Cancelled")
+        if (appointment.Status == AppointmentStatus.Cancelled)
         {
             TempData["Warning"] = "Bu randevu zaten iptal edilmiş.";
             return RedirectToAction("Index");

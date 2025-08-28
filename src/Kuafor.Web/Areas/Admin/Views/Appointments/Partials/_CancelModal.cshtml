@@ -11,7 +11,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
                 </div>
                 <div class="modal-body">
-                    <input type="hidden" asp-for="Id" />
+                    <input type="hidden" asp-for="Id" id="cancelAppointmentId" />
                     <div class="mb-3">
                         <label class="form-label">İptal Nedeni (isteğe bağlı)</label>
                         <input asp-for="Reason" class="form-control" placeholder="Kısa açıklama..." />
@@ -29,3 +29,12 @@
         </div>
     </div>
 </div>
+
+<script>
+// Cancel modal açıldığında appointment ID'yi set et
+document.getElementById('cancelModal').addEventListener('show.bs.modal', function (event) {
+    var button = event.relatedTarget;
+    var appointmentId = button.getAttribute('data-id');
+    document.getElementById('cancelAppointmentId').value = appointmentId;
+});
+</script>

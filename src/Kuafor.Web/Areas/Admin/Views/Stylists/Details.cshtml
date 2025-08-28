@@ -1,0 +1,133 @@
+@model Kuafor.Web.Models.Entities.Stylist
+
+@{
+    ViewData["Title"] = "Kuaför Detayları";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Kuaför Detayları</h1>
+        <div>
+            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning me-2">
+                <i class="fas fa-edit"></i> Düzenle
+            </a>
+            <a href="@Url.Action("Index")" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Geri Dön
+            </a>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Kişisel Bilgiler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Ad Soyad:</label>
+                                <p class="form-control-plaintext">@($"{Model.FirstName} {Model.LastName}")</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">E-posta:</label>
+                                <p class="form-control-plaintext">@(Model.Email ?? "Belirtilmemiş")</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Telefon:</label>
+                                <p class="form-control-plaintext">@(Model.Phone ?? "Belirtilmemiş")</p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold">Durum:</label>
+                                <p class="form-control-plaintext">
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge badge-success">Aktif</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge badge-secondary">Pasif</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Biyografi:</label>
+                        <p class="form-control-plaintext">@(Model.Bio ?? "Biyografi belirtilmemiş")</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">İş Bilgileri</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Şube:</label>
+                        <p class="form-control-plaintext">
+                            @if (ViewBag.Branch != null)
+                            {
+                                <span class="badge badge-info">@ViewBag.Branch.Name</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Şube atanmamış</span>
+                            }
+                        </p>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Puan:</label>
+                        <div class="d-flex align-items-center">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                if (i <= Model.Rating)
+                                {
+                                    <i class="fas fa-star text-warning"></i>
+                                }
+                                else
+                                {
+                                    <i class="far fa-star text-muted"></i>
+                                }
+                            }
+                            <span class="ml-2">@Model.Rating/5</span>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Kayıt Tarihi:</label>
+                        <p class="form-control-plaintext">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Hızlı İşlemler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning btn-sm">
+                            <i class="fas fa-edit"></i> Düzenle
+                        </a>
+                        <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-danger btn-sm">
+                            <i class="fas fa-trash"></i> Sil
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,16 @@
+<div id="calendar"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'tr',
+        events: '/Appointments/GetCalendarEvents',
+        eventClick: function(info) {
+            window.location.href = '/Appointments/Details/' + info.event.id;
+        }
+    });
+    calendar.render();
+});
+</script>

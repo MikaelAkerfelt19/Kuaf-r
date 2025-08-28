@@ -5,6 +5,30 @@
 <div class="container py-4">
     <h3 class="mb-3">Profil</h3>
     
+    @if (ViewBag.NextAppointment != null)
+    {
+        var appointment = ViewBag.NextAppointment as Kuafor.Web.Models.Entities.Appointment;
+        if (appointment != null)
+        {
+            <div class="alert alert-info mb-4">
+                <h5 class="alert-heading">Yaklaşan Randevunuz</h5>
+                <p class="mb-2">
+                    <strong>@appointment.StartAt.ToString("dd MMM yyyy, dddd, HH:mm")</strong><br>
+                    @(appointment.Service?.Name ?? "Hizmet") · @(appointment.Stylist?.FirstName ?? "") @(appointment.Stylist?.LastName ?? "")
+                    @if (appointment.Branch != null)
+                    {
+                        <span>(Şube: @appointment.Branch.Name)</span>
+                    }
+                </p>
+                <hr>
+                <p class="mb-0">
+                    <a href="@Url.Action("Details", "Appointments", new { area = "Customer", id = appointment.Id })" class="btn btn-sm btn-primary">Detayları Gör</a>
+                    <a href="@Url.Action("Reschedule", "Appointments", new { area = "Customer", id = appointment.Id })" class="btn btn-sm btn-outline-secondary">Tarihi Değiştir</a>
+                </p>
+            </div>
+        }
+    }
+    
     <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation"><button class="nav-link active" data-bs-toggle="tab" data-bs-target="#tab-identity" type="button" role="tab">Kimlik & İletişim</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-addresses" type="button" role="tab">Adresler</button></li>

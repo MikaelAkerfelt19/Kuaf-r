@@ -134,24 +134,8 @@
     <script>
         function deleteStylist(id) {
             if (confirm('Bu kuaförü silmek istediğinizden emin misiniz?')) {
-                var form = document.createElement('form');
-                form.method = 'POST';
-                form.action = '@Url.Action("Delete")';
-                
-                var token = document.createElement('input');
-                token.type = 'hidden';
-                token.name = '__RequestVerificationToken';
-                token.value = $('input[name="__RequestVerificationToken"]').val();
-                
-                var idInput = document.createElement('input');
-                idInput.type = 'hidden';
-                idInput.name = 'id';
-                idInput.value = id;
-                
-                form.appendChild(token);
-                form.appendChild(idInput);
-                document.body.appendChild(form);
-                form.submit();
+                // Doğru URL'ye yönlendir
+                window.location.href = '/Admin/Stylists/Delete/' + id;
             }
         }
 
