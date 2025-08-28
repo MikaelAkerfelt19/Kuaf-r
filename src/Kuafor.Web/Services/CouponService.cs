@@ -21,6 +21,16 @@ public class CouponService : ICouponService
             .OrderBy(c => c.Title)
             .ToListAsync();
     }
+
+    public async Task<IEnumerable<Coupon>> GetActiveForCustomerAsync(int customerId)
+    {
+        return await _context.Coupons
+            .Where(c => c.IsActive && 
+                       (c.ExpiresAt == null || c.ExpiresAt > DateTime.UtcNow) &&
+                       (c.MaxUsageCount == null || c.CurrentUsageCount < c.MaxUsageCount))
+            .OrderBy(c => c.ExpiresAt)
+            .ToListAsync();
+    }
     
     public async Task<Coupon?> GetByIdAsync(int id)
     {

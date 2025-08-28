@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Kuafor.Web.Models.Enums;
 
 namespace Kuafor.Web.Models.Entities;
 
@@ -17,7 +18,7 @@ public class Appointment
     public DateTime EndTime => EndAt;
     
     [Required, StringLength(20)]
-    public string Status { get; set; } = "Pending";
+    public AppointmentStatus Status { get; set; } = AppointmentStatus.Pending;
     
     [StringLength(500)]
     public string? Notes { get; set; }

@@ -4,29 +4,28 @@ namespace Kuafor.Web.Services.Interfaces;
 
 public interface IBranchService
 {
+    // CRUD Operations
     Task<IEnumerable<Branch>> GetAllAsync();
     Task<Branch?> GetByIdAsync(int id);
-    Task<IEnumerable<Branch>> GetActiveAsync();
-    Task<IEnumerable<Branch>> GetForHomePageAsync();
     Task<Branch> CreateAsync(Branch branch);
     Task<Branch> UpdateAsync(Branch branch);
     Task DeleteAsync(int id);
+    
+    // Query Operations
+    Task<IEnumerable<Branch>> GetActiveAsync();
+    Task<IEnumerable<Branch>> GetForHomePageAsync();
+    Task<Branch?> GetByNameAsync(string name);
+    Task<IEnumerable<Branch>> GetByCityAsync(string city);
+    
+    // Business Logic
+    Task<bool> IsActiveAsync(int id);
+    Task<int> GetStylistCountAsync(int branchId);
+    Task<int> GetAppointmentCountAsync(int branchId, DateTime? date = null);
+    Task<decimal> GetRevenueAsync(int branchId, DateTime? from = null, DateTime? to = null);
+    Task<object> GetPerformanceAsync(int branchId, DateTime? from = null, DateTime? to = null);
+    
+    // Utility Methods
     Task<bool> ExistsAsync(int id);
-    
-    // Yeni eklenen method
-    Task<List<BranchPerformance>> GetPerformanceAsync(DateTime start, DateTime end);
-    
-    // Eksik method'lar
-    Task UpdateDisplayOrderAsync(int id, int newOrder);
-    Task ToggleHomePageVisibilityAsync(int id);
-}
-
-// BranchPerformance DTO'su
-public class BranchPerformance
-{
-    public int Id { get; set; }
-    public string Name { get; set; } = string.Empty;
-    public int AppointmentCount { get; set; }
-    public decimal TotalRevenue { get; set; }
-    public double AverageRating { get; set; }
+    Task<int> GetCountAsync();
+    Task<IEnumerable<string>> GetCitiesAsync();
 }

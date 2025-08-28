@@ -1,5 +1,7 @@
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Appointments;
+using Kuafor.Web.Models.Validation;
 
 namespace Kuafor.Web.Services;
 
@@ -75,5 +77,24 @@ public class ValidationService : IValidationService
             return false;
         
         return true;
+    }
+
+    public Task<ValidationResult> ValidateAppointmentAsync(CreateAppointmentViewModel model)
+    {
+        var result = new ValidationResult();
+        
+        // 1. Temel validation
+        if (!IsValidAppointmentTime(model.StartAt, model.StartAt.AddMinutes(model.DurationMin), model.StylistId))
+        {
+            result.AddError("Randevu zamanı geçersiz");
+        }
+        
+        // 2. Minimum süre kontrolü
+        if (model.DurationMin < 15)
+        {
+            result.AddError("Minimum randevu süresi 15 dakikadır");
+        }
+        
+        return Task.FromResult(result);
     }
 }

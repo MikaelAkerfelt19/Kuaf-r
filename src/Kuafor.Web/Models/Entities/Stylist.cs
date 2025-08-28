@@ -27,6 +27,7 @@ public class Stylist
     public bool IsActive { get; set; } = true;
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
     
     // Foreign keys
     public int BranchId { get; set; }

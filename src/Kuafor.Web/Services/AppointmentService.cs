@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Services.Interfaces;
 
 namespace Kuafor.Web.Services;
@@ -8,10 +9,12 @@ namespace Kuafor.Web.Services;
 public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
+    private readonly IWorkingHoursService _workingHoursService;
     
-    public AppointmentService(ApplicationDbContext context)
+    public AppointmentService(ApplicationDbContext context, IWorkingHoursService workingHoursService)
     {
         _context = context;
+        _workingHoursService = workingHoursService;
     }
     
     public async Task<IEnumerable<Appointment>> GetAllAsync()
@@ -47,11 +50,25 @@ public class AppointmentService : IAppointmentService
             .Where(a => a.CustomerId == customerId);
 
         if (from.HasValue)
-            query = query.Where(a => a.StartTime >= from.Value);
+            query = query.Where(a => a.StartAt >= from.Value);
         if (to.HasValue)
-            query = query.Where(a => a.StartTime <= to.Value);
+            query = query.Where(a => a.StartAt <= to.Value);
 
-        return await query.OrderBy(a => a.StartTime).ToListAsync();
+        return await query.OrderBy(a => a.StartAt).ToListAsync();
+    }
+
+    public async Task<IEnumerable<Appointment>> GetUpcomingByCustomerAsync(int customerId)
+    {
+        return await _context.Appointments
+            .Include(a => a.Service)
+            .Include(a => a.Stylist)
+            .Include(a => a.Branch)
+            .Include(a => a.Customer)
+            .Where(a => a.CustomerId == customerId && 
+                       a.StartAt > DateTime.UtcNow &&
+                       a.Status != AppointmentStatus.Cancelled)
+            .OrderBy(a => a.StartAt)
+            .ToListAsync();
     }
 
     public async Task<IEnumerable<Appointment>> GetByStylistAsync(int stylistId, DateTime? from = null, DateTime? to = null)
@@ -64,11 +81,11 @@ public class AppointmentService : IAppointmentService
             .Where(a => a.StylistId == stylistId);
 
         if (from.HasValue)
-            query = query.Where(a => a.StartTime >= from.Value);
+            query = query.Where(a => a.StartAt >= from.Value);
         if (to.HasValue)
-            query = query.Where(a => a.StartTime <= to.Value);
+            query = query.Where(a => a.StartAt <= to.Value);
 
-        return await query.OrderBy(a => a.StartTime).ToListAsync();
+        return await query.OrderBy(a => a.StartAt).ToListAsync();
     }
 
     public async Task<IEnumerable<Appointment>> GetByBranchAsync(int branchId, DateTime? from = null, DateTime? to = null)
@@ -76,16 +93,15 @@ public class AppointmentService : IAppointmentService
         var query = _context.Appointments
             .Include(a => a.Customer)
             .Include(a => a.Service)
-            .Include(a => a.Stylist)
             .Include(a => a.Branch)
             .Where(a => a.BranchId == branchId);
 
         if (from.HasValue)
-            query = query.Where(a => a.StartTime >= from.Value);
+            query = query.Where(a => a.StartAt >= from.Value);
         if (to.HasValue)
-            query = query.Where(a => a.StartTime <= to.Value);
+            query = query.Where(a => a.StartAt <= to.Value);
 
-        return await query.OrderBy(a => a.StartTime).ToListAsync();
+        return await query.OrderBy(a => a.StartAt).ToListAsync();
     }
 
     public async Task<Appointment> CreateAsync(Appointment appointment)
@@ -97,7 +113,7 @@ public class AppointmentService : IAppointmentService
         }
         
         appointment.CreatedAt = DateTime.UtcNow;
-        appointment.Status = "Scheduled";
+        appointment.Status = AppointmentStatus.Confirmed;
         
         _context.Appointments.Add(appointment);
         await _context.SaveChangesAsync();
@@ -113,7 +129,7 @@ public class AppointmentService : IAppointmentService
 
         appointment.StartAt = newStartAt;
         appointment.EndAt = newStartAt.AddMinutes(30); // Default 30 minutes
-        appointment.Status = "Rescheduled";
+        appointment.Status = AppointmentStatus.Rescheduled;
         appointment.UpdatedAt = DateTime.UtcNow;
 
         await _context.SaveChangesAsync();
@@ -126,7 +142,7 @@ public class AppointmentService : IAppointmentService
         if (appointment == null)
             throw new ArgumentException("Appointment not found");
 
-        appointment.Status = "Cancelled";
+        appointment.Status = AppointmentStatus.Cancelled;
         appointment.CancellationReason = reason;
         appointment.CancelledAt = DateTime.UtcNow;
         appointment.UpdatedAt = DateTime.UtcNow;
@@ -200,9 +216,9 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
             .Where(a => a.CustomerId == customerId && 
-                       a.StartTime > now && 
-                       a.Status != "Cancelled")
-            .OrderBy(a => a.StartTime)
+                       a.StartAt > now && 
+                       a.Status != AppointmentStatus.Cancelled)
+            .OrderBy(a => a.StartAt)
             .ToListAsync();
     }
     
@@ -224,25 +240,25 @@ public class AppointmentService : IAppointmentService
     public async Task<decimal> GetTotalRevenueAsync()
     {
         return await _context.Appointments
-            .Where(a => a.Status == "Completed")
+            .Where(a => a.Status == AppointmentStatus.Completed)
             .SumAsync(a => a.TotalPrice);
     }
 
     public async Task<decimal> GetRevenueByDateAsync(DateTime date)
     {
         return await _context.Appointments
-            .Where(a => a.Status == "Completed" && 
-                       a.StartTime.Date == date.Date)
-            .SumAsync(a => a.TotalPrice);
+            .Where(a => a.Status == AppointmentStatus.Completed && 
+                       a.StartAt.Date == date.Date)
+            .SumAsync(a => a.FinalPrice);
     }
 
     public async Task<decimal> GetRevenueByDateRangeAsync(DateTime start, DateTime end)
     {
         return await _context.Appointments
-            .Where(a => a.Status == "Completed" && 
-                       a.StartTime.Date >= start.Date && 
-                       a.StartTime.Date <= end.Date)
-            .SumAsync(a => a.TotalPrice);
+            .Where(a => a.Status == AppointmentStatus.Completed && 
+                       a.StartAt.Date >= start.Date && 
+                       a.StartAt.Date <= end.Date)
+            .SumAsync(a => a.FinalPrice);
     }
 
     public async Task<IEnumerable<Appointment>> GetByCustomerIdAsync(int customerId)
@@ -253,7 +269,7 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
             .Where(a => a.CustomerId == customerId)
-            .OrderBy(a => a.StartTime)
+            .OrderBy(a => a.StartAt)
             .ToListAsync();
     }
 
@@ -265,7 +281,7 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
             .Where(a => a.StylistId == stylistId)
-            .OrderBy(a => a.StartTime)
+            .OrderBy(a => a.StartAt)
             .ToListAsync();
     }
 
@@ -277,7 +293,7 @@ public class AppointmentService : IAppointmentService
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
             .Where(a => a.BranchId == branchId)
-            .OrderBy(a => a.StartTime)
+            .OrderBy(a => a.StartAt)
             .ToListAsync();
     }
 
@@ -293,16 +309,46 @@ public class AppointmentService : IAppointmentService
 
     public async Task<bool> IsTimeSlotAvailableAsync(int stylistId, DateTime startTime, DateTime endTime, int? excludeAppointmentId = null)
     {
+        // 1. Çalışma günü kontrolü
+        var branchId = await GetStylistBranchIdAsync(stylistId);
+        if (!await _workingHoursService.IsWorkingDayAsync(branchId, startTime.Date))
+            return false;
+        
+        // 2. Çalışma saatleri kontrolü
+        if (!await _workingHoursService.IsWithinWorkingHoursAsync(branchId, startTime))
+            return false;
+        
+        // 3. Mevcut randevu çakışması kontrolü
+        var hasConflict = await HasExistingConflictAsync(stylistId, startTime, endTime, excludeAppointmentId);
+        if (hasConflict)
+            return false;
+        
+        // 4. Minimum önceden bildirim süresi (2 saat)
+        var minAdvanceTime = DateTime.UtcNow.AddHours(2);
+        if (startTime <= minAdvanceTime)
+            return false;
+        
+        return true;
+    }
+    
+    private async Task<int> GetStylistBranchIdAsync(int stylistId)
+    {
+        var stylist = await _context.Stylists.FindAsync(stylistId);
+        return stylist?.BranchId ?? 0;
+    }
+    
+    private async Task<bool> HasExistingConflictAsync(int stylistId, DateTime startTime, DateTime endTime, int? excludeAppointmentId)
+    {
         var query = _context.Appointments
             .Where(a => a.StylistId == stylistId && 
-                       a.Status != "Cancelled" &&
-                       ((a.StartTime < endTime && a.EndTime > startTime)));
+                       a.Status != AppointmentStatus.Cancelled &&
+                       ((a.StartAt < endTime && a.EndAt > startTime)));
 
         if (excludeAppointmentId.HasValue)
         {
             query = query.Where(a => a.Id != excludeAppointmentId.Value);
         }
 
-        return !await query.AnyAsync();
+        return await query.AnyAsync();
     }
 }

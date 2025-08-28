@@ -20,16 +20,55 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Appointment> Appointments { get; set; } = null!;
     public DbSet<Testimonial> Testimonials { get; set; } = null!;
-    
- 
-    // WorkingHours tablosu zaten veritabanında mevcut
     public DbSet<Payment> Payments { get; set; } = null!;
     public DbSet<Notification> Notifications { get; set; } = null!;
     public DbSet<Report> Reports { get; set; } = null!;
     
+    // Yeni eklenen DbSets
+    public DbSet<WorkingHours> WorkingHours { get; set; } = null!;
+    public DbSet<Loyalty> Loyalties { get; set; } = null!;
+    public DbSet<LoyaltyTransaction> LoyaltyTransactions { get; set; } = null!;
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
+        
+        // Configure decimal precision for all decimal properties
+        builder.Entity<Appointment>()
+            .Property(a => a.TotalPrice)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Appointment>()
+            .Property(a => a.DiscountAmount)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Appointment>()
+            .Property(a => a.FinalPrice)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Coupon>()
+            .Property(c => c.Amount)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Coupon>()
+            .Property(c => c.MinSpend)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Payment>()
+            .Property(p => p.Amount)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Service>()
+            .Property(s => s.Price)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Service>()
+            .Property(s => s.PriceFrom)
+            .HasPrecision(18, 2);
+            
+        builder.Entity<Stylist>()
+            .Property(s => s.Rating)
+            .HasPrecision(3, 1);
         
         // Coupon Code unique constraint
         builder.Entity<Coupon>()
@@ -95,5 +134,26 @@ public class ApplicationDbContext : IdentityDbContext
         //  Report index (performans için)
         builder.Entity<Report>()
             .HasIndex(r => new { r.Type, r.CreatedAt });
+
+        // WorkingHours configuration
+        builder.Entity<WorkingHours>()
+            .HasOne(w => w.Branch)
+            .WithMany()
+            .HasForeignKey(w => w.BranchId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        // Loyalty configuration
+        builder.Entity<Loyalty>()
+            .HasOne(l => l.Customer)
+            .WithMany()
+            .HasForeignKey(l => l.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
+            
+        // LoyaltyTransaction configuration
+        builder.Entity<LoyaltyTransaction>()
+            .HasOne(lt => lt.Customer)
+            .WithMany()
+            .HasForeignKey(lt => lt.CustomerId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }

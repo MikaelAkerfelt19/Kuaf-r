@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Enums;
 
 namespace Kuafor.Web.Services;
 
@@ -14,19 +15,67 @@ public class CustomerService : ICustomerService
         _context = context;
     }
     
-    public async Task<Customer?> GetByUserIdAsync(string userId)
+    public async Task<IEnumerable<Customer>> GetAllAsync()
     {
         return await _context.Customers
-            .FirstOrDefaultAsync(c => c.UserId == userId && c.IsActive);
+            .Include(c => c.Appointments)
+            .OrderBy(c => c.FirstName)
+            .ThenBy(c => c.LastName)
+            .ToListAsync();
     }
     
     public async Task<Customer?> GetByIdAsync(int id)
     {
         return await _context.Customers
-            .FirstOrDefaultAsync(c => c.Id == id && c.IsActive);
+            .Include(c => c.Appointments)
+            .FirstOrDefaultAsync(c => c.Id == id);
     }
     
-    public async Task<IEnumerable<Customer>> GetAllAsync()
+    public async Task<Customer> CreateAsync(Customer customer)
+    {
+        customer.CreatedAt = DateTime.UtcNow;
+        _context.Customers.Add(customer);
+        await _context.SaveChangesAsync();
+        return customer;
+    }
+    
+    public async Task<Customer> UpdateAsync(Customer customer)
+    {
+        customer.UpdatedAt = DateTime.UtcNow;
+        _context.Customers.Update(customer);
+        await _context.SaveChangesAsync();
+        return customer;
+    }
+    
+    public async Task DeleteAsync(int id)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer != null)
+        {
+            _context.Customers.Remove(customer);
+            await _context.SaveChangesAsync();
+        }
+    }
+    
+    public async Task<Customer?> GetByUserIdAsync(string userId)
+    {
+        return await _context.Customers
+            .FirstOrDefaultAsync(c => c.UserId == userId);
+    }
+    
+    public async Task<Customer?> GetByEmailAsync(string email)
+    {
+        return await _context.Customers
+            .FirstOrDefaultAsync(c => c.Email == email);
+    }
+    
+    public async Task<Customer?> GetByPhoneAsync(string phone)
+    {
+        return await _context.Customers
+            .FirstOrDefaultAsync(c => c.Phone == phone);
+    }
+    
+    public async Task<IEnumerable<Customer>> GetActiveAsync()
     {
         return await _context.Customers
             .Where(c => c.IsActive)
@@ -35,36 +84,71 @@ public class CustomerService : ICustomerService
             .ToListAsync();
     }
     
-    public async Task<Customer> CreateAsync(Customer customer)
+    public async Task<IEnumerable<Customer>> GetByBranchAsync(int branchId)
     {
-        customer.CreatedAt = DateTime.UtcNow;
-        customer.IsActive = true;
-        
-        _context.Customers.Add(customer);
-        await _context.SaveChangesAsync();
-        
-        return customer;
+        return await _context.Customers
+            .Where(c => c.IsActive && c.Appointments.Any(a => a.BranchId == branchId))
+            .OrderBy(c => c.FirstName)
+            .ThenBy(c => c.LastName)
+            .ToListAsync();
     }
     
-    public async Task<Customer> UpdateAsync(Customer customer)
+    public async Task<bool> IsActiveAsync(int id)
     {
-        var existing = await _context.Customers.FindAsync(customer.Id);
-        if (existing == null)
-            throw new InvalidOperationException("Customer not found");
-            
-        existing.FirstName = customer.FirstName;
-        existing.LastName = customer.LastName;
-        existing.Phone = customer.Phone;
-        existing.Email = customer.Email;
-        existing.DateOfBirth = customer.DateOfBirth;
+        var customer = await _context.Customers.FindAsync(id);
+        return customer?.IsActive ?? false;
+    }
+    
+    public async Task<int> GetAppointmentCountAsync(int customerId)
+    {
+        return await _context.Appointments
+            .Where(a => a.CustomerId == customerId)
+            .CountAsync();
+    }
+    
+    public async Task<decimal> GetTotalSpentAsync(int customerId)
+    {
+        return await _context.Appointments
+            .Where(a => a.CustomerId == customerId && a.Status == AppointmentStatus.Completed)
+            .SumAsync(a => a.FinalPrice);
+    }
+    
+    public async Task<DateTime?> GetLastVisitAsync(int customerId)
+    {
+        var lastAppointment = await _context.Appointments
+            .Where(a => a.CustomerId == customerId && a.Status == AppointmentStatus.Completed)
+            .OrderByDescending(a => a.StartAt)
+            .FirstOrDefaultAsync();
         
-        await _context.SaveChangesAsync();
-        
-        return existing;
+        return lastAppointment?.StartAt;
+    }
+    
+    public async Task<bool> HasUpcomingAppointmentsAsync(int customerId)
+    {
+        var now = DateTime.UtcNow;
+        return await _context.Appointments
+            .AnyAsync(a => a.CustomerId == customerId && 
+                          a.StartAt > now && 
+                          a.Status != AppointmentStatus.Cancelled);
     }
     
     public async Task<bool> ExistsAsync(int id)
     {
-        return await _context.Customers.AnyAsync(c => c.Id == id && c.IsActive);
+        return await _context.Customers.AnyAsync(c => c.Id == id);
+    }
+    
+    public async Task<bool> ExistsByUserIdAsync(string userId)
+    {
+        return await _context.Customers.AnyAsync(c => c.UserId == userId);
+    }
+    
+    public async Task<bool> ExistsByEmailAsync(string email)
+    {
+        return await _context.Customers.AnyAsync(c => c.Email == email);
+    }
+    
+    public async Task<int> GetCountAsync()
+    {
+        return await _context.Customers.CountAsync();
     }
 }

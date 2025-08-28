@@ -5,6 +5,7 @@ namespace Kuafor.Web.Services.Interfaces;
 public interface ICouponService
 {
     Task<IEnumerable<Coupon>> GetAllAsync();
+    Task<IEnumerable<Coupon>> GetActiveForCustomerAsync(int customerId);
     Task<Coupon?> GetByIdAsync(int id);
     Task<Coupon> CreateAsync(Coupon coupon);
     Task<Coupon> UpdateAsync(Coupon coupon);
