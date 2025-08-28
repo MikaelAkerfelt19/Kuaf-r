@@ -26,6 +26,9 @@ public class ServicesController : Controller
     }
 
     // GET: /Customer/Services
+    [HttpGet]
+    [Route("")]
+    [Route("Index")]
     public async Task<IActionResult> Index()
     {
         var services = await _serviceService.GetActiveAsync();
@@ -41,7 +44,8 @@ public class ServicesController : Controller
     }
 
     // GET: /Customer/Services/Details/5
-    [Route("Detail/{id}")]
+    [HttpGet]
+    [Route("Details/{id:int}")]
     public async Task<IActionResult> Details(int id)
     {
         var service = await _serviceService.GetByIdAsync(id);
@@ -65,6 +69,8 @@ public class ServicesController : Controller
     }
 
     // GET: /Customer/Services/Search
+    [HttpGet]
+    [Route("Search")]
     public async Task<IActionResult> Search(string q, int? categoryId, decimal? minPrice, decimal? maxPrice)
     {
         var services = await _serviceService.SearchAsync(q, categoryId, minPrice, maxPrice);
@@ -82,6 +88,7 @@ public class ServicesController : Controller
     }
 
     // GET: /Services (Global route - Area olmadan)
+    [HttpGet]
     [Route("/[controller]")]
     [AllowAnonymous]
     public async Task<IActionResult> GlobalIndex()
@@ -98,8 +105,9 @@ public class ServicesController : Controller
         return View("Index", vm);
     }
 
-    // GET: /Services/Detail/{id} (Global route - Area olmadan)
-    [Route("/[controller]/Detail/{id}")]
+    // GET: /Services/Details/{id} (Global route - Area olmadan)
+    [HttpGet]
+    [Route("/[controller]/Details/{id:int}")]
     [AllowAnonymous]
     public async Task<IActionResult> GlobalDetails(int id)
     {

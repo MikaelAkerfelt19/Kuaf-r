@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Stylist;
+using Kuafor.Web.Models.Enums;
 using System.Security.Claims;
 
 namespace Kuafor.Web.Areas.Stylist.Controllers
@@ -49,7 +50,7 @@ namespace Kuafor.Web.Areas.Stylist.Controllers
                 ServiceName = appointment.Service?.Name ?? "Bilinmeyen Hizmet",
                 StartTime = appointment.StartAt.ToLocalTime(),
                 Duration = appointment.Service?.DurationMin ?? 30,
-                Status = appointment.Status,
+                Status = appointment.Status.ToString(),
                 Notes = appointment.Notes
             };
 
@@ -75,7 +76,7 @@ namespace Kuafor.Web.Areas.Stylist.Controllers
                     return RedirectToAction("Index", "Dashboard");
                 }
 
-                appointment.Status = "Completed";
+                appointment.Status = AppointmentStatus.Completed;
                 await _appointmentService.UpdateAsync(appointment);
 
                 TempData["Success"] = "Randevu başarıyla tamamlandı";
@@ -111,6 +112,12 @@ namespace Kuafor.Web.Areas.Stylist.Controllers
 
             var stylist = await _stylistService.GetByUserIdAsync(userId);
             return stylist?.Id ?? 0;
+        }
+
+        // Bu hizmeti sunan kuaförleri bul
+        public async Task<IEnumerable<Models.Entities.Stylist>> GetByServiceAsync(int serviceId)
+        {
+            return await _stylistService.GetByServiceAsync(serviceId);
         }
     }
 }

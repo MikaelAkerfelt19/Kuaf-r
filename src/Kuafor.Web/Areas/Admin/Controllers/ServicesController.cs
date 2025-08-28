@@ -80,8 +80,19 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            await _serviceService.DeleteAsync(id);
-            TempData["Success"] = "Hizmet başarıyla silindi.";
+            try
+            {
+                await _serviceService.DeleteAsync(id);
+                TempData["Success"] = "Hizmet başarıyla silindi.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = $"Hizmet silinemedi: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Beklenmeyen hata: {ex.Message}";
+            }
             return RedirectToAction(nameof(Index));
         }
 
@@ -90,6 +101,20 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         {
             await _serviceService.ToggleHomePageVisibilityAsync(id);
             return Json(new { success = true });
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            try
+            {
+                await _serviceService.ToggleActiveAsync(id);
+                return Json(new { success = true });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
 
         [HttpPost]

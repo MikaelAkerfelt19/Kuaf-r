@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Appointments;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -71,7 +72,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     CustomerId = customerId,
                     StartAt = start.ToUniversalTime(),
                     EndAt = start.AddMinutes(service.DurationMin).ToUniversalTime(),
-                    Status = "Scheduled"
+                    Status = AppointmentStatus.Confirmed
                 };
 
                 var created = await _appointmentService.CreateAsync(appointment);
@@ -112,8 +113,8 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             
             var appointments = await _appointmentService.GetByCustomerAsync(customerId);
             
-            var upcoming = appointments.Where(a => a.StartAt > DateTime.UtcNow && a.Status != "Cancelled").OrderBy(a => a.StartAt);
-            var past = appointments.Where(a => a.StartAt <= DateTime.UtcNow || a.Status == "Cancelled").OrderByDescending(a => a.StartAt);
+            var upcoming = appointments.Where(a => a.StartAt > DateTime.UtcNow && a.Status != AppointmentStatus.Cancelled).OrderBy(a => a.StartAt);
+            var past = appointments.Where(a => a.StartAt <= DateTime.UtcNow || a.Status == AppointmentStatus.Cancelled).OrderByDescending(a => a.StartAt);
 
             ViewBag.Upcoming = upcoming;
             ViewBag.Past = past;
@@ -141,6 +142,12 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             var service = await _serviceService.GetByIdAsync(appointment.ServiceId);
             var stylist = await _stylistService.GetByIdAsync(appointment.StylistId);
             var branch = await _branchService.GetByIdAsync(appointment.BranchId);
+
+            if (service == null || stylist == null || branch == null)
+            {
+                TempData["Error"] = "Randevu bilgileri eksik";
+                return RedirectToAction("Index");
+            }
 
             var vm = new AppointmentDetailViewModel
             {
@@ -170,7 +177,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 return RedirectToAction("Index");
             }
 
-            if (appointment.Status == "Cancelled")
+            if (appointment.Status == AppointmentStatus.Cancelled)
             {
                 TempData["Error"] = "İptal edilmiş randevu yeniden planlanamaz";
                 return RedirectToAction("Index");
@@ -185,8 +192,8 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 CurrentStartTime = appointment.StartAt,
                 CurrentEndTime = appointment.EndAt,
                 ServiceName = (await _serviceService.GetByIdAsync(appointment.ServiceId))?.Name ?? "",
-                StylistName = (await _stylistService.GetByIdAsync(appointment.StylistId))?.FirstName + " " + 
-                             (await _stylistService.GetByIdAsync(appointment.StylistId))?.LastName ?? "",
+                StylistName = ((await _stylistService.GetByIdAsync(appointment.StylistId))?.FirstName ?? "") + " " + 
+                             ((await _stylistService.GetByIdAsync(appointment.StylistId))?.LastName ?? ""),
                 AvailableTimeSlots = availableSlots
             };
 
@@ -231,7 +238,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 // Randevuyu güncelle
                 appointment.StartAt = model.NewStartTime.ToUniversalTime();
                 appointment.EndAt = model.NewStartTime.AddMinutes((int)(appointment.EndAt - appointment.StartAt).TotalMinutes).ToUniversalTime();
-                appointment.Status = "Rescheduled";
+                appointment.Status = AppointmentStatus.Rescheduled;
                 appointment.UpdatedAt = DateTime.UtcNow;
 
                 await _appointmentService.UpdateAsync(appointment);

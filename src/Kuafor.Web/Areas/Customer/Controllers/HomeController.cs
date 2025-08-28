@@ -25,20 +25,21 @@ namespace Kuafor.Web.Areas.Customer.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var customerId = GetCurrentCustomerId();
+            var customerId = await GetCurrentCustomerIdAsync();
             var upcomingAppointments = await _appointmentService.GetUpcomingAsync(customerId);
 
             var vm = new CustomerDashboardViewModel
             {
-                Upcoming = upcomingAppointments.Any() ? new UpcomingAppointmentVm
+                UpcomingAppointments = upcomingAppointments.Select(a => new AppointmentSummaryVm
                 {
-                    HasAppointment = true,
-                    StartTime = upcomingAppointments.First().StartAt,
-                    ServiceName = upcomingAppointments.First().Service.Name,
-                    StylistName = $"{upcomingAppointments.First().Stylist.FirstName} {upcomingAppointments.First().Stylist.LastName}",
-                    Branch = upcomingAppointments.First().Branch.Name,
-                    AppointmentId = upcomingAppointments.First().Id
-                } : new UpcomingAppointmentVm { HasAppointment = false },
+                    Id = a.Id,
+                    StartAt = a.StartAt,
+                    EndAt = a.EndAt,
+                    ServiceName = a.Service.Name,
+                    StylistName = $"{a.Stylist.FirstName} {a.Stylist.LastName}",
+                    BranchName = a.Branch.Name,
+                    Status = a.Status.ToString()
+                }).ToList(),
                 TotalAppointments = upcomingAppointments.Count()
             };
 
@@ -53,12 +54,6 @@ namespace Kuafor.Web.Areas.Customer.Controllers
 
             var customer = await _customerService.GetByUserIdAsync(userId);
             return customer?.Id ?? 0;
-        }
-
-        private int GetCurrentCustomerId()
-        {
-            // Geçici olarak - register sonrası customer oluşturulacak
-            return 1;
         }
     }
 }

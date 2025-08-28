@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Admin.Appointments;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Enums;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
@@ -30,6 +31,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Appointments
+        [HttpGet]
+        [Route("")]
         public async Task<IActionResult> Index()
         {
             var appointments = await _appointmentService.GetAllAsync();
@@ -40,26 +43,30 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             var customers = await _customerService.GetAllAsync();
             var branches = await _branchService.GetAllAsync();
 
-            var vm = appointments.Select(a => new AppointmentDto
+            var appointmentDtos = appointments.Select(a => new AppointmentDto
             {
                 Id = a.Id,
                 StartAt = a.StartAt,
                 DurationMin = 30, // Default duration
                 CustomerName = $"{a.Customer?.FirstName} {a.Customer?.LastName}",
                 ServiceName = a.Service?.Name ?? "",
-                Status = a.Status,
+                Status = a.Status.ToString(),
                 Price = a.TotalPrice,
                 Note = a.Notes,
                 BranchId = a.BranchId,
                 StylistId = a.StylistId
             }).ToList();
 
-            ViewBag.Services = services;
-            ViewBag.Stylists = stylists;
-            ViewBag.Customers = customers;
-            ViewBag.Branches = branches;
+            // AppointmentsPageViewModel oluştur
+            var viewModel = new AppointmentsPageViewModel
+            {
+                Items = appointmentDtos,
+                Filter = new AppointmentFilter(), // Varsayılan filtre
+                BranchNames = branches.ToDictionary(b => b.Id, b => b.Name),
+                StylistNames = stylists.ToDictionary(s => s.Id, s => $"{s.FirstName} {s.LastName}")
+            };
 
-            return View(vm);
+            return View(viewModel);
         }
 
         // POST: /Admin/Appointments/Reschedule
@@ -114,7 +121,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 var appointment = await _appointmentService.GetByIdAsync(id);
                 if (appointment != null)
                 {
-                    appointment.Status = status;
+                    appointment.Status = Enum.Parse<AppointmentStatus>(status);
                     appointment.UpdatedAt = DateTime.UtcNow;
                     await _appointmentService.UpdateAsync(appointment);
                     TempData["Success"] = "Randevu durumu güncellendi.";
@@ -129,6 +136,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Appointments/Details/5
+        [HttpGet]
+        [Route("Details/{id:int}")] 
         public async Task<IActionResult> Details(int id)
         {
             var appointment = await _appointmentService.GetByIdAsync(id);
@@ -141,6 +150,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Appointments/Edit/5
+        [HttpGet]
+        [Route("Edit/{id:int}")] 
         public async Task<IActionResult> Edit(int id)
         {
             var appointment = await _appointmentService.GetByIdAsync(id);

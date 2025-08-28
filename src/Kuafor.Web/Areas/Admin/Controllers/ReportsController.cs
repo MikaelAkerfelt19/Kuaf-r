@@ -41,21 +41,14 @@ public class ReportsController : Controller
             WeeklyRevenue = await _appointmentService.GetRevenueByDateRangeAsync(weekStart, weekEnd),
             
             // Top stylists - gerçek veritabanından
-            TopStylistsByWeek = (await _stylistService.GetTopStylistsByWeekAsync(weekStart, weekEnd))
-                .Select(s => new Models.Admin.Reports.TopStylist { Name = s.Name, Count = s.AppointmentCount }).ToList(),
-            TopStylistsByMonth = (await _stylistService.GetTopStylistsByMonthAsync(today.Year, today.Month))
-                .Select(s => new Models.Admin.Reports.TopStylist { Name = s.Name, Count = s.AppointmentCount }).ToList(),
+            TopStylistsByWeek = (await _stylistService.GetTopStylistsByWeekAsync(5))
+                .Select(s => new Models.Admin.Reports.TopStylist { Name = $"{s.FirstName} {s.LastName}", Count = 0 }).ToList(),
+            TopStylistsByMonth = (await _stylistService.GetTopStylistsByMonthAsync(5))
+                .Select(s => new Models.Admin.Reports.TopStylist { Name = $"{s.FirstName} {s.LastName}", Count = 0 }).ToList(),
             
             // Branch performance - gerçek veritabanından
-            BranchPerformance = (await _branchService.GetPerformanceAsync(weekStart, weekEnd))
-                .Select(b => new Models.Admin.Reports.BranchPerformance
-                {
-                    Id = b.Id,
-                    Name = b.Name,
-                    AppointmentCount = b.AppointmentCount,
-                    TotalRevenue = b.TotalRevenue,
-                    AverageRating = b.AverageRating
-                }).ToList()
+            BranchPerformance = new List<Models.Admin.Reports.BranchPerformance>()
+            // TODO: Implement branch performance logic
         };
 
         return View(vm);

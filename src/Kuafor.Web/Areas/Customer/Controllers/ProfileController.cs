@@ -1,32 +1,82 @@
 using Kuafor.Web.Models.Profile;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
+using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Entities;
 
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
     [Area("Customer")]
+    [Authorize]
     public class ProfileController : Controller
     {
-        public IActionResult Index()
+        private readonly ICustomerService _customerService;
+        private readonly IAppointmentService _appointmentService;
+        private readonly IBranchService _branchService;
+        private readonly IStylistService _stylistService;
+        private readonly ICouponService _couponService;
+        private readonly ILoyaltyService _loyaltyService;
+
+        public ProfileController(
+            ICustomerService customerService,
+            IAppointmentService appointmentService,
+            IBranchService branchService,
+            IStylistService stylistService,
+            ICouponService couponService,
+            ILoyaltyService loyaltyService)
         {
+            _customerService = customerService;
+            _appointmentService = appointmentService;
+            _branchService = branchService;
+            _stylistService = stylistService;
+            _couponService = couponService;
+            _loyaltyService = loyaltyService;
+        }
+
+        public async Task<IActionResult> Index()
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (string.IsNullOrEmpty(userId))
+            {
+                return RedirectToAction("Login", "Auth", new { area = "" });
+            }
+
+            var customer = await _customerService.GetByUserIdAsync(userId);
+            if (customer == null)
+            {
+                return RedirectToAction("Login", "Auth", new { area = "" });
+            }
+
+            // Yaklaşan randevuları al
+            var upcomingAppointments = await _appointmentService.GetUpcomingByCustomerAsync(customer.Id);
+            var nextAppointment = upcomingAppointments.FirstOrDefault();
+
+            // Şube ve kuaför seçeneklerini al
+            var branches = await _branchService.GetActiveAsync();
+            var stylists = await _stylistService.GetActiveAsync();
+
+            // Müşteri kuponlarını al
+            var customerCoupons = await _couponService.GetActiveForCustomerAsync(customer.Id);
+
+            // Loyalty bilgilerini al
+            var loyalty = await _loyaltyService.GetByCustomerIdAsync(customer.Id);
+
             var vm = new ProfilePageViewModel
             {
                 Identity = new IdentityViewModel
                 {
-                    FullName = User?.Identity?.Name ?? "Misafir Kullanıcı",
-                    DisplayName = "feas",
-                    BirthDate = new DateTime(2003, 7, 15),
-                    Email = "user@example.com",
-                    Phone = "+90 5xx xxx xx xx",
-                    WhatsappOptIn = true,
+                    FullName = $"{customer.FirstName} {customer.LastName}",
+                    DisplayName = customer.FirstName,
+                    BirthDate = customer.DateOfBirth,
+                    Email = customer.Email ?? string.Empty,
+                    Phone = customer.Phone ?? string.Empty,
+                    WhatsappOptIn = true, 
                     AvatarUrl = "/images/avatars/default.png"
                 },
                 Addresses = new AddressesViewModel
                 {
-                    Items =
-                    {
-                        new AddressItemVm(1,"Ev","Boğaçhan Sk. No:10/3","İstanbul","Kadıköy","34710",true),
-                        new AddressItemVm(2,"İş","Rıhtım Cd. No:21","İstanbul","Kadıköy","34716",false),
-                    }
+                    Items = new List<AddressItemVm>() // Şimdilik boş, gelecekte Address entity eklenecek
                 },
                 Notifications = new NotificationsViewModel
                 {
@@ -42,31 +92,27 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 },
                 Preferences = new PreferencesViewModel
                 {
-                    PreferredBranch = "Merkez",
-                    PreferredStylist = "Ahmet Özdoğan",
+                    PreferredBranch = branches.FirstOrDefault()?.Name ?? "Merkez",
+                    PreferredStylist = stylists.FirstOrDefault()?.FirstName + " " + stylists.FirstOrDefault()?.LastName ?? "Ahmet Özdoğan",
                     PreferredTimeBand = "Hafta içi 18:00-21:00",
                     FlexMinutes = 15,
-                    BranchOptions = { "Merkez", "İldem", "Talas" },
-                    StylistOptions = { "Ahmet Özdoğan", "Ahmet Ülker", "İbrahim Taşkın" },
-                    TimeBandOptions =
+                    BranchOptions = branches.Select(b => b.Name).ToList(),
+                    StylistOptions = stylists.Select(s => $"{s.FirstName} {s.LastName}").ToList(),
+                    TimeBandOptions = new List<string>
                     {
                         "Hafta içi 10:00-13:00",
                         "Hafta içi 13:00-17:00",
                         "Hafta içi 18:00-21:00",
                         "Hafta sonu 10:00-14:00"
                     },
-                    QuickRebooks = {
-                                        // (<serviceId>, <stylistId>, <label>)
-                        new QuickRebookItem(1, 10, "Saç Kesimi · Ahmet Ö."),
-                        new QuickRebookItem(3, 12, "Bakım & Spa · İbrahim T."),
-                    }
+                    QuickRebooks = new List<QuickRebookItem>() // Şimdilik boş
                 },
                 Loyalty = new LoyaltyViewModel
                 {
-                    Tier = "Gümüş",
-                    Points = 120,
+                    Tier = loyalty?.Tier ?? "Bronz",
+                    Points = loyalty?.Points ?? 0,
                     NextTierPoints = 200,
-                    Benefits =
+                    Benefits = new List<string>
                     {
                         "Randevu hatırlatmada öncelik",
                         "Seçili hizmetlerde %5 indirim",
@@ -75,20 +121,16 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 },
                 Coupons = new CouponsViewModel
                 {
-                    Active =
-                    {
-                        new CouponVm("FEAS10","Hoş Geldin İndirimi","İlk randevunda geçerli",
-                                     DateTime.Today.AddDays(30),  null, "%10", false),
-                        new CouponVm("SPA50","Bakım Kampanyası","Bakım & Spa için",
-                                     DateTime.Today.AddDays(10),  300m, "₺50", false),
-                    },
-                    Expired =
-                    {
-                        new CouponVm("SUMMER15","Yaz İndirimi", "Belirli hizmetlerde",
-                                     DateTime.Today.AddDays(-3), null, "%15", false),
-                        new CouponVm("USED20","Kullanılmış Kupon", "Geçmiş sipariş",
-                                     DateTime.Today.AddDays(5),  null, "%20", true)
-                    }
+                    Active = customerCoupons.Select(c => new CouponVm(
+                        c.Code,
+                        c.Title,
+                        c.DiscountType == "Percent" ? $"%{c.Amount} indirim" : $"₺{c.Amount} indirim",
+                        c.ExpiresAt ?? DateTime.Today.AddMonths(1),
+                        c.MinSpend,
+                        c.DiscountType == "Percent" ? $"%{c.Amount}" : $"₺{c.Amount}",
+                        false
+                    )).ToList(),
+                    Expired = new List<CouponVm>()
                 },
                 Security = new SecurityViewModel
                 {
@@ -96,8 +138,8 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     TwoFactor = new TwoFactorSetupModel
                     {
                         IsEnabled = false,
-                        SecretKey = "JBSWY3DPEHPK3PXP", // MOCK
-                        OtpauthUri = "otpauth://totp/xxx-hairdresser:user@example.com?secret=JBSWY3DPEHPK3PXP&issuer=xxx-hairdresser",
+                        SecretKey = "JBSWY3DPEHPK3PXP",
+                        OtpauthUri = $"otpauth://totp/xxx-hairdresser:{customer.Email ?? "customer"}?secret=JBSWY3DPEHPK3PXP&issuer=xxx-hairdresser",
                         RecoveryCodes = new List<string>
                         {
                             "5XK2-7QHT", "9LMP-2CVA", "R7QZ-3JTY", "Z9ND-4HKK",
@@ -106,28 +148,22 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     },
                     ActiveSessions = new List<ActiveSessionVm>
                     {
-                        new("s_cur","Windows · PC","Chrome 126", DateTime.Now.AddMinutes(-5), true),
-                        new("s_1","iPhone 14","Safari iOS", DateTime.Now.AddHours(-2), false),
-                        new("s_2","MacBook Pro","Safari macOS", DateTime.Now.AddDays(-1), false),
+                        new("s_cur","Windows · PC","Chrome 126", DateTime.Now.AddMinutes(-5), true)
                     }
                 },
                 Payments = new PaymentsViewModel
                 {
-                    Cards =
-                    {
-                        new SavedCardVm(1, "1234-****-****-5678", "John Doe", 12, 2025, true),
-                        new SavedCardVm(2, "2345-****-****-6789", "Jane Doe", 11, 2024, false)
-                    },
+                    Cards = new List<SavedCardVm>(), // Şimdilik boş, gelecekte Payment entity eklenecek
                     Billing = new BillingInfoViewModel
                     {
                         InvoiceType = "Bireysel",
-                        FullNameOrCompany = "John Doe",
-                        TaxNumber = "12345678901",
-                        AddressLine1 = "123 Main St",
-                        City = "Istanbul",
-                        District = "Kadikoy",
-                        Zip = "34700",
-                        Email = "john.doe@example.com",
+                        FullNameOrCompany = $"{customer.FirstName} {customer.LastName}",
+                        TaxNumber = "",
+                        AddressLine1 = "",
+                        City = "",
+                        District = "",
+                        Zip = "",
+                        Email = customer.Email ?? string.Empty,
                         EInvoiceOptIn = true
                     }
                 },
@@ -143,9 +179,14 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     LastExportFileName = "export_2023-03-15.json"
                 }
             };
+
+            // Yaklaşan randevu bilgisini ViewBag'e ekle
+            if (nextAppointment != null)
+            {
+                ViewBag.NextAppointment = nextAppointment;
+            }
+
             return View(vm);
         }
-
-        // Security action'ı kaldırıldı - yanlış model kullanımı nedeniyle
     }
 }

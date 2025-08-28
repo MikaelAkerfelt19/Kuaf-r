@@ -8,7 +8,9 @@ namespace Kuafor.Web.Areas.Admin.Controllers
     [Area("Admin")]
     public class BranchesController : Controller
     {
-        private readonly IBranchService _branchService;        
+        private readonly IBranchService _branchService;
+        private readonly object _lock = new object();
+        private static List<BranchDto> _branches = new List<BranchDto>();
 
         public BranchesController(IBranchService branchService)
         {
@@ -23,8 +25,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             {
                 Id = b.Id,
                 Name = b.Name,
-                Address = b.Address?.Trim() ?? string.Empty,
-                Phone = b.Phone?.Trim() ?? string.Empty,
+                Address = b.Address ?? string.Empty,
+                Phone = b.Phone ?? string.Empty,
                 IsActive = b.IsActive
             }).OrderBy(b => b.Id).ToList();
             
@@ -115,9 +117,13 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 await _branchService.DeleteAsync(id);
                 TempData["Success"] = "Şube silindi.";
             }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = $"Şube silinemedi: {ex.Message}";
+            }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Şube silinirken hata oluştu: {ex.Message}";
+                TempData["Error"] = $"Beklenmeyen hata: {ex.Message}";
             }
 
             return Redirect("/Admin/Branches");

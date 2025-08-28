@@ -19,6 +19,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Stylists
+        [HttpGet]
+        [Route("")]
         public async Task<IActionResult> Index()
         {
             var stylists = await _stylistService.GetAllAsync();
@@ -47,6 +49,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Stylists/Details/5
+        [HttpGet]
+        [Route("Details/{id:int}")]
         public async Task<IActionResult> Details(int id)
         {
             var stylist = await _stylistService.GetByIdAsync(id);
@@ -62,6 +66,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Stylists/Create
+        [HttpGet]
+        [Route("Create")]
         public async Task<IActionResult> Create()
         {
             var branches = await _branchService.GetAllAsync();
@@ -71,6 +77,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         // POST: /Admin/Stylists/Create
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(global::Kuafor.Web.Models.Entities.Stylist stylist)
         {
@@ -94,6 +101,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Stylists/Edit/5
+        [HttpGet]
+        [Route("Edit/{id:int}")]
         public async Task<IActionResult> Edit(int id)
         {
             var stylist = await _stylistService.GetByIdAsync(id);
@@ -110,6 +119,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         // POST: /Admin/Stylists/Edit/5
         [HttpPost]
+        [Route("Edit/{id:int}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int id, global::Kuafor.Web.Models.Entities.Stylist stylist)
         {
@@ -138,19 +148,38 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             return View(stylist);
         }
 
-        // POST: /Admin/Stylists/Delete/5
-        [HttpPost]
-        [ValidateAntiForgeryToken]
+        // GET: /Admin/Stylists/Delete/5 - Confirmation sayfası
+        [HttpGet]
+        [Route("Delete/{id:int}")]
         public async Task<IActionResult> Delete(int id)
+        {
+            var stylist = await _stylistService.GetByIdAsync(id);
+            if (stylist == null)
+            {
+                return NotFound();
+            }
+
+            return View(stylist);
+        }
+
+        // POST: /Admin/Stylists/Delete/5 - Gerçek silme işlemi
+        [HttpPost]
+        [Route("Delete/{id:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {
                 await _stylistService.DeleteAsync(id);
                 TempData["Success"] = "Kuaför başarıyla silindi.";
             }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = $"Kuaför silinemedi: {ex.Message}";
+            }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Hata: {ex.Message}";
+                TempData["Error"] = $"Beklenmeyen hata: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Index));

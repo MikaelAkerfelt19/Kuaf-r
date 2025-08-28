@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Stylist;
+using Kuafor.Web.Models.Enums;
 using System.Security.Claims;
 
 namespace Kuafor.Web.Areas.Stylist.Controllers
@@ -53,7 +54,7 @@ namespace Kuafor.Web.Areas.Stylist.Controllers
                     ServiceName = a.Service?.Name ?? "Bilinmeyen Hizmet",
                     StartTime = a.StartAt.ToLocalTime(),
                     Duration = a.Service?.DurationMin ?? 30,
-                    Status = a.Status
+                    Status = a.Status.ToString()
                 }).ToList(),
 
                 UpcomingAppointments = upcomingAppointments.Select(a => new AppointmentViewModel
@@ -63,7 +64,7 @@ namespace Kuafor.Web.Areas.Stylist.Controllers
                     ServiceName = a.Service?.Name ?? "Bilinmeyen Hizmet",
                     StartTime = a.StartAt.ToLocalTime(),
                     Duration = a.Service?.DurationMin ?? 30,
-                    Status = a.Status
+                    Status = a.Status.ToString()
                 }).ToList()
             };
 
