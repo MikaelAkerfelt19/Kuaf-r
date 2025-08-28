@@ -9,6 +9,7 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Services;
+using Kuafor.Web.Services.BackgroundServices;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using DotNetEnv;
 
@@ -156,6 +157,15 @@ builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<ITestimonialService, TestimonialService>();
 builder.Services.AddScoped<IValidationService, ValidationService>();
 
+// Yeni eklenen servisler
+builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
+builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
+builder.Services.AddScoped<ITemplateService, RazorTemplateService>();
+
+// Background service
+builder.Services.AddHostedService<AppointmentReminderService>();
+
 // Authorization policies
 builder.Services.AddAuthorization(options =>
 {
@@ -206,11 +216,6 @@ app.MapStaticAssets();
 app.MapControllerRoute(
     name: "areas",
     pattern: "{area:exists}/{controller=Home}/{action=Index}/{id?}");
-
-app.MapControllerRoute(
-    name: "areas",
-    pattern: "{area:exists}/{controller=Dashboard}/{action=Index}/{id?}"
-);
 
 // Varsayılan kök
 app.MapControllerRoute(
