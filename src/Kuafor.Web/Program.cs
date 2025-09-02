@@ -110,6 +110,13 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.AccessDeniedPath = "/Auth/AccessDenied";
     options.ExpireTimeSpan = TimeSpan.FromHours(2);
     options.SlidingExpiration = true;
+    options.ReturnUrlParameter = "returnUrl";
+    options.Events.OnRedirectToLogin = context =>
+    {
+        context.Response.StatusCode = 302;
+        context.Response.Headers["Location"] = context.RedirectUri;
+        return Task.CompletedTask;
+    };
 });
 
 // JWT Authentication (API için)

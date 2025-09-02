@@ -30,6 +30,7 @@ public class Stylist
     public DateTime? UpdatedAt { get; set; }
     
     // Foreign keys
+    [Required]
     public int BranchId { get; set; }
     public string? UserId { get; set; } // Identity User ID
     

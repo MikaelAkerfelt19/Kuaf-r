@@ -323,18 +323,28 @@ public class AppointmentService : IAppointmentService
         if (hasConflict)
             return false;
         
-        // 4. Minimum önceden bildirim süresi (2 saat)
-        var minAdvanceTime = DateTime.UtcNow.AddHours(2);
+        // 4. Minimum önceden bildirim süresi (30 dakika) 
+        var minAdvanceTime = DateTime.UtcNow.AddMinutes(30);
         if (startTime <= minAdvanceTime)
             return false;
         
         return true;
     }
     
+    private readonly Dictionary<int, int> _stylistBranchCache = new();
+    
     private async Task<int> GetStylistBranchIdAsync(int stylistId)
     {
+        if (_stylistBranchCache.TryGetValue(stylistId, out int cachedBranchId))
+            return cachedBranchId;
+            
         var stylist = await _context.Stylists.FindAsync(stylistId);
-        return stylist?.BranchId ?? 0;
+        var branchId = stylist?.BranchId ?? 0;
+        
+        if (branchId > 0)
+            _stylistBranchCache[stylistId] = branchId;
+            
+        return branchId;
     }
     
     private async Task<bool> HasExistingConflictAsync(int stylistId, DateTime startTime, DateTime endTime, int? excludeAppointmentId)
@@ -349,6 +359,22 @@ public class AppointmentService : IAppointmentService
             query = query.Where(a => a.Id != excludeAppointmentId.Value);
         }
 
-        return await query.AnyAsync();
+        var conflictingAppointments = await query.ToListAsync();
+        
+        // Debug log
+        if (conflictingAppointments.Any())
+        {
+            Console.WriteLine($"DEBUG: Çakışan randevular bulundu. Stylist: {stylistId}, İstenen: {startTime:yyyy-MM-dd HH:mm} - {endTime:yyyy-MM-dd HH:mm}");
+            foreach (var appt in conflictingAppointments)
+            {
+                Console.WriteLine($"  - Mevcut randevu: {appt.StartAt:yyyy-MM-dd HH:mm} - {appt.EndAt:yyyy-MM-dd HH:mm} (Status: {appt.Status})");
+            }
+        }
+        else
+        {
+            Console.WriteLine($"DEBUG: Çakışma yok. Stylist: {stylistId}, İstenen: {startTime:yyyy-MM-dd HH:mm} - {endTime:yyyy-MM-dd HH:mm}");
+        }
+
+        return conflictingAppointments.Any();
     }
 }

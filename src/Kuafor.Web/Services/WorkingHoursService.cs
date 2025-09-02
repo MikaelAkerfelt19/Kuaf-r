@@ -87,4 +87,90 @@ public class WorkingHoursService : IWorkingHoursService
         
         return slots;
     }
+
+    // CRUD Operations
+    public async Task<WorkingHours?> GetByIdAsync(int id)
+    {
+        return await _context.WorkingHours.FindAsync(id);
+    }
+
+    public async Task<WorkingHours> CreateAsync(WorkingHours workingHours)
+    {
+        workingHours.CreatedAt = DateTime.UtcNow;
+        _context.WorkingHours.Add(workingHours);
+        await _context.SaveChangesAsync();
+        return workingHours;
+    }
+
+    public async Task<WorkingHours> UpdateAsync(WorkingHours workingHours)
+    {
+        workingHours.UpdatedAt = DateTime.UtcNow;
+        _context.WorkingHours.Update(workingHours);
+        await _context.SaveChangesAsync();
+        return workingHours;
+    }
+
+    public async Task DeleteAsync(int id)
+    {
+        var workingHours = await _context.WorkingHours.FindAsync(id);
+        if (workingHours != null)
+        {
+            _context.WorkingHours.Remove(workingHours);
+            await _context.SaveChangesAsync();
+        }
+    }
+
+    public async Task SetBranchWorkingHoursAsync(int branchId, List<WorkingHours> workingHoursList)
+    {
+        // Mevcut çalışma saatlerini sil
+        var existingHours = await _context.WorkingHours
+            .Where(w => w.BranchId == branchId)
+            .ToListAsync();
+        
+        _context.WorkingHours.RemoveRange(existingHours);
+        
+        // Yeni çalışma saatlerini ekle
+        foreach (var workingHours in workingHoursList)
+        {
+            workingHours.BranchId = branchId;
+            workingHours.CreatedAt = DateTime.UtcNow;
+            _context.WorkingHours.Add(workingHours);
+        }
+        
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task InitializeDefaultWorkingHoursAsync(int branchId)
+    {
+        var defaultHours = new List<WorkingHours>();
+        
+        // Pazartesi - Cumartesi: 09:00 - 18:00, Öğle arası: 12:00 - 13:00
+        for (int i = 1; i <= 6; i++)
+        {
+            defaultHours.Add(new WorkingHours
+            {
+                BranchId = branchId,
+                DayOfWeek = (DayOfWeek)i,
+                OpenTime = TimeSpan.FromHours(9),
+                CloseTime = TimeSpan.FromHours(18),
+                BreakStart = TimeSpan.FromHours(12),
+                BreakEnd = TimeSpan.FromHours(13),
+                IsWorkingDay = true,
+                CreatedAt = DateTime.UtcNow
+            });
+        }
+        
+        // Pazar: Kapalı
+        defaultHours.Add(new WorkingHours
+        {
+            BranchId = branchId,
+            DayOfWeek = DayOfWeek.Sunday,
+            OpenTime = TimeSpan.FromHours(9),
+            CloseTime = TimeSpan.FromHours(18),
+            IsWorkingDay = false,
+            CreatedAt = DateTime.UtcNow
+        });
+        
+        await SetBranchWorkingHoursAsync(branchId, defaultHours);
+    }
 }

@@ -8,6 +8,8 @@ namespace Kuafor.Web.Models.Admin.Services
         public int Id { get; set; }
         [Required, StringLength(80)]
         public string Name { get; set; } = string.Empty;
+        [StringLength(50)]
+        public string? Category { get; set; }
         [Range(5, 480)]
         public int DurationMin { get; set; } = 30;
         [Range(0, 100000)]

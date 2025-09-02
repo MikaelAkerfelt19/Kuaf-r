@@ -64,6 +64,16 @@ namespace Kuafor.Web.Models.Admin.Appointments
         public string? Reason { get; set; }
     }
 
+    // Silme formu
+    public class DeleteForm
+    {
+        [Required]
+        public int Id { get; set; }
+
+        [StringLength(200)]
+        public string? Reason { get; set; }
+    }
+
     // Sayfa modeli
     public class AppointmentsPageViewModel
     {

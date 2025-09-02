@@ -6,4 +6,5 @@ public class ServicesIndexViewModel
 {
     public List<Service> Services { get; set; } = new();
     public List<Branch> Branches { get; set; } = new();
+    public List<string> Categories { get; set; } = new();
 }
