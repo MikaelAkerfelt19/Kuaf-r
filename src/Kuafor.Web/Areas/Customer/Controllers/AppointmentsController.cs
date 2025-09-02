@@ -40,7 +40,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             var vm = new AppointmentWizardViewModel
             {
                 Services = (await _serviceService.GetAllAsync()).Select(s => new ServiceVm(s.Id, s.Name, $"{s.DurationMin} dakika", "")).ToList(),
-                Stylists = (await _stylistService.GetAllAsync()).Select(s => new StylistVm(s.Id, $"{s.FirstName} {s.LastName}", (double)s.Rating, s.Bio ?? "")).ToList(),
+                Stylists = (await _stylistService.GetAllAsync()).Select(s => new StylistVm(s.Id, $"{s.FirstName} {s.LastName}", (double)s.Rating, s.Bio ?? "", s.BranchId)).ToList(),
                 TimeSlots = await BuildAvailableSlotsAsync(stylistId, serviceId)
             };
 
@@ -299,8 +299,12 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 
                 while (currentTime.AddMinutes(service.DurationMin) <= endTime)
                 {
-                    // Öğle arası kontrolü
-                    if (workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue)
+                    // Öğle arası kontrolü - sadece çalışma süresi 4 saatten fazlaysa
+                    var workDuration = workingHours.CloseTime - workingHours.OpenTime;
+                    if (workDuration.TotalHours >= 4 && 
+                        workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue &&
+                        workingHours.BreakStart.Value < workingHours.CloseTime &&
+                        workingHours.BreakEnd.Value > workingHours.OpenTime)
                     {
                         var breakStart = date.Date.Add(workingHours.BreakStart.Value);
                         var breakEnd = date.Date.Add(workingHours.BreakEnd.Value);
@@ -326,7 +330,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                         a.StartAt < slotEnd && a.EndAt > currentTime);
                         
                     slots.Add(new TimeSlotVm(currentTime, !hasConflict));
-                    currentTime = currentTime.AddMinutes(30); // 30 dakikalık aralıklar
+                    currentTime = currentTime.AddMinutes(15); // 15 dakikalık aralıklar
                 }
             }
             
@@ -338,9 +342,42 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             // Identity User ID'den Customer ID'yi bul
             var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userId))
+            {
+                Console.WriteLine("DEBUG: User ID bulunamadı");
                 return 0;
+            }
 
+            Console.WriteLine($"DEBUG: User ID: {userId}");
+            
             var customer = await _customerService.GetByUserIdAsync(userId);
+            if (customer == null)
+            {
+                Console.WriteLine("DEBUG: Customer kaydı bulunamadı, otomatik oluşturuluyor...");
+                
+                // Customer kaydı yoksa otomatik oluştur
+                var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "";
+                var userName = User.Identity?.Name ?? "";
+                var nameParts = userName.Split(' ');
+                
+                customer = new Models.Entities.Customer
+                {
+                    UserId = userId,
+                    FirstName = nameParts.Length > 0 ? nameParts[0] : "Müşteri",
+                    LastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "",
+                    Email = userEmail,
+                    Phone = "",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+                
+                await _customerService.CreateAsync(customer);
+                Console.WriteLine($"DEBUG: Customer oluşturuldu - ID: {customer.Id}");
+            }
+            else
+            {
+                Console.WriteLine($"DEBUG: Customer bulundu - ID: {customer.Id}");
+            }
+
             return customer?.Id ?? 0;
         }
     }

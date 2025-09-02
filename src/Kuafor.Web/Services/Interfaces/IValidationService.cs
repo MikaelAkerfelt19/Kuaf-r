@@ -8,7 +8,7 @@ public interface IValidationService
 {
     bool IsValidAppointmentTime(DateTime startTime, DateTime endTime, int stylistId);
     bool IsValidCoupon(string couponCode, decimal basketTotal);
-    bool IsWithinWorkingHours(DateTime dateTime, int branchId);
+    Task<bool> IsWithinWorkingHoursAsync(DateTime dateTime, int branchId);
     bool IsValidPrice(decimal price, int serviceId);
     Task<ValidationResult> ValidateAppointmentAsync(CreateAppointmentViewModel model);
 }

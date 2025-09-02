@@ -215,7 +215,7 @@ public class AppointmentsController : Controller
 
     private async Task<int?> GetCurrentCustomerId()
     {
-        if (!User.Identity?.IsAuthenticated == true)
+        if (User.Identity?.IsAuthenticated != true)
             return null;
 
         var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -223,6 +223,27 @@ public class AppointmentsController : Controller
             return null;
 
         var customer = await _customerService.GetByUserIdAsync(userId);
+        if (customer == null)
+        {
+            // Customer kaydı yoksa otomatik oluştur
+            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "";
+            var userName = User.Identity?.Name ?? "";
+            var nameParts = userName.Split(' ');
+            
+            customer = new Models.Entities.Customer
+            {
+                UserId = userId,
+                FirstName = nameParts.Length > 0 ? nameParts[0] : "Müşteri",
+                LastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "",
+                Email = userEmail,
+                Phone = "",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            await _customerService.CreateAsync(customer);
+        }
+
         return customer?.Id;
     }
 }

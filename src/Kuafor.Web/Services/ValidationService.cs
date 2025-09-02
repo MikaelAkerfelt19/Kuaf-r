@@ -7,6 +7,13 @@ namespace Kuafor.Web.Services;
 
 public class ValidationService : IValidationService
 {
+    private readonly IWorkingHoursService _workingHoursService;
+
+    public ValidationService(IWorkingHoursService workingHoursService)
+    {
+        _workingHoursService = workingHoursService;
+    }
+
     public bool IsValidAppointmentTime(DateTime startTime, DateTime endTime, int stylistId)
     {
         var now = DateTime.UtcNow;
@@ -48,19 +55,9 @@ public class ValidationService : IValidationService
         return true;
     }
     
-    public bool IsWithinWorkingHours(DateTime dateTime, int branchId)
+    public async Task<bool> IsWithinWorkingHoursAsync(DateTime dateTime, int branchId)
     {
-        if (dateTime.DayOfWeek == DayOfWeek.Sunday)
-            return false;
-        
-        var hour = dateTime.Hour;
-        if (hour < 9 || hour >= 21)
-            return false;
-        
-        if (hour == 13)
-            return false;
-        
-        return true;
+        return await _workingHoursService.IsWithinWorkingHoursAsync(branchId, dateTime);
     }
     
     public bool IsValidPrice(decimal price, int serviceId)
@@ -79,7 +76,7 @@ public class ValidationService : IValidationService
         return true;
     }
 
-    public Task<ValidationResult> ValidateAppointmentAsync(CreateAppointmentViewModel model)
+    public async Task<ValidationResult> ValidateAppointmentAsync(CreateAppointmentViewModel model)
     {
         var result = new ValidationResult();
         
@@ -95,6 +92,21 @@ public class ValidationService : IValidationService
             result.AddError("Minimum randevu süresi 15 dakikadır");
         }
         
-        return Task.FromResult(result);
+        // 3. Çalışma saatleri kontrolü (async işlem ekliyoruz)
+        if (model.StylistId > 0)
+        {
+            // Stylist'ten branch ID'yi al
+            var stylist = await _workingHoursService.GetStylistBranchAsync(model.StylistId);
+            if (stylist != null)
+            {
+                var isWithinWorkingHours = await IsWithinWorkingHoursAsync(model.StartAt, stylist.BranchId);
+                if (!isWithinWorkingHours)
+                {
+                    result.AddError("Seçilen saat çalışma saatleri dışındadır");
+                }
+            }
+        }
+        
+        return result;
     }
 }

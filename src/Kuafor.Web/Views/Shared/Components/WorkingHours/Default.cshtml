@@ -1,0 +1,52 @@
+@model IEnumerable<Kuafor.Web.Models.Entities.WorkingHours>
+
+@if (Model != null && Model.Any())
+{
+    <div class="working-hours-info">
+        <h6 class="text-muted mb-2">
+            <i class="fas fa-clock me-2"></i>Çalışma Saatleri
+        </h6>
+        <div class="row g-1">
+            @foreach (var day in Model.OrderBy(w => w.DayOfWeek))
+            {
+                var dayName = day.DayOfWeek switch
+                {
+                    DayOfWeek.Monday => "Pazartesi",
+                    DayOfWeek.Tuesday => "Salı", 
+                    DayOfWeek.Wednesday => "Çarşamba",
+                    DayOfWeek.Thursday => "Perşembe",
+                    DayOfWeek.Friday => "Cuma",
+                    DayOfWeek.Saturday => "Cumartesi",
+                    DayOfWeek.Sunday => "Pazar",
+                    _ => day.DayOfWeek.ToString()
+                };
+
+                <div class="col-12">
+                    <div class="d-flex justify-content-between align-items-center py-1 @(day.IsWorkingDay ? "" : "text-muted")">
+                        <span class="small">@dayName</span>
+                        @if (day.IsWorkingDay)
+                        {
+                            <span class="small">
+                                @day.OpenTime.ToString(@"hh\:mm") - @day.CloseTime.ToString(@"hh\:mm")
+                                @if (day.BreakStart.HasValue && day.BreakEnd.HasValue)
+                                {
+                                    <span class="text-muted">(Öğle: @day.BreakStart.Value.ToString(@"hh\:mm") - @day.BreakEnd.Value.ToString(@"hh\:mm"))</span>
+                                }
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="small text-muted">Kapalı</span>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+}
+else
+{
+    <div class="text-muted small">
+        <i class="fas fa-exclamation-triangle me-2"></i>Çalışma saatleri bilgisi bulunamadı.
+    </div>
+}

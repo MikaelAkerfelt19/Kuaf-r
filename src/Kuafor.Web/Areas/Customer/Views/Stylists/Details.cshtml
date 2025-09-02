@@ -67,11 +67,16 @@
                 </div>
                 <div class="card-body">
                     <p class="text-muted">Şube çalışma saatleri geçerlidir.</p>
-                    <ul class="list-unstyled">
-                        <li><strong>Pazartesi - Cumartesi:</strong> 09:00 - 18:00</li>
-                        <li><strong>Öğle Arası:</strong> 12:00 - 13:00</li>
-                        <li><strong>Pazar:</strong> Kapalı</li>
-                    </ul>
+                    @if (Model.BranchId > 0)
+                    {
+                        @await Component.InvokeAsync("WorkingHours", Model.BranchId)
+                    }
+                    else
+                    {
+                        <div class="text-muted small">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Çalışma saatleri bilgisi bulunamadı.
+                        </div>
+                    }
                 </div>
             </div>
         </div>

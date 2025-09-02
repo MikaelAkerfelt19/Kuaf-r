@@ -38,23 +38,37 @@ public class WorkingHoursService : IWorkingHoursService
     
     public async Task<bool> IsWithinWorkingHoursAsync(int branchId, DateTime dateTime)
     {
+        Console.WriteLine($"DEBUG: IsWithinWorkingHoursAsync - Branch: {branchId}, DateTime: {dateTime:yyyy-MM-dd HH:mm}");
+        
         var workingHours = await GetByBranchAndDayAsync(branchId, dateTime.DayOfWeek);
         if (workingHours == null || !workingHours.IsWorkingDay)
+        {
+            Console.WriteLine("DEBUG: Çalışma günü değil veya working hours bulunamadı");
             return false;
+        }
         
         var timeOfDay = dateTime.TimeOfDay;
+        Console.WriteLine($"DEBUG: TimeOfDay: {timeOfDay}, OpenTime: {workingHours.OpenTime}, CloseTime: {workingHours.CloseTime}");
         
         // Çalışma saatleri kontrolü
-        if (timeOfDay < workingHours.OpenTime || timeOfDay >= workingHours.CloseTime)
+        if (timeOfDay < workingHours.OpenTime || timeOfDay > workingHours.CloseTime)
+        {
+            Console.WriteLine("DEBUG: Çalışma saatleri dışında");
             return false;
+        }
         
         // Öğle arası kontrolü
         if (workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue)
         {
+            Console.WriteLine($"DEBUG: BreakStart: {workingHours.BreakStart.Value}, BreakEnd: {workingHours.BreakEnd.Value}");
             if (timeOfDay >= workingHours.BreakStart.Value && timeOfDay < workingHours.BreakEnd.Value)
+            {
+                Console.WriteLine("DEBUG: Öğle arası saatleri içinde");
                 return false;
+            }
         }
         
+        Console.WriteLine("DEBUG: Çalışma saatleri içinde");
         return true;
     }
     
@@ -70,8 +84,12 @@ public class WorkingHoursService : IWorkingHoursService
         
         while (currentTime.Add(TimeSpan.FromMinutes(durationMinutes)) <= endTime)
         {
-            // Öğle arası kontrolü
-            if (workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue)
+            // Öğle arası kontrolü - sadece çalışma süresi 4 saatten fazlaysa
+            var workDuration = workingHours.CloseTime - workingHours.OpenTime;
+            if (workDuration.TotalHours >= 4 && 
+                workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue &&
+                workingHours.BreakStart.Value < workingHours.CloseTime &&
+                workingHours.BreakEnd.Value > workingHours.OpenTime)
             {
                 var slotEnd = currentTime.Add(TimeSpan.FromMinutes(durationMinutes));
                 if (currentTime < workingHours.BreakEnd.Value && slotEnd > workingHours.BreakStart.Value)
@@ -82,10 +100,18 @@ public class WorkingHoursService : IWorkingHoursService
             }
             
             slots.Add(currentTime);
-            currentTime = currentTime.Add(TimeSpan.FromMinutes(30)); // 30 dakikalık aralıklar
+            var slotIntervalMinutes = 15; // Daha detaylı slot aralığı
+            currentTime = currentTime.Add(TimeSpan.FromMinutes(slotIntervalMinutes));
         }
         
         return slots;
+    }
+
+    public async Task<Stylist?> GetStylistBranchAsync(int stylistId)
+    {
+        return await _context.Stylists
+            .Include(s => s.Branch)
+            .FirstOrDefaultAsync(s => s.Id == stylistId);
     }
 
     // CRUD Operations

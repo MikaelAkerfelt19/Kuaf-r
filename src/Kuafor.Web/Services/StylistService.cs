@@ -88,18 +88,12 @@ public class StylistService : IStylistService
 
     public async Task<IEnumerable<Stylist>> GetByServiceAsync(int serviceId)
     {
-        // Bu hizmeti sunan kuaförleri bul
-        var stylistIds = await _context.Appointments
-            .Where(a => a.ServiceId == serviceId && a.Status != AppointmentStatus.Cancelled)
-            .Select(a => a.StylistId)
-            .Distinct()
-            .ToListAsync();
-            
-        if (!stylistIds.Any())
-            return new List<Stylist>();
-            
+        // Tüm aktif kuaförleri döndür (her kuaför her hizmeti verebilir)
         return await _context.Stylists
-            .Where(s => stylistIds.Contains(s.Id) && s.IsActive)
+            .Include(s => s.Branch)
+            .Where(s => s.IsActive)
+            .OrderBy(s => s.FirstName)
+            .ThenBy(s => s.LastName)
             .ToListAsync();
     }
 
@@ -175,10 +169,23 @@ public class StylistService : IStylistService
         if (stylist == null || !stylist.IsActive)
             return false;
         
-        // Çalışma saatleri kontrolü (basit kontrol)
-        var hour = dateTime.Hour;
-        if (hour < 9 || hour >= 18)
+        // Çalışma saatleri kontrolü - WorkingHoursService kullan
+        var workingHours = await _context.WorkingHours
+            .FirstOrDefaultAsync(w => w.BranchId == stylist.BranchId && w.DayOfWeek == dateTime.DayOfWeek);
+            
+        if (workingHours == null || !workingHours.IsWorkingDay)
             return false;
+            
+        var timeOfDay = dateTime.TimeOfDay;
+        if (timeOfDay < workingHours.OpenTime || timeOfDay >= workingHours.CloseTime)
+            return false;
+            
+        // Öğle arası kontrolü
+        if (workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue)
+        {
+            if (timeOfDay >= workingHours.BreakStart.Value && timeOfDay < workingHours.BreakEnd.Value)
+                return false;
+        }
         
         // Randevu çakışması kontrolü
         var endTime = dateTime.AddMinutes(durationMinutes);

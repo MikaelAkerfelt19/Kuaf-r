@@ -157,6 +157,12 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                         await _workingHoursService.SetBranchWorkingHoursAsync(stylist.BranchId, workingHoursList);
                         Console.WriteLine("DEBUG: Çalışma saatleri kaydedildi!");
                     }
+                    else
+                    {
+                        // Eğer form'dan çalışma saati gelmemişse default çalışma saatlerini başlat
+                        await _workingHoursService.InitializeDefaultWorkingHoursAsync(stylist.BranchId);
+                        Console.WriteLine("DEBUG: Default çalışma saatleri başlatıldı!");
+                    }
                     
                     // Detaylı başarı mesajı
                     var branch = await _branchService.GetByIdAsync(stylist.BranchId);

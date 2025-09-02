@@ -21,8 +21,7 @@ public class Branch
     [StringLength(500)]
     public string? Description { get; set; }
     
-    [StringLength(100)]
-    public string? WorkingHours { get; set; } // "09:00-18:00"
+
     
     public bool IsActive { get; set; } = true;
     

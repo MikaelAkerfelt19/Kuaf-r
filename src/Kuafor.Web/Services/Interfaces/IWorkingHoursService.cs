@@ -10,6 +10,7 @@ public interface IWorkingHoursService
     Task<bool> IsWorkingDayAsync(int branchId, DateTime date);
     Task<bool> IsWithinWorkingHoursAsync(int branchId, DateTime dateTime);
     Task<IEnumerable<TimeSpan>> GetAvailableTimeSlotsAsync(int branchId, DateTime date, int durationMinutes);
+    Task<Stylist?> GetStylistBranchAsync(int stylistId);
     
     // CRUD Operations
     Task<WorkingHours> CreateAsync(WorkingHours workingHours);

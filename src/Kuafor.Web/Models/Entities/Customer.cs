@@ -25,9 +25,8 @@ public class Customer
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? UpdatedAt { get; set; }
     
-    // Foreign keys
-    public string UserId { get; set; } = string.Empty; // Identity User ID
+    [Required]
+    public string UserId { get; set; } = string.Empty;
     
-    // Navigation properties
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

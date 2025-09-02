@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Enums;
 
@@ -18,8 +19,6 @@ public static class DbInitializer
         
         // Admin kullanıcı oluştur
         await EnsureAdminUserAsync(userManager);
-        
-        // Seed data kaldırıldı - sadece rolleri ve admin kullanıcısı oluşturuluyor
     }
 
     private static async Task EnsureRolesAsync(RoleManager<IdentityRole> roleManager)

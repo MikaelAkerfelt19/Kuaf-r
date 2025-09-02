@@ -6,7 +6,7 @@ namespace Kuafor.Web.Models.Appointments
     public enum WizardStep { Service = 1, Stylist = 2, Time = 3, Confirm = 4 }
 
     public record ServiceVm(int Id, string Name, string DurationText, string Description);
-    public record StylistVm(int Id, string Name, double Rating, string Bio);
+    public record StylistVm(int Id, string Name, double Rating, string Bio, int BranchId);
     public record TimeSlotVm(DateTime Start, bool IsAvailable);
 
     public class AppointmentWizardViewModel

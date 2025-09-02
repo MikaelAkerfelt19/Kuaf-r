@@ -76,12 +76,14 @@ public class LoyaltyService : ILoyaltyService
     
     public Task<string> CalculateTierAsync(int points)
     {
+        // TODO: Bu değerler admin panelinden ayarlanabilir olmalı
+        // Şimdilik sabit değerler kullanılıyor
         var tier = points switch
         {
-            >= 1000 => "Platin",
-            >= 500 => "Altın",
-            >= 200 => "Gümüş",
-            _ => "Bronz"
+            >= 1000 => "Platin",  // 1000+ puan
+            >= 500 => "Altın",    // 500-999 puan
+            >= 200 => "Gümüş",    // 200-499 puan
+            _ => "Bronz"          // 0-199 puan
         };
         
         return Task.FromResult(tier);

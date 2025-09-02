@@ -73,22 +73,7 @@ public static class TurkishDateHelper
         return !IsWeekend(date) && !IsHoliday(date);
     }
     
-    // Kuaför çalışma saatleri içinde mi kontrol eder
-    public static bool IsWithinHairSalonHours(DateTime dateTime)
-    {
-        var hour = dateTime.Hour;
-        
-        if (IsWeekend(dateTime))
-        {
-            // Hafta sonu: 10:00 - 20:00
-            return hour >= 10 && hour < 20;
-        }
-        else
-        {
-            // Hafta içi: 09:00 - 21:00
-            return hour >= 9 && hour < 21;
-        }
-    }
+
     
     // Tarih aralığındaki çalışma günü sayısını hesaplar
     public static int GetWorkingDaysCount(DateTime startDate, DateTime endDate)
