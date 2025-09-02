@@ -31,70 +31,92 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach (var stylist in Model)
+                        @if (Model.Any())
                         {
-                            var branches = ViewBag.Branches as List<Kuafor.Web.Models.Admin.Stylists.BranchDto>;
-                            var branch = branches?.FirstOrDefault(b => b.Id == stylist.BranchId);
-                            <tr>
-                                <td>@stylist.Id</td>
-                                <td>
-                                    <strong>@stylist.Name</strong>
-                                    @if (!string.IsNullOrEmpty(stylist.Bio))
-                                    {
-                                        <br><small class="text-muted">@stylist.Bio</small>
-                                    }
-                                </td>
-                                <td>
-                                    @if (branch != null)
-                                    {
-                                        <span class="badge badge-info">@branch.Name</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Şube atanmamış</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        @for (int i = 1; i <= 5; i++)
+                            @foreach (var stylist in Model)
+                            {
+                                var branches = ViewBag.Branches as List<Kuafor.Web.Models.Admin.Stylists.BranchDto>;
+                                var branch = branches?.FirstOrDefault(b => b.Id == stylist.BranchId);
+                                <tr>
+                                    <td>@stylist.Id</td>
+                                    <td>
+                                        <strong>@stylist.Name</strong>
+                                        @if (!string.IsNullOrEmpty(stylist.Bio))
                                         {
-                                            if (i <= stylist.Rating)
-                                            {
-                                                <i class="fas fa-star text-warning"></i>
-                                            }
-                                            else
-                                            {
-                                                <i class="far fa-star text-muted"></i>
-                                            }
+                                            <br><small class="text-muted">@stylist.Bio</small>
                                         }
-                                        <span class="ml-2">@stylist.Rating/5</span>
-                                    </div>
-                                </td>
-                                <td>
-                                    @if (stylist.IsActive)
-                                    {
-                                        <span class="badge badge-success">Aktif</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge badge-secondary">Pasif</span>
-                                    }
-                                </td>
-                                <td>
-                                    <div class="btn-group" role="group">
-                                        <a href="@Url.Action("Details", new { id = stylist.Id })" 
-                                           class="btn btn-sm btn-info" title="Detaylar">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="@Url.Action("Edit", new { id = stylist.Id })" 
-                                           class="btn btn-sm btn-warning" title="Düzenle">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <button type="button" class="btn btn-sm btn-danger" title="Sil"
-                                                onclick="deleteStylist(@stylist.Id)">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
-                                    </div>
+                                    </td>
+                                    <td>
+                                        @if (branch != null && stylist.BranchId > 0)
+                                        {
+                                            <span class="badge badge-info">@branch.Name</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Şube atanmamış</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (stylist.Rating > 0)
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                @for (int i = 1; i <= 5; i++)
+                                                {
+                                                    if (i <= stylist.Rating)
+                                                    {
+                                                        <i class="fas fa-star text-warning"></i>
+                                                    }
+                                                    else
+                                                    {
+                                                        <i class="far fa-star text-muted"></i>
+                                                    }
+                                                }
+                                                <span class="ml-2">@stylist.Rating/5</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Henüz puanlanmamış</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (stylist.IsActive)
+                                        {
+                                            <span class="badge badge-success">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-secondary">Pasif</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="@Url.Action("Details", new { id = stylist.Id })" 
+                                               class="btn btn-sm btn-info" title="Detaylar">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="@Url.Action("Edit", new { id = stylist.Id })" 
+                                               class="btn btn-sm btn-warning" title="Düzenle">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger" title="Sil"
+                                                    onclick="deleteStylist(@stylist.Id)">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                                    <br>
+                                    <strong>Henüz kuaför eklenmemiş</strong>
+                                    <br>
+                                    <small>İlk kuaförü eklemek için "Yeni Kuaför" butonuna tıklayın.</small>
                                 </td>
                             </tr>
                         }

@@ -159,9 +159,15 @@
                                         Ertele
                                     </button>
 
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                    <button type="button" class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
                                         data-bs-target="#cancelModal" data-id="@a.Id">
                                         İptal
+                                    </button>
+
+                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+                                        data-bs-target="#deleteModal" data-id="@a.Id" data-customer="@a.CustomerName"
+                                        data-service="@a.ServiceName" data-when="@toLocal(a.StartAt)">
+                                        Sil
                                     </button>
                                 </td>
                             </tr>

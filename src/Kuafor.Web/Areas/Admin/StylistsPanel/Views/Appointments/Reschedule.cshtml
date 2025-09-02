@@ -1,0 +1,36 @@
+@model Kuafor.Web.Models.Stylist.AppointmentDetailViewModel
+
+<!-- #region Reschedule Modal -->
+<div class="modal fade" id="rescheduleModal" tabindex="-1" aria-labelledby="rescheduleModalLabel" aria-hidden="true">
+    <div class="modal-dialog"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rescheduleModalLabel">Randevu Tarihi Değiştirme</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <form asp-area="Stylist" asp-controller="Appointments" asp-action="Reschedule" asp-route-id="@Model.Id" method="post">
+                    <div class="mb-3">
+                        <label for="newDate" class="form-label">Yeni Tarih</label>
+                        <input type="date" class="form-control" id="newDate" name="newDate" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="newTime" class="form-label">Yeni Saat</label>
+                        <input type="time" class="form-control" id="newTime" name="newTime" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                        <button type="submit" class="btn btn-primary">Randevu Tarihini Değiştir</button>
+                    </div>
+                    <div class="mb-3">
+                        <label for="reason" class="form-label">İptal Nedeni</label>
+                        <textarea class="form-control" id="reason" name="reason" rows="3" required></textarea>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Vazgeç</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

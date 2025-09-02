@@ -1,0 +1,46 @@
+@model Kuafor.Web.Models.Admin.Appointments.DeleteForm
+
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Randevu Silme Onayı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    <strong>Dikkat!</strong> Bu randevuyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!
+                </div>
+                
+                <div class="mb-3">
+                    <strong>Randevu Bilgileri:</strong>
+                    <ul class="list-unstyled mt-2">
+                        <li><strong>Müşteri:</strong> <span id="deleteCustomerName"></span></li>
+                        <li><strong>Hizmet:</strong> <span id="deleteServiceName"></span></li>
+                        <li><strong>Tarih/Saat:</strong> <span id="deleteDateTime"></span></li>
+                    </ul>
+                </div>
+
+                <form method="post" action="/Admin/Appointments/Delete" id="deleteForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="id" id="deleteAppointmentId" />
+                    
+                    <div class="mb-3">
+                        <label for="deleteReason" class="form-label">Silme Nedeni (Opsiyonel)</label>
+                        <textarea class="form-control" id="deleteReason" name="reason" rows="3" 
+                                placeholder="Randevuyu silme nedeninizi belirtebilirsiniz..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="fas fa-times"></i> İptal
+                </button>
+                <button type="submit" form="deleteForm" class="btn btn-danger">
+                    <i class="fas fa-trash"></i> Evet, Sil
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

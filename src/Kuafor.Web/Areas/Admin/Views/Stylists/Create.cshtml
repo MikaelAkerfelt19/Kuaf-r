@@ -13,11 +13,14 @@
         </a>
     </div>
 
-    <div class="card shadow">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Kuaför Bilgileri</h6>
-        </div>
-        <div class="card-body">
+    <div class="row">
+        <!-- Kuaför Bilgileri -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Kuaför Bilgileri</h6>
+                </div>
+                <div class="card-body">
             @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
             {
                 <div class="alert alert-danger alert-dismissible fade show" role="alert">
@@ -26,7 +29,7 @@
                 </div>
             }
 
-            <form method="post" asp-action="Create">
+            <form id="create-form" method="post" asp-action="Create">
                 @Html.AntiForgeryToken()
                 
                 <div class="row">
@@ -102,58 +105,166 @@
 
                 <div class="mb-3">
                     <div class="form-check">
-                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
                         <label asp-for="IsActive" class="form-check-label">
                             Kuaför aktif olarak çalışıyor
                         </label>
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end">
-                    <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
-                        <i class="fas fa-times"></i> İptal
-                    </a>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-save"></i> Kaydet
-                    </button>
+                        <div class="d-flex justify-content-end">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Kaydet
+                            </button>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+        </div>
+
+        <!-- Çalışma Saatleri -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Çalışma Saatleri</h6>
+                </div>
+                <div class="card-body">
+                    @{
+                        var daysOfWeek = new[] { 
+                            new { Value = DayOfWeek.Monday, Name = "Pazartesi" },
+                            new { Value = DayOfWeek.Tuesday, Name = "Salı" },
+                            new { Value = DayOfWeek.Wednesday, Name = "Çarşamba" },
+                            new { Value = DayOfWeek.Thursday, Name = "Perşembe" },
+                            new { Value = DayOfWeek.Friday, Name = "Cuma" },
+                            new { Value = DayOfWeek.Saturday, Name = "Cumartesi" },
+                            new { Value = DayOfWeek.Sunday, Name = "Pazar" }
+                        };
+                    }
+
+                    @for (int i = 0; i < daysOfWeek.Length; i++)
+                    {
+                        var day = daysOfWeek[i];
+                        var isWorkingDay = day.Value != DayOfWeek.Sunday; // Pazar hariç çalışma günü
+                        
+                        <div class="border rounded p-3 mb-3">
+                            <h6 class="mb-2">@day.Name</h6>
+                            
+                            <input type="hidden" form="create-form" name="workingHours[@i].DayOfWeek" value="@((int)day.Value)" />
+                            
+                            <div class="form-check mb-2">
+                                <input type="checkbox" 
+                                       form="create-form"
+                                       name="workingHours[@i].IsWorkingDay" 
+                                       value="true"
+                                       class="form-check-input working-day-checkbox" 
+                                       data-target="day-@i"
+                                       @(isWorkingDay ? "checked" : "") />
+                                <input type="hidden" form="create-form" name="workingHours[@i].IsWorkingDay" value="false" />
+                                <label class="form-check-label">Çalışma Günü</label>
+                            </div>
+                            
+                            <div id="day-@i" class="working-hours-details" style="@(isWorkingDay ? "" : "display: none;")">
+                                <div class="row mb-2">
+                                    <div class="col-6">
+                                        <label class="form-label small">Açılış</label>
+                                        <input type="time" 
+                                               form="create-form"
+                                               name="workingHours[@i].OpenTime" 
+                                               class="form-control form-control-sm"
+                                               value="09:00" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Kapanış</label>
+                                        <input type="time" 
+                                               form="create-form"
+                                               name="workingHours[@i].CloseTime" 
+                                               class="form-control form-control-sm"
+                                               value="18:00" />
+                                    </div>
+                                </div>
+                                
+                                <div class="row">
+                                    <div class="col-6">
+                                        <label class="form-label small">Öğle Başı</label>
+                                        <input type="time" 
+                                               form="create-form"
+                                               name="workingHours[@i].BreakStart" 
+                                               class="form-control form-control-sm"
+                                               value="12:00" />
+                                    </div>
+                                    <div class="col-6">
+                                        <label class="form-label small">Öğle Sonu</label>
+                                        <input type="time" 
+                                               form="create-form"
+                                               name="workingHours[@i].BreakEnd" 
+                                               class="form-control form-control-sm"
+                                               value="13:00" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        $(document).ready(function() {
-            // Form validation için
-            $('form').on('submit', function() {
-                var isValid = true;
-                
-                // Required alanları kontrol et
-                $('input[required], select[required]').each(function() {
-                    if (!$(this).val()) {
-                        $(this).addClass('is-invalid');
-                        isValid = false;
-                    } else {
-                        $(this).removeClass('is-invalid');
+        console.log('Stylists Create page loaded');
+        
+        // Form validation ve debug
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            // Çalışma günü checkbox'larını yönet
+            const checkboxes = document.querySelectorAll('.working-day-checkbox');
+            
+            checkboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    const target = document.getElementById(this.dataset.target);
+                    if (target) {
+                        target.style.display = this.checked ? 'block' : 'none';
                     }
                 });
+            });
+            
+            form.addEventListener('submit', function(e) {
+                console.log('Form submit ediliyor...');
                 
-                // Email format kontrolü
-                var email = $('#Email').val();
-                if (email && !isValidEmail(email)) {
-                    $('#Email').addClass('is-invalid');
-                    isValid = false;
+                // Form verilerini logla
+                const formData = new FormData(form);
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
                 }
                 
-                if (!isValid) {
-                    alert('Lütfen gerekli alanları doldurun.');
+                // Validation kontrolü
+                const firstName = document.querySelector('#FirstName').value.trim();
+                const lastName = document.querySelector('#LastName').value.trim();
+                const branchId = document.querySelector('#BranchId').value;
+                const isActive = document.querySelector('#IsActive').checked;
+                
+                console.log('Validation değerleri:', {
+                    firstName: firstName,
+                    lastName: lastName,
+                    branchId: branchId,
+                    isActive: isActive
+                });
+                
+                if (!firstName || !lastName || !branchId) {
+                    console.log('Validation hatası var!');
+                    e.preventDefault();
+                    alert('Lütfen zorunlu alanları doldurun!');
                     return false;
                 }
                 
-                return true;
+                console.log('Form gönderiliyor...');
             });
-            
         });
     </script>
 }

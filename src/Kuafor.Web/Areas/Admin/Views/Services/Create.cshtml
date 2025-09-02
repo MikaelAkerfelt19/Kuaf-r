@@ -1,0 +1,227 @@
+@model Kuafor.Web.Models.Entities.Service
+
+@{
+    ViewData["Title"] = "Yeni Hizmet Ekle";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Yeni Hizmet Ekle</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+
+    <div class="card shadow">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Hizmet Bilgileri</h6>
+        </div>
+        <div class="card-body">
+            @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @err
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
+
+            <form method="post" asp-action="Create">
+                @Html.AntiForgeryToken()
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Name" class="form-label">Hizmet Adı <span class="text-danger">*</span></label>
+                            <input asp-for="Name" class="form-control" placeholder="Hizmet adı" required />
+                            <span asp-validation-for="Name" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Category" class="form-label">Hizmet Türü <span class="text-danger">*</span></label>
+                            <select asp-for="Category" class="form-select" required>
+                                <option value="">Hizmet Türü Seçin</option>
+                                <option value="haircut">Saç Kesimi</option>
+                                <option value="coloring">Renklendirme</option>
+                                <option value="styling">Şekillendirme</option>
+                                <option value="beard">Sakal Traşı</option>
+                                <option value="care">Bakım & Spa</option>
+                                <option value="manicure">Manikür & Pedikür</option>
+                                <option value="other">Diğer</option>
+                            </select>
+                            <span asp-validation-for="Category" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="DurationMin" class="form-label">Süre (Dakika) <span class="text-danger">*</span></label>
+                            <input asp-for="DurationMin" type="number" class="form-control" min="5" max="480" placeholder="30" required />
+                            <span asp-validation-for="DurationMin" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Price" class="form-label">Fiyat (₺) <span class="text-danger">*</span></label>
+                            <input asp-for="Price" type="number" class="form-control" min="0" step="0.01" placeholder="150.00" required />
+                            <span asp-validation-for="Price" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="PriceFrom" class="form-label">Başlangıç Fiyatı (₺)</label>
+                            <input asp-for="PriceFrom" type="number" class="form-control" min="0" step="0.01" placeholder="100.00" />
+                            <span asp-validation-for="PriceFrom" class="text-danger"></span>
+                            <div class="form-text">Opsiyonel - "Başlangıç" fiyatı için</div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="IconClass" class="form-label">İkon Sınıfı</label>
+                            <select asp-for="IconClass" class="form-select">
+                                <option value="bi bi-scissors">✂️ Makas</option>
+                                <option value="bi bi-palette">🎨 Palet</option>
+                                <option value="bi bi-droplet">💧 Damla</option>
+                                <option value="bi bi-hand-index">👆 El</option>
+                                <option value="bi bi-star">⭐ Yıldız</option>
+                                <option value="bi bi-heart">❤️ Kalp</option>
+                                <option value="bi bi-gem">💎 Elmas</option>
+                            </select>
+                            <span asp-validation-for="IconClass" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Description" class="form-label">Kısa Açıklama <span class="text-danger">*</span></label>
+                    <textarea asp-for="Description" class="form-control" rows="3" placeholder="Hizmet hakkında kısa açıklama..." required></textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                    <div class="form-text">Maksimum 200 karakter</div>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="DetailedDescription" class="form-label">Detaylı Açıklama</label>
+                    <textarea asp-for="DetailedDescription" class="form-control" rows="4" placeholder="Hizmet hakkında detaylı bilgi..."></textarea>
+                    <span asp-validation-for="DetailedDescription" class="text-danger"></span>
+                    <div class="form-text">Maksimum 1000 karakter</div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label asp-for="DisplayOrder" class="form-label">Görüntü Sırası</label>
+                            <input asp-for="DisplayOrder" type="number" class="form-control" min="0" placeholder="1" />
+                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Hizmet aktif
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="ShowOnHomePage" class="form-check-input" type="checkbox" />
+                                <label asp-for="ShowOnHomePage" class="form-check-label">
+                                    Ana sayfada göster
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-end">
+                    <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                        <i class="fas fa-times"></i> İptal
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Form validation için
+            $('form').on('submit', function() {
+                var isValid = true;
+                
+                // Required alanları kontrol et
+                $('input[required], select[required], textarea[required]').each(function() {
+                    if (!$(this).val()) {
+                        $(this).addClass('is-invalid');
+                        isValid = false;
+                    } else {
+                        $(this).removeClass('is-invalid');
+                    }
+                });
+                
+                // Fiyat kontrolü
+                var price = $('#Price').val();
+                if (price <= 0) {
+                    $('#Price').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                // Süre kontrolü
+                var duration = $('#DurationMin').val();
+                if (duration < 5 || duration > 480) {
+                    $('#DurationMin').addClass('is-invalid');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    alert('Lütfen gerekli alanları doldurun ve geçerli değerler girin.');
+                    return false;
+                }
+                
+                return true;
+            });
+            
+            // Kategori seçiminde otomatik ikon güncelleme
+            $('#Category').on('change', function() {
+                var category = $(this).val();
+                var iconSelect = $('#IconClass');
+                
+                switch(category) {
+                    case 'haircut':
+                        iconSelect.val('bi bi-scissors');
+                        break;
+                    case 'coloring':
+                        iconSelect.val('bi bi-palette');
+                        break;
+                    case 'styling':
+                        iconSelect.val('bi bi-star');
+                        break;
+                    case 'beard':
+                        iconSelect.val('bi bi-hand-index');
+                        break;
+                    case 'care':
+                        iconSelect.val('bi bi-droplet');
+                        break;
+                    case 'manicure':
+                        iconSelect.val('bi bi-heart');
+                        break;
+                    default:
+                        iconSelect.val('bi bi-scissors');
+                }
+            });
+        });
+    </script>
+}

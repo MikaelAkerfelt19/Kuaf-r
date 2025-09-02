@@ -18,10 +18,32 @@
             <div class="d-flex justify-content-center">
                 <div class="btn-group" role="group">
                     <button type="button" class="btn btn-outline-primary active" data-category="all">Tümü</button>
-                    <button type="button" class="btn btn-outline-primary" data-category="haircut">Saç Kesimi</button>
-                    <button type="button" class="btn btn-outline-primary" data-category="coloring">Renklendirme</button>
-                    <button type="button" class="btn btn-outline-primary" data-category="styling">Şekillendirme</button>
-                    <button type="button" class="btn btn-outline-primary" data-category="beard">Sakal Traşı</button>
+                    @if (Model.Categories.Any())
+                    {
+                        @foreach (var category in Model.Categories)
+                        {
+                            var categoryName = category switch
+                            {
+                                "haircut" => "Saç Kesimi",
+                                "coloring" => "Renklendirme",
+                                "styling" => "Şekillendirme",
+                                "beard" => "Sakal Traşı",
+                                "care" => "Bakım & Spa",
+                                "manicure" => "Manikür & Pedikür",
+                                "other" => "Diğer",
+                                _ => category
+                            };
+                            <button type="button" class="btn btn-outline-primary" data-category="@category.ToLower()">@categoryName</button>
+                        }
+                    }
+                    else
+                    {
+                        <!-- Varsayılan kategoriler (henüz hizmet yoksa) -->
+                        <button type="button" class="btn btn-outline-primary" data-category="haircut">Saç Kesimi</button>
+                        <button type="button" class="btn btn-outline-primary" data-category="coloring">Renklendirme</button>
+                        <button type="button" class="btn btn-outline-primary" data-category="styling">Şekillendirme</button>
+                        <button type="button" class="btn btn-outline-primary" data-category="beard">Sakal Traşı</button>
+                    }
                 </div>
             </div>
         </div>

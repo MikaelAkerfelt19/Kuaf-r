@@ -1,0 +1,85 @@
+@model Kuafor.Web.Models.Entities.Stylist
+@{
+    ViewData["Title"] = $"{Model.FirstName} {Model.LastName} - Kuaför Detayları";
+}
+
+<div class="container py-4">
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card shadow-sm">
+                <div class="card-body text-center">
+                    <img src="/images/avatars/default.png" class="rounded-circle mb-3" alt="@Model.FirstName @Model.LastName" style="width: 150px; height: 150px; object-fit: cover;">
+                    <h4>@Model.FirstName @Model.LastName</h4>
+                    <div class="mb-3">
+                        @for (int i = 1; i <= 5; i++)
+                        {
+                            if (i <= Model.Rating)
+                            {
+                                <i class="bi bi-star-fill text-warning"></i>
+                            }
+                            else
+                            {
+                                <i class="bi bi-star text-muted"></i>
+                            }
+                        }
+                        <span class="ms-2">(@Model.Rating.ToString("0.0"))</span>
+                    </div>
+                    @if (!string.IsNullOrEmpty(Model.Bio))
+                    {
+                        <p class="text-muted">@Model.Bio</p>
+                    }
+                    <hr>
+                    <div class="text-start">
+                        <p class="mb-2"><i class="bi bi-building me-2"></i><strong>Şube:</strong> @Model.Branch?.Name</p>
+                        @if (!string.IsNullOrEmpty(Model.Phone))
+                        {
+                            <p class="mb-2"><i class="bi bi-telephone me-2"></i><strong>Telefon:</strong> @Model.Phone</p>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <p class="mb-2"><i class="bi bi-envelope me-2"></i><strong>Email:</strong> @Model.Email</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-8">
+            <h3 class="mb-4">Hizmetler ve Randevu</h3>
+            
+            <!-- Hizmetler Listesi -->
+            <div class="card shadow-sm mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Sunulan Hizmetler</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Tüm hizmetlerimizi sunmaktadır. Detaylı bilgi için randevu oluşturabilirsiniz.</p>
+                    <a href="@Url.Action("New", "Appointments", new { area = "Customer", stylistId = Model.Id })" class="btn btn-primary">
+                        <i class="bi bi-calendar-plus me-2"></i>Randevu Al
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Çalışma Saatleri -->
+            <div class="card shadow-sm">
+                <div class="card-header">
+                    <h5 class="mb-0">Çalışma Saatleri</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">Şube çalışma saatleri geçerlidir.</p>
+                    <ul class="list-unstyled">
+                        <li><strong>Pazartesi - Cumartesi:</strong> 09:00 - 18:00</li>
+                        <li><strong>Öğle Arası:</strong> 12:00 - 13:00</li>
+                        <li><strong>Pazar:</strong> Kapalı</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        console.log('Stylist Details page loaded');
+    </script>
+}

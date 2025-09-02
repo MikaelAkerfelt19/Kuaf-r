@@ -5,8 +5,9 @@
 
 <div class="d-flex align-items-center justify-content-between mb-3">
     <h2 class="mb-0">Hizmetler</h2>
-    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#serviceModal"
-        data-mode="create">Yeni Hizmet</button>
+    <a href="@Url.Action("Create")" class="btn btn-primary">
+        <i class="fas fa-plus"></i> Yeni Hizmet
+    </a>
 </div>
 
 @if (TempData["Success"] is string ok && !string.IsNullOrWhiteSpace(ok))
@@ -32,6 +33,7 @@
                     <tr>
                         <th style="width:80px">#</th>
                         <th>Ad</th>
+                        <th style="width:140px">Kategori</th>
                         <th style="width:140px">Süre (dk)</th>
                         <th style="width:140px">Fiyat (₺)</th>
                         <th style="width:120px">Durum</th>
@@ -42,7 +44,13 @@
                     @if (Model.Count == 0)
                     {
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">Kayıt bulunamadı.</td>
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="fas fa-info-circle fa-2x mb-3"></i>
+                                <br>
+                                <strong>Henüz hizmet eklenmemiş</strong>
+                                <br>
+                                <small>İlk hizmeti eklemek için "Yeni Hizmet" butonuna tıklayın.</small>
+                            </td>
                         </tr>
                     }
                     else
@@ -52,6 +60,27 @@
                             <tr>
                                 <td>@s.Id</td>
                                 <td>@s.Name</td>
+                                <td>
+                                    @if (!string.IsNullOrEmpty(s.Category))
+                                    {
+                                        var categoryName = s.Category switch
+                                        {
+                                            "haircut" => "Saç Kesimi",
+                                            "coloring" => "Renklendirme",
+                                            "styling" => "Şekillendirme",
+                                            "beard" => "Sakal Traşı",
+                                            "care" => "Bakım & Spa",
+                                            "manicure" => "Manikür & Pedikür",
+                                            "other" => "Diğer",
+                                            _ => s.Category
+                                        };
+                                        <span class="badge bg-info">@categoryName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Kategori yok</span>
+                                    }
+                                </td>
                                 <td>@s.DurationMin</td>
                                 <td>@s.Price.ToString("0.##")</td>
                                 <td>

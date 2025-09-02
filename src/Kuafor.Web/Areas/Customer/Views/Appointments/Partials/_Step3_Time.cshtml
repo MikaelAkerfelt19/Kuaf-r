@@ -4,22 +4,74 @@
   <div class="text-muted">Seçim: <strong>@Model.SelectedService?.Name</strong> · <strong>@Model.SelectedStylist?.Name</strong></div>
 </div>
 
-<div class="form-check form-switch mb-2">
-  <input class="form-check-input" type="checkbox" id="onlyAvailSwitch" />
-  <label class="form-check-label" for="onlyAvailSwitch">Sadece uygun saatleri göster</label>
+<div class="mb-3">
+  <div class="form-check form-switch mb-2">
+    <input class="form-check-input" type="checkbox" id="onlyAvailSwitch" checked />
+    <label class="form-check-label" for="onlyAvailSwitch">Sadece uygun saatleri göster</label>
+  </div>
+  
+  <div class="text-muted small">
+    <i class="bi bi-info-circle"></i> 
+    Toplam @Model.TimeSlots.Count() slot, @Model.TimeSlots.Count(s => s.IsAvailable) tanesi uygun
+  </div>
 </div>
 
-<div class="row g-2">
+<div class="row g-2" id="timeSlots">
   @foreach (var slot in Model.TimeSlots)
   {
     var disabled = !slot.IsAvailable;
-    <div class="col-6 col-md-3 col-lg-2">
-      <a class="btn btn-@(disabled?"outline-secondary disabled":"outline-primary") w-100"
-        asp-area="Customer" asp-controller="Appointments" asp-action="New"
-        asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@Model.SelectedStylistId"
-        asp-route-start="@slot.Start.ToString("yyyy-MM-dd HH:mm:ss")">
-        @slot.Start.ToString("dd MMM HH:mm")
-      </a>
+    var slotClass = disabled ? "unavailable" : "available";
+    
+    <div class="col-6 col-md-3 col-lg-2 time-slot @slotClass" data-available="@slot.IsAvailable.ToString().ToLower()">
+      @if (disabled)
+      {
+        <button class="btn btn-outline-secondary w-100" disabled>
+          @slot.Start.ToString("dd MMM HH:mm")
+          <br><small class="text-muted">Dolu</small>
+        </button>
+      }
+      else
+      {
+        <a class="btn btn-outline-primary w-100 slot-link"
+          asp-area="Customer" asp-controller="Appointments" asp-action="New"
+          asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@Model.SelectedStylistId"
+          asp-route-start="@slot.Start.ToString("yyyy-MM-dd HH:mm:ss")"
+          onclick="showLoadingSpinner(this)">
+          @slot.Start.ToString("dd MMM HH:mm")
+          <br><small class="text-success">Uygun</small>
+        </a>
+      }
     </div>
   }
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const onlyAvailSwitch = document.getElementById('onlyAvailSwitch');
+    const timeSlots = document.querySelectorAll('.time-slot');
+    
+    function filterSlots() {
+        const showOnlyAvailable = onlyAvailSwitch.checked;
+        
+        timeSlots.forEach(slot => {
+            const isAvailable = slot.dataset.available === 'true';
+            
+            if (showOnlyAvailable && !isAvailable) {
+                slot.style.display = 'none';
+            } else {
+                slot.style.display = 'block';
+            }
+        });
+    }
+    
+    onlyAvailSwitch.addEventListener('change', filterSlots);
+    
+    // Başlangıçta filtreyi uygula
+    filterSlots();
+});
+
+function showLoadingSpinner(element) {
+    element.innerHTML = '<div class="spinner-border spinner-border-sm" role="status"><span class="visually-hidden">Yükleniyor...</span></div> Randevu oluşturuluyor...';
+    element.disabled = true;
+}
+</script>

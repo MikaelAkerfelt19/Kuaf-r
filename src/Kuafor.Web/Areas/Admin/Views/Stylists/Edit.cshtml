@@ -13,119 +13,240 @@
         </a>
     </div>
 
-    <div class="card shadow">
-        <div class="card-header py-3">
-            <h6 class="m-0 font-weight-bold text-primary">Kuaför Bilgileri</h6>
+    <div class="row">
+        <!-- Kuaför Bilgileri -->
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Kuaför Bilgileri</h6>
+                </div>
+                <div class="card-body">
+                    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            @err
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                        </div>
+                    }
+
+                    @if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
+                    {
+                        <div class="alert alert-success alert-dismissible fade show" role="alert">
+                            @success
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                        </div>
+                    }
+
+                    <form method="post" asp-action="Edit">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" asp-for="Id" />
+                        <input type="hidden" asp-for="CreatedAt" />
+                        <input type="hidden" asp-for="UpdatedAt" />
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="FirstName" class="form-label">Ad <span class="text-danger">*</span></label>
+                                    <input asp-for="FirstName" class="form-control" placeholder="Kuaförün adı" required />
+                                    <span asp-validation-for="FirstName" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="LastName" class="form-label">Soyad <span class="text-danger">*</span></label>
+                                    <input asp-for="LastName" class="form-control" placeholder="Kuaförün soyadı" required />
+                                    <span asp-validation-for="LastName" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Email" class="form-label">E-posta</label>
+                                    <input asp-for="Email" type="email" class="form-control" placeholder="ornek@email.com" />
+                                    <span asp-validation-for="Email" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Phone" class="form-label">Telefon</label>
+                                    <input asp-for="Phone" class="form-control" placeholder="0555 123 45 67" />
+                                    <span asp-validation-for="Phone" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="BranchId" class="form-label">Şube <span class="text-danger">*</span></label>
+                                    <select asp-for="BranchId" class="form-select" required>
+                                        <option value="">Şube Seçin</option>
+                                        @foreach (var branch in ViewBag.Branches)
+                                        {
+                                            <option value="@branch.Id">@branch.Name</option>
+                                        }
+                                    </select>
+                                    <span asp-validation-for="BranchId" class="text-danger"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="Rating" class="form-label">Puan</label>
+                                    <select asp-for="Rating" class="form-select">
+                                        <option value="0">0 - Yeni</option>
+                                        <option value="1">1 - Başlangıç</option>
+                                        <option value="2">2 - Gelişmekte</option>
+                                        <option value="3">3 - İyi</option>
+                                        <option value="4">4 - Çok İyi</option>
+                                        <option value="5">5 - Mükemmel</option>
+                                    </select>
+                                    <span asp-validation-for="Rating" class="text-danger"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Bio" class="form-label">Biyografi</label>
+                            <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Kuaför hakkında kısa bilgi..."></textarea>
+                            <span asp-validation-for="Bio" class="text-danger"></span>
+                            <div class="form-text">Maksimum 500 karakter</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <div class="form-check">
+                                <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                <label asp-for="IsActive" class="form-check-label">
+                                    Kuaför aktif olarak çalışıyor
+                                </label>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-warning">
+                                <i class="fas fa-save"></i> Güncelle
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
-            @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-            {
-                <div class="alert alert-danger alert-dismissible fade show" role="alert">
-                    @err
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
-                </div>
-            }
 
-            <form method="post" asp-action="Edit">
-                @Html.AntiForgeryToken()
-                <input type="hidden" asp-for="Id" />
-                
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="FirstName" class="form-label">Ad <span class="text-danger">*</span></label>
-                            <input asp-for="FirstName" class="form-control" placeholder="Kuaförün adı" required />
-                            <span asp-validation-for="FirstName" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="LastName" class="form-label">Soyad <span class="text-danger">*</span></label>
-                            <input asp-for="LastName" class="form-control" placeholder="Kuaförün soyadı" required />
-                            <span asp-validation-for="LastName" class="text-danger"></span>
-                        </div>
-                    </div>
+        <!-- Çalışma Saatleri -->
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Çalışma Saatleri</h6>
                 </div>
+                <div class="card-body">
+                    <form method="post" asp-action="UpdateWorkingHours" asp-route-stylistId="@Model.Id">
+                        @Html.AntiForgeryToken()
+                        
+                        @{
+                            var workingHours = (List<Kuafor.Web.Models.Entities.WorkingHours>)ViewBag.WorkingHours ?? new List<Kuafor.Web.Models.Entities.WorkingHours>();
+                            var daysOfWeek = new[] { 
+                                new { Value = DayOfWeek.Monday, Name = "Pazartesi" },
+                                new { Value = DayOfWeek.Tuesday, Name = "Salı" },
+                                new { Value = DayOfWeek.Wednesday, Name = "Çarşamba" },
+                                new { Value = DayOfWeek.Thursday, Name = "Perşembe" },
+                                new { Value = DayOfWeek.Friday, Name = "Cuma" },
+                                new { Value = DayOfWeek.Saturday, Name = "Cumartesi" },
+                                new { Value = DayOfWeek.Sunday, Name = "Pazar" }
+                            };
+                        }
 
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Email" class="form-label">E-posta</label>
-                            <input asp-for="Email" type="email" class="form-control" placeholder="ornek@email.com" />
-                            <span asp-validation-for="Email" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Phone" class="form-label">Telefon</label>
-                            <input asp-for="Phone" class="form-control" placeholder="0555 123 45 67" />
-                            <span asp-validation-for="Phone" class="text-danger"></span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="BranchId" class="form-label">Şube <span class="text-danger">*</span></label>
-                            <select asp-for="BranchId" class="form-select" required>
-                                <option value="">Şube Seçin</option>
-                                @foreach (var branch in ViewBag.Branches)
-                                {
-                                    if (branch.Id == Model.BranchId)
-                                    {
-                                        <option value="@branch.Id" selected>@branch.Name</option>
+                        @for (int i = 0; i < daysOfWeek.Length; i++)
+                        {
+                            var day = daysOfWeek[i];
+                            var workingHour = workingHours.FirstOrDefault(w => w.DayOfWeek == day.Value);
+                            
+                            <div class="border rounded p-3 mb-3">
+                                <h6 class="mb-2">@day.Name</h6>
+                                
+                                <input type="hidden" name="workingHours[@i].DayOfWeek" value="@((int)day.Value)" />
+                                <input type="hidden" name="workingHours[@i].BranchId" value="@Model.BranchId" />
+                                
+                                <div class="form-check mb-2">
+                                    @{
+                                        var isWorkingDay = workingHour?.IsWorkingDay == true;
                                     }
-                                    else
-                                    {
-                                        <option value="@branch.Id">@branch.Name</option>
-                                    }
-                                }
-                            </select>
-                            <span asp-validation-for="BranchId" class="text-danger"></span>
+                                    <input type="checkbox" 
+                                           name="workingHours[@i].IsWorkingDay" 
+                                           value="true"
+                                           class="form-check-input working-day-checkbox" 
+                                           data-target="day-@i"
+                                           @(isWorkingDay ? "checked" : "") />
+                                    <input type="hidden" name="workingHours[@i].IsWorkingDay" value="false" />
+                                    <label class="form-check-label">Çalışma Günü</label>
+                                </div>
+                                
+                                <div id="day-@i" class="working-hours-details" style="@(isWorkingDay ? "" : "display: none;")">
+                                    <div class="row mb-2">
+                                        <div class="col-6">
+                                            <label class="form-label small">Açılış</label>
+                                            <input type="time" 
+                                                   name="workingHours[@i].OpenTime" 
+                                                   class="form-control form-control-sm"
+                                                   value="@(workingHour?.OpenTime.ToString(@"hh\:mm") ?? "09:00")" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small">Kapanış</label>
+                                            <input type="time" 
+                                                   name="workingHours[@i].CloseTime" 
+                                                   class="form-control form-control-sm"
+                                                   value="@(workingHour?.CloseTime.ToString(@"hh\:mm") ?? "18:00")" />
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label class="form-label small">Öğle Başı</label>
+                                            <input type="time" 
+                                                   name="workingHours[@i].BreakStart" 
+                                                   class="form-control form-control-sm"
+                                                   value="@(workingHour?.BreakStart?.ToString(@"hh\:mm") ?? "12:00")" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small">Öğle Sonu</label>
+                                            <input type="time" 
+                                                   name="workingHours[@i].BreakEnd" 
+                                                   class="form-control form-control-sm"
+                                                   value="@(workingHour?.BreakEnd?.ToString(@"hh\:mm") ?? "13:00")" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="fas fa-clock"></i> Çalışma Saatlerini Güncelle
+                            </button>
                         </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Rating" class="form-label">Puan</label>
-                            <select asp-for="Rating" class="form-select">
-                                <option value="0">0 - Yeni</option>
-                                <option value="1">1 - Başlangıç</option>
-                                <option value="2">2 - Gelişmekte</option>
-                                <option value="3">3 - İyi</option>
-                                <option value="4">4 - Çok İyi</option>
-                                <option value="5">5 - Mükemmel</option>
-                            </select>
-                            <span asp-validation-for="Rating" class="text-danger"></span>
-                        </div>
-                    </div>
+                    </form>
                 </div>
-
-                <div class="mb-3">
-                    <label asp-for="Bio" class="form-label">Biyografi</label>
-                    <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Kuaför hakkında kısa bilgi...">@Model.Bio</textarea>
-                    <span asp-validation-for="Bio" class="text-danger"></span>
-                    <div class="form-text">Maksimum 500 karakter</div>
-                </div>
-
-                <div class="mb-3">
-                    <div class="form-check">
-                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
-                        <label asp-for="IsActive" class="form-check-label">
-                            Kuaför aktif olarak çalışıyor
-                        </label>
-                    </div>
-                </div>
-
-                <div class="d-flex justify-content-end">
-                    <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
-                        <i class="fas fa-times"></i> İptal
-                    </a>
-                    <button type="submit" class="btn btn-warning">
-                        <i class="fas fa-save"></i> Güncelle
-                    </button>
-                </div>
-            </form>
+            </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        // Çalışma günü checkbox'larını yönet
+        document.addEventListener('DOMContentLoaded', function() {
+            const checkboxes = document.querySelectorAll('.working-day-checkbox');
+            
+            checkboxes.forEach(function(checkbox) {
+                checkbox.addEventListener('change', function() {
+                    const target = document.getElementById(this.dataset.target);
+                    if (target) {
+                        target.style.display = this.checked ? 'block' : 'none';
+                    }
+                });
+            });
+        });
+    </script>
+}

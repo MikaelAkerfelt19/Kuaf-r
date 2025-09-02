@@ -20,18 +20,7 @@
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hizmetler</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#services">Tümü</a></li>
-                                <li><a class="dropdown-item" asp-controller="Services" asp-action="Index">Fiyat
-                                        Listesi</a></li>
-                                <li>
-                                    <hr class="dropdown-divider" />
-                                </li>
-                                <li><a class="dropdown-item" asp-controller="Services" asp-action="Detail"
-                                        asp-route-id="sac-kesim">Saç Kesimi</a></li>
-                                <li><a class="dropdown-item" asp-controller="Services" asp-action="Detail"
-                                        asp-route-id="sakal">Sakal Tıraşı</a></li>
-                                <li><a class="dropdown-item" asp-controller="Services" asp-action="Detail"
-                                        asp-route-id="boya">Boya</a></li>
+                                @await Component.InvokeAsync("NavbarServices")
                             </ul>
                         </li>
                         <li class="nav-item"><a class="nav-link" href="#testimonials">Yorumlar</a></li>
@@ -81,18 +70,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hizmetler</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="#services">Tümü</a></li>
-                            <li><a class="dropdown-item" asp-controller="Services" asp-action="Index">Fiyat
-                                    Listesi</a></li>
-                            <li>
-                                <hr class="dropdown-divider" />
-                            </li>
-                            <li><a class="dropdown-item" asp-controller="Services" asp-action="Detail"
-                                    asp-route-id="sac-kesim">Saç Kesimi</a></li>
-                            <li><a class="dropdown-item" asp-controller="Services" asp-action="Detail"
-                                    asp-route-id="sakal">Sakal Tıraşı</a></li>
-                            <li><a class="dropdown-item" asp-controller="Services" asp-action="Detail"
-                                    asp-route-id="boya">Boya</a></li>
+                            @await Component.InvokeAsync("NavbarServices")
                         </ul>
                     </li>
                     <li class="nav-item"><a class="nav-link" href="#testimonials">Yorumlar</a></li>

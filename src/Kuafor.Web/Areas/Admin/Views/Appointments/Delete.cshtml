@@ -1,0 +1,88 @@
+@model Kuafor.Web.Models.Entities.Appointment
+@{
+    ViewData["Title"] = "Randevu Sil";
+}
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Randevu Silme Onayı
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <strong>Dikkat!</strong> Bu randevuyu silmek istediğinizden emin misiniz? Bu işlem geri alınamaz!
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Randevu Bilgileri</h6>
+                            <dl class="row">
+                                <dt class="col-sm-4">Müşteri:</dt>
+                                <dd class="col-sm-8">@($"{Model.Customer?.FirstName} {Model.Customer?.LastName}")</dd>
+
+                                <dt class="col-sm-4">Hizmet:</dt>
+                                <dd class="col-sm-8">@Model.Service?.Name</dd>
+
+                                <dt class="col-sm-4">Tarih/Saat:</dt>
+                                <dd class="col-sm-8">@Model.StartAt.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                                <dt class="col-sm-4">Şube:</dt>
+                                <dd class="col-sm-8">@Model.Branch?.Name</dd>
+
+                                <dt class="col-sm-4">Kuaför:</dt>
+                                <dd class="col-sm-8">@($"{Model.Stylist?.FirstName} {Model.Stylist?.LastName}")</dd>
+
+                                <dt class="col-sm-4">Durum:</dt>
+                                <dd class="col-sm-8">
+                                    <span class="badge @(Model.Status.ToString() switch {
+                                        "Scheduled" => "bg-primary",
+                                        "Completed" => "bg-success",
+                                        "Cancelled" => "bg-danger",
+                                        "Rescheduled" => "bg-warning text-dark",
+                                        _ => "bg-secondary"
+                                    })">
+                                        @Model.Status
+                                    </span>
+                                </dd>
+
+                                <dt class="col-sm-4">Fiyat:</dt>
+                                <dd class="col-sm-8">@Model.TotalPrice.ToString("0.##") ₺</dd>
+                            </dl>
+                        </div>
+
+                        <div class="col-md-6">
+                            <h6 class="text-muted">Silme Nedeni (Opsiyonel)</h6>
+                            <form method="post" action="/Admin/Appointments/DeleteConfirmed/@Model.Id">
+                                @Html.AntiForgeryToken()
+                                <input type="hidden" name="id" value="@Model.Id" />
+                                
+                                <div class="mb-3">
+                                    <textarea class="form-control" name="reason" rows="4" 
+                                            placeholder="Randevuyu silme nedeninizi belirtebilirsiniz..."></textarea>
+                                </div>
+
+                                <div class="d-grid gap-2">
+                                    <button type="submit" class="btn btn-danger">
+                                        <i class="fas fa-trash me-2"></i>
+                                        Evet, Bu Randevuyu Sil
+                                    </button>
+                                    
+                                    <a href="/Admin/Appointments" class="btn btn-secondary">
+                                        <i class="fas fa-times me-2"></i>
+                                        İptal
+                                    </a>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
