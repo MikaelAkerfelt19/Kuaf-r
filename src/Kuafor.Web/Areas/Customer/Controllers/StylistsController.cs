@@ -18,6 +18,9 @@ public class StylistsController : Controller
     }
 
     // GET: /Customer/Stylists
+    [HttpGet]
+    [Route("")]
+    [Route("Index")]
     public async Task<IActionResult> Index()
     {
         var stylists = await _stylistService.GetActiveAsync();
@@ -28,6 +31,8 @@ public class StylistsController : Controller
     }
 
     // GET: /Customer/Stylists/Details/5
+    [HttpGet]
+    [Route("Details/{id:int}")]
     public async Task<IActionResult> Details(int id)
     {
         var stylist = await _stylistService.GetByIdAsync(id);

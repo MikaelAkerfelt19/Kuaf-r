@@ -7,6 +7,7 @@ using Kuafor.Web.Models.Admin.Services;
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Route("Admin/[controller]")]
     [Authorize(Roles = "Admin")]
     public class ServicesController : Controller
     {
@@ -17,6 +18,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             _serviceService = serviceService;
         }
 
+        [HttpGet]
+        [Route("")]
         public async Task<IActionResult> Index()
         {
             var services = await _serviceService.GetAllAsync();
@@ -26,6 +29,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             {
                 Id = s.Id,
                 Name = s.Name,
+                Category = s.Category,
                 DurationMin = s.DurationMin,
                 Price = s.Price,
                 IsActive = s.IsActive
@@ -34,12 +38,15 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             return View(serviceDtos);
         }
 
+        [HttpGet]
+        [Route("Create")]
         public IActionResult Create()
         {
             return View(new Service());
         }
 
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(Service service)
         {

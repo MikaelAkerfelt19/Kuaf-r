@@ -6,6 +6,7 @@ using Kuafor.Web.Models.Entities;
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Route("Admin/[controller]")]
     public class BranchesController : Controller
     {
         private readonly IBranchService _branchService;
@@ -18,6 +19,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // GET: /Admin/Branches
+        [HttpGet]
+        [Route("")]
         public async Task<IActionResult> Index()
         {
             var branches = await _branchService.GetAllAsync();
@@ -35,6 +38,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         // POST: /Admin/Branches/Create
         [HttpPost]
+        [Route("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(BranchFormModel form)
         {
@@ -67,6 +71,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         // POST: /Admin/Branches/Edit
         [HttpPost]
+        [Route("Edit")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(BranchFormModel form)
         {
@@ -103,6 +108,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         // POST: /Admin/Branches/Delete
         [HttpPost]
+        [Route("Delete")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {

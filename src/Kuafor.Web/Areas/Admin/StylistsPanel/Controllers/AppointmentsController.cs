@@ -5,9 +5,9 @@ using Kuafor.Web.Models.Stylist;
 using Kuafor.Web.Models.Enums;
 using System.Security.Claims;
 
-namespace Kuafor.Web.Areas.Stylist.Controllers
+namespace Kuafor.Web.Areas.StylistsPanel.Controllers
 {
-    [Area("Stylist")]
+    [Area("StylistsPanel")]
     [Authorize(Roles = "Stylist")]
     public class AppointmentsController : Controller
     {

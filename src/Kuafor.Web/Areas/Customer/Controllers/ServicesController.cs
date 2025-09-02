@@ -14,15 +14,18 @@ public class ServicesController : Controller
     private readonly IServiceService _serviceService;
     private readonly IStylistService _stylistService;
     private readonly IBranchService _branchService;
+    private readonly IWorkingHoursService _workingHoursService;
 
     public ServicesController(
         IServiceService serviceService,
         IStylistService stylistService,
-        IBranchService branchService)
+        IBranchService branchService,
+        IWorkingHoursService workingHoursService)
     {
         _serviceService = serviceService;
         _stylistService = stylistService;
         _branchService = branchService;
+        _workingHoursService = workingHoursService;
     }
 
     // GET: /Customer/Services
@@ -34,10 +37,19 @@ public class ServicesController : Controller
         var services = await _serviceService.GetActiveAsync();
         var branches = await _branchService.GetActiveAsync();
         
+        // Database'den gelen hizmetlerin kategorilerini al
+        var categories = services
+            .Where(s => !string.IsNullOrEmpty(s.Category))
+            .Select(s => s.Category!)
+            .Distinct()
+            .OrderBy(c => c)
+            .ToList();
+        
         var vm = new ServicesIndexViewModel
         {
             Services = services.ToList(),
-            Branches = branches.ToList()
+            Branches = branches.ToList(),
+            Categories = categories
         };
 
         return View(vm);
@@ -57,6 +69,15 @@ public class ServicesController : Controller
 
         // Bu hizmeti sunan kuaförleri bul
         var stylists = await _stylistService.GetByServiceAsync(id);
+        
+        // İlk şubenin çalışma saatlerini al (örnek olarak)
+        var branches = await _branchService.GetActiveAsync();
+        var firstBranch = branches.FirstOrDefault();
+        if (firstBranch != null)
+        {
+            var workingHours = await _workingHoursService.GetByBranchAsync(firstBranch.Id);
+            ViewBag.WorkingHours = workingHours;
+        }
         
         var vm = new ServiceDetailsViewModel
         {

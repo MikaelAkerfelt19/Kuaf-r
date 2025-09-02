@@ -17,19 +17,22 @@ namespace Kuafor.Web.Areas.Customer.Controllers
         private readonly IStylistService _stylistService;
         private readonly IBranchService _branchService;
         private readonly ICustomerService _customerService;
+        private readonly IWorkingHoursService _workingHoursService;
 
         public AppointmentsController(
             IAppointmentService appointmentService,
             IServiceService serviceService,
             IStylistService stylistService,
             IBranchService branchService,
-            ICustomerService customerService)
+            ICustomerService customerService,
+            IWorkingHoursService workingHoursService)
         {
             _appointmentService = appointmentService;
             _serviceService = serviceService;
             _stylistService = stylistService;
             _branchService = branchService;
             _customerService = customerService;
+            _workingHoursService = workingHoursService;
         }
 
         public async Task<IActionResult> New(int? serviceId, int? stylistId, string? start)
@@ -264,21 +267,70 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             if (service == null || stylist == null)
                 return new List<TimeSlotVm>();
 
-            var start = DateTime.Today.AddDays(2).AddHours(10);
             var slots = new List<TimeSlotVm>();
+            var startDate = DateTime.Today.AddDays(1);
+            var endDate = startDate.AddDays(7);
             
-            for (int i = 0; i < 16; i++)
+            // Performans optimizasyonu: Önce tüm çalışma saatlerini ve mevcut randevuları al
+            var allWorkingHours = await _workingHoursService.GetByBranchAsync(stylist.BranchId);
+            var existingAppointments = await _appointmentService.GetByDateRangeAsync(startDate, endDate.AddDays(1));
+            var stylistAppointments = existingAppointments
+                .Where(a => a.StylistId == stylistId.Value && a.Status != Models.Enums.AppointmentStatus.Cancelled)
+                .ToList();
+            
+            // 7 gün için slot oluştur
+            for (int day = 1; day <= 7; day++)
             {
-                var slotStart = start.AddMinutes(30 * i);
-                var slotEnd = slotStart.AddMinutes(service.DurationMin);
+                var date = DateTime.Today.AddDays(day);
                 
-                var isAvailable = !await _appointmentService.HasTimeConflictAsync(
-                    stylistId.Value, slotStart, slotEnd);
+                // Bu günün çalışma saatlerini bul
+                var workingHours = allWorkingHours.FirstOrDefault(w => w.DayOfWeek == date.DayOfWeek);
+                if (workingHours == null || !workingHours.IsWorkingDay)
+                    continue;
                     
-                slots.Add(new TimeSlotVm(slotStart, isAvailable));
+                // Bu günün mevcut randevularını al
+                var dayAppointments = stylistAppointments
+                    .Where(a => a.StartAt.Date == date.Date)
+                    .ToList();
+                    
+                // Çalışma saatleri içinde slotlar oluştur
+                var currentTime = date.Date.Add(workingHours.OpenTime);
+                var endTime = date.Date.Add(workingHours.CloseTime);
+                
+                while (currentTime.AddMinutes(service.DurationMin) <= endTime)
+                {
+                    // Öğle arası kontrolü
+                    if (workingHours.BreakStart.HasValue && workingHours.BreakEnd.HasValue)
+                    {
+                        var breakStart = date.Date.Add(workingHours.BreakStart.Value);
+                        var breakEnd = date.Date.Add(workingHours.BreakEnd.Value);
+                        
+                        if (currentTime < breakEnd && currentTime.AddMinutes(service.DurationMin) > breakStart)
+                        {
+                            currentTime = breakEnd;
+                            continue;
+                        }
+                    }
+                    
+                    // Minimum bildirim süresi kontrolü (30 dakika)
+                    var minAdvanceTime = DateTime.Now.AddMinutes(30);
+                    if (currentTime <= minAdvanceTime)
+                    {
+                        currentTime = currentTime.AddMinutes(30);
+                        continue;
+                    }
+                    
+                    // Çakışma kontrolü - memory'de yap, DB query'siz
+                    var slotEnd = currentTime.AddMinutes(service.DurationMin);
+                    var hasConflict = dayAppointments.Any(a => 
+                        a.StartAt < slotEnd && a.EndAt > currentTime);
+                        
+                    slots.Add(new TimeSlotVm(currentTime, !hasConflict));
+                    currentTime = currentTime.AddMinutes(30); // 30 dakikalık aralıklar
+                }
             }
             
-            return slots;
+            return slots.OrderBy(s => s.Start).ToList();
         }
 
         private async Task<int> GetCurrentCustomerId()

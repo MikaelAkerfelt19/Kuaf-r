@@ -200,19 +200,42 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             return View(appointment);
         }
 
+        // GET: /Admin/Appointments/Delete/5 - Confirmation sayfası
+        [HttpGet]
+        [Route("Delete/{id:int}")]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var appointment = await _appointmentService.GetByIdAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Services = await _serviceService.GetAllAsync();
+            ViewBag.Stylists = await _stylistService.GetAllAsync();
+            ViewBag.Customers = await _customerService.GetAllAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+
+            return View(appointment);
+        }
+
         // POST: /Admin/Appointments/Delete/5
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Delete(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id, string? reason = null)
         {
             try
             {
                 await _appointmentService.DeleteAsync(id);
                 TempData["Success"] = "Randevu başarıyla silindi.";
             }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = $"Randevu silinemedi: {ex.Message}";
+            }
             catch (Exception ex)
             {
-                TempData["Error"] = $"Hata: {ex.Message}";
+                TempData["Error"] = $"Beklenmeyen hata: {ex.Message}";
             }
 
             return RedirectToAction(nameof(Index));

@@ -81,12 +81,18 @@ public class AppointmentsController : Controller
                 return RedirectToAction("Login", "Account");
             }
 
-            // Çakışma kontrolü
-            var hasConflict = await _appointmentService.HasConflictAsync(
-                model.StylistId, model.StartAt, model.StartAt.AddMinutes(model.DurationMin));
+            // Çakışma kontrolü - sadece basit çakışma kontrolü, detaylı kontrol CreateAsync'te yapılacak
+            var existingAppointments = await _appointmentService.GetByStylistAsync(
+                model.StylistId, model.StartAt.Date, model.StartAt.Date.AddDays(1));
+            
+            var endTime = model.StartAt.AddMinutes(model.DurationMin);
+            var hasSimpleConflict = existingAppointments.Any(a => 
+                a.Status != Models.Enums.AppointmentStatus.Cancelled &&
+                a.StartAt < endTime && a.EndAt > model.StartAt);
 
-            if (hasConflict)
+            if (hasSimpleConflict)
             {
+                Console.WriteLine($"DEBUG: Basit çakışma kontrolü - Stylist: {model.StylistId}, İstenen: {model.StartAt:yyyy-MM-dd HH:mm} - {endTime:yyyy-MM-dd HH:mm}");
                 ModelState.AddModelError("", "Seçilen tarih ve saatte kuaför müsait değil. Lütfen başka bir zaman seçin.");
                 model.Services = await _serviceService.GetAllAsync();
                 model.Branches = await _branchService.GetAllAsync();
