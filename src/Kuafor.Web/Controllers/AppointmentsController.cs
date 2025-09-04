@@ -5,7 +5,7 @@ using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Models.Appointments;
 using System.Security.Claims;
-
+using Kuafor.Web.Services;
 namespace Kuafor.Web.Controllers;
 
 [Authorize]
@@ -16,19 +16,22 @@ public class AppointmentsController : Controller
     private readonly IStylistService _stylistService;
     private readonly IBranchService _branchService;
     private readonly ICustomerService _customerService;
+    private readonly ITimeZoneService _timeZoneService;
 
     public AppointmentsController(
         IAppointmentService appointmentService,
         IServiceService serviceService,
         IStylistService stylistService,
         IBranchService branchService,
-        ICustomerService customerService)
+        ICustomerService customerService,
+        ITimeZoneService timeZoneService)
     {
         _appointmentService = appointmentService;
         _serviceService = serviceService;
         _stylistService = stylistService;
         _branchService = branchService;
         _customerService = customerService;
+        _timeZoneService = timeZoneService;
     }
 
     // GET: /Appointments
@@ -42,6 +45,14 @@ public class AppointmentsController : Controller
         }
 
         var appointments = await _appointmentService.GetByCustomerAsync(customerId.Value);
+        
+        // Timezone düzeltmesi: UTC karşılaştırması yerine tutarlı zaman kullan
+        var nowUtc = DateTime.UtcNow;
+        var upcoming = appointments.Where(a => a.StartAt > nowUtc && a.Status != AppointmentStatus.Cancelled).OrderBy(a => a.StartAt);
+        var past = appointments.Where(a => a.StartAt <= nowUtc || a.Status == AppointmentStatus.Cancelled).OrderByDescending(a => a.StartAt);
+
+        ViewBag.Upcoming = upcoming;
+        ViewBag.Past = past;
         return View(appointments);
     }
 
@@ -81,18 +92,20 @@ public class AppointmentsController : Controller
                 return RedirectToAction("Login", "Account");
             }
 
-            // Çakışma kontrolü - sadece basit çakışma kontrolü, detaylı kontrol CreateAsync'te yapılacak
+            // Timezone düzeltmesi: Local time'ı UTC'ye çevir
+            var startUtc = _timeZoneService.ConvertToUtc(model.StartAt);
+            var endUtc = _timeZoneService.ConvertToUtc(model.StartAt.AddMinutes(model.DurationMin));
+
+            // Çakışma kontrolü - UTC zamanları ile
             var existingAppointments = await _appointmentService.GetByStylistAsync(
-                model.StylistId, model.StartAt.Date, model.StartAt.Date.AddDays(1));
+                model.StylistId, startUtc.Date, startUtc.Date.AddDays(1));
             
-            var endTime = model.StartAt.AddMinutes(model.DurationMin);
             var hasSimpleConflict = existingAppointments.Any(a => 
                 a.Status != Models.Enums.AppointmentStatus.Cancelled &&
-                a.StartAt < endTime && a.EndAt > model.StartAt);
+                a.StartAt < endUtc && a.EndAt > startUtc);
 
             if (hasSimpleConflict)
             {
-                Console.WriteLine($"DEBUG: Basit çakışma kontrolü - Stylist: {model.StylistId}, İstenen: {model.StartAt:yyyy-MM-dd HH:mm} - {endTime:yyyy-MM-dd HH:mm}");
                 ModelState.AddModelError("", "Seçilen tarih ve saatte kuaför müsait değil. Lütfen başka bir zaman seçin.");
                 model.Services = await _serviceService.GetAllAsync();
                 model.Branches = await _branchService.GetAllAsync();
@@ -105,20 +118,22 @@ public class AppointmentsController : Controller
                 StylistId = model.StylistId,
                 BranchId = model.BranchId,
                 CustomerId = customerId.Value,
-                StartAt = model.StartAt.ToUniversalTime(),
-                EndAt = model.StartAt.AddMinutes(model.DurationMin).ToUniversalTime(),
+                StartAt = startUtc,
+                EndAt = endUtc,
                 Notes = model.Notes,
                 Status = AppointmentStatus.Confirmed
             };
 
             await _appointmentService.CreateAsync(appointment);
 
-            TempData["Success"] = "Randevunuz başarıyla oluşturuldu. Onay için bekleyiniz.";
+            // Başarı mesajında local time kullan
+            var localStart = _timeZoneService.ConvertToLocalTime(appointment.StartAt);
+            TempData["Success"] = $"Randevunuz başarıyla oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {model.SelectedServiceName}";
             return RedirectToAction("Index");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            ModelState.AddModelError("", "Randevu oluşturulurken bir hata oluştu. Lütfen tekrar deneyin.");
+            ModelState.AddModelError("", "Randevu oluşturulurken bir hata oluştu: " + ex.Message);
             model.Services = await _serviceService.GetAllAsync();
             model.Branches = await _branchService.GetAllAsync();
             return View(model);
@@ -170,7 +185,9 @@ public class AppointmentsController : Controller
             return RedirectToAction("Index");
         }
 
-        if (appointment.StartAt <= DateTime.UtcNow.AddHours(2))
+        // Timezone düzeltmesi: Local time ile karşılaştır
+        var localStart = _timeZoneService.ConvertToLocalTime(appointment.StartAt);
+        if (localStart <= DateTime.Now.AddHours(2))
         {
             TempData["Error"] = "Randevu saatinden 2 saat öncesine kadar iptal edebilirsiniz.";
             return RedirectToAction("Index");
@@ -188,7 +205,9 @@ public class AppointmentsController : Controller
     {
         try
         {
-            var slots = await _appointmentService.GetAvailableSlotsAsync(stylistId, date, durationMin);
+            // Timezone düzeltmesi: Local date'i UTC'ye çevir
+            var dateUtc = _timeZoneService.ConvertToUtc(date);
+            var slots = await _appointmentService.GetAvailableSlotsAsync(stylistId, dateUtc, durationMin);
             return Json(slots);
         }
         catch (Exception)

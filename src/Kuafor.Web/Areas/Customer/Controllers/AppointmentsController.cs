@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Appointments;
 using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Services;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
@@ -17,22 +18,24 @@ namespace Kuafor.Web.Areas.Customer.Controllers
         private readonly IStylistService _stylistService;
         private readonly IBranchService _branchService;
         private readonly ICustomerService _customerService;
-        private readonly IWorkingHoursService _workingHoursService;
-
+        private readonly IStylistWorkingHoursService _stylistWorkingHoursService;
+        private readonly ITimeZoneService _timeZoneService;
         public AppointmentsController(
             IAppointmentService appointmentService,
             IServiceService serviceService,
             IStylistService stylistService,
             IBranchService branchService,
             ICustomerService customerService,
-            IWorkingHoursService workingHoursService)
+            IStylistWorkingHoursService stylistWorkingHoursService,
+            ITimeZoneService timeZoneService) 
         {
             _appointmentService = appointmentService;
             _serviceService = serviceService;
             _stylistService = stylistService;
             _branchService = branchService;
             _customerService = customerService;
-            _workingHoursService = workingHoursService;
+            _stylistWorkingHoursService = stylistWorkingHoursService;
+            _timeZoneService = timeZoneService; 
         }
 
         public async Task<IActionResult> New(int? serviceId, int? stylistId, string? start)
@@ -67,20 +70,26 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 if (customerId == 0)
                     return BadRequest("Müşteri bilgisi bulunamadı");
 
+                // Timezone dönüşümü düzeltildi
+                var startUtc = _timeZoneService.ConvertToUtc(start);
+                var endUtc = _timeZoneService.ConvertToUtc(start.AddMinutes(service.DurationMin));
+
                 var appointment = new Appointment
                 {
                     ServiceId = serviceId,
                     StylistId = stylistId,
                     BranchId = stylist.BranchId,
                     CustomerId = customerId,
-                    StartAt = start.ToUniversalTime(),
-                    EndAt = start.AddMinutes(service.DurationMin).ToUniversalTime(),
+                    StartAt = startUtc,
+                    EndAt = endUtc,
                     Status = AppointmentStatus.Confirmed
                 };
 
                 var created = await _appointmentService.CreateAsync(appointment);
                 
-                TempData["Success"] = $"Randevu oluşturuldu: {start:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName}";
+                // Başarı mesajında local time kullan
+                var localStart = _timeZoneService.ConvertToLocalTime(created.StartAt);
+                TempData["Success"] = $"Randevu oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName}";
                 return RedirectToAction("Index");
             }
             catch (InvalidOperationException ex)
@@ -116,8 +125,10 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             
             var appointments = await _appointmentService.GetByCustomerAsync(customerId);
             
-            var upcoming = appointments.Where(a => a.StartAt > DateTime.UtcNow && a.Status != AppointmentStatus.Cancelled).OrderBy(a => a.StartAt);
-            var past = appointments.Where(a => a.StartAt <= DateTime.UtcNow || a.Status == AppointmentStatus.Cancelled).OrderByDescending(a => a.StartAt);
+            // Timezone düzeltmesi: UTC karşılaştırması yerine local time kullan
+            var nowUtc = DateTime.UtcNow;
+            var upcoming = appointments.Where(a => a.StartAt > nowUtc && a.Status != AppointmentStatus.Cancelled).OrderBy(a => a.StartAt);
+            var past = appointments.Where(a => a.StartAt <= nowUtc || a.Status == AppointmentStatus.Cancelled).OrderByDescending(a => a.StartAt);
 
             ViewBag.Upcoming = upcoming;
             ViewBag.Past = past;
@@ -230,17 +241,20 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     return RedirectToAction("Index");
                 }
 
-                // Zaman çakışması kontrolü
+                // Zaman çakışması kontrolü - UTC dönüşümü ile
+                var newStartUtc = _timeZoneService.ConvertToUtc(model.NewStartTime);
+                var newEndUtc = _timeZoneService.ConvertToUtc(model.NewStartTime.AddMinutes((int)(appointment.EndAt - appointment.StartAt).TotalMinutes));
+                
                 if (await _appointmentService.HasTimeConflictAsync(
-                    appointment.StylistId, model.NewStartTime, model.NewStartTime.AddMinutes((int)(appointment.EndAt - appointment.StartAt).TotalMinutes)))
+                    appointment.StylistId, newStartUtc, newEndUtc))
                 {
                     TempData["Error"] = "Seçilen zaman diliminde başka bir randevu bulunmaktadır";
                     return RedirectToAction("Reschedule", new { id = model.AppointmentId });
                 }
 
-                // Randevuyu güncelle
-                appointment.StartAt = model.NewStartTime.ToUniversalTime();
-                appointment.EndAt = model.NewStartTime.AddMinutes((int)(appointment.EndAt - appointment.StartAt).TotalMinutes).ToUniversalTime();
+                // Randevuyu güncelle - UTC dönüşümü ile
+                appointment.StartAt = newStartUtc;
+                appointment.EndAt = newEndUtc;
                 appointment.Status = AppointmentStatus.Rescheduled;
                 appointment.UpdatedAt = DateTime.UtcNow;
 
@@ -272,7 +286,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             var endDate = startDate.AddDays(7);
             
             // Performans optimizasyonu: Önce tüm çalışma saatlerini ve mevcut randevuları al
-            var allWorkingHours = await _workingHoursService.GetByBranchAsync(stylist.BranchId);
+            var allWorkingHours = await _stylistWorkingHoursService.GetByStylistAsync(stylistId.Value);
             var existingAppointments = await _appointmentService.GetByDateRangeAsync(startDate, endDate.AddDays(1));
             var stylistAppointments = existingAppointments
                 .Where(a => a.StylistId == stylistId.Value && a.Status != Models.Enums.AppointmentStatus.Cancelled)
@@ -288,9 +302,11 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 if (workingHours == null || !workingHours.IsWorkingDay)
                     continue;
                     
-                // Bu günün mevcut randevularını al
+                // Bu günün mevcut randevularını al - UTC dönüşümü ile
+                var dateUtc = date.Date.ToUniversalTime();
+                var nextDayUtc = dateUtc.AddDays(1);
                 var dayAppointments = stylistAppointments
-                    .Where(a => a.StartAt.Date == date.Date)
+                    .Where(a => a.StartAt >= dateUtc && a.StartAt < nextDayUtc)
                     .ToList();
                     
                 // Çalışma saatleri içinde slotlar oluştur
@@ -324,11 +340,14 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                         continue;
                     }
                     
-                    // Çakışma kontrolü - memory'de yap, DB query'siz
+                    // Çakışma kontrolü - memory'de yap, DB query'siz - UTC dönüşümü ile
                     var slotEnd = currentTime.AddMinutes(service.DurationMin);
+                    var currentTimeUtc = currentTime.ToUniversalTime();
+                    var slotEndUtc = slotEnd.ToUniversalTime();
                     var hasConflict = dayAppointments.Any(a => 
-                        a.StartAt < slotEnd && a.EndAt > currentTime);
+                        a.StartAt < slotEndUtc && a.EndAt > currentTimeUtc);
                         
+                    // TimeSlotVm'e local time geç (view'da doğru gösterim için)
                     slots.Add(new TimeSlotVm(currentTime, !hasConflict));
                     currentTime = currentTime.AddMinutes(15); // 15 dakikalık aralıklar
                 }

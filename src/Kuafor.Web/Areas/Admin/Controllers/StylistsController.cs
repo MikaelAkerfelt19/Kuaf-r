@@ -3,6 +3,7 @@ using Kuafor.Web.Models.Admin.Stylists;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
 using StylistEntity = Kuafor.Web.Models.Entities.Stylist;
+using System.ComponentModel.DataAnnotations;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
@@ -12,16 +13,16 @@ namespace Kuafor.Web.Areas.Admin.Controllers
     {
         private readonly IStylistService _stylistService;
         private readonly IBranchService _branchService;
-        private readonly IWorkingHoursService _workingHoursService;
+        private readonly IStylistWorkingHoursService _stylistWorkingHoursService;
 
         public StylistsController(
             IStylistService stylistService, 
             IBranchService branchService,
-            IWorkingHoursService workingHoursService)
+            IStylistWorkingHoursService stylistWorkingHoursService)
         {
             _stylistService = stylistService;
             _branchService = branchService;
-            _workingHoursService = workingHoursService;
+            _stylistWorkingHoursService = stylistWorkingHoursService;
         }
 
         // GET: /Admin/Stylists
@@ -121,7 +122,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                     Console.WriteLine("DEBUG: Kuaför başarıyla oluşturuldu!");
                     
                     // Form'dan çalışma saatlerini al ve kaydet
-                    var workingHoursList = new List<WorkingHours>();
+                    var stylistWorkingHoursList = new List<StylistWorkingHours>();
                     
                     for (int i = 0; i < 7; i++) // 7 gün
                     {
@@ -134,9 +135,9 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                         
                         if (int.TryParse(dayOfWeekStr, out int dayOfWeekInt))
                         {
-                            var workingHour = new WorkingHours
+                            var workingHour = new StylistWorkingHours
                             {
-                                BranchId = stylist.BranchId,
+                                StylistId = stylist.Id, // Stylist oluşturulduktan sonra
                                 DayOfWeek = (DayOfWeek)dayOfWeekInt,
                                 IsWorkingDay = isWorkingDayStr.ToString().Contains("true"),
                                 OpenTime = TimeSpan.TryParse(openTimeStr, out var openTime) ? openTime : TimeSpan.FromHours(9),
@@ -146,23 +147,13 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                                 CreatedAt = DateTime.UtcNow
                             };
                             
-                            workingHoursList.Add(workingHour);
+                            stylistWorkingHoursList.Add(workingHour);
                             Console.WriteLine($"DEBUG: Gün {workingHour.DayOfWeek}, Çalışıyor: {workingHour.IsWorkingDay}, Açılış: {workingHour.OpenTime}");
                         }
                     }
 
-                    // Çalışma saatlerini kaydet
-                    if (workingHoursList.Any())
-                    {
-                        await _workingHoursService.SetBranchWorkingHoursAsync(stylist.BranchId, workingHoursList);
-                        Console.WriteLine("DEBUG: Çalışma saatleri kaydedildi!");
-                    }
-                    else
-                    {
-                        // Eğer form'dan çalışma saati gelmemişse default çalışma saatlerini başlat
-                        await _workingHoursService.InitializeDefaultWorkingHoursAsync(stylist.BranchId);
-                        Console.WriteLine("DEBUG: Default çalışma saatleri başlatıldı!");
-                    }
+                    // Stylist oluşturulduktan sonra çalışma saatlerini kaydet
+                    await _stylistWorkingHoursService.SetStylistWorkingHoursAsync(stylist.Id, stylistWorkingHoursList);
                     
                     // Detaylı başarı mesajı
                     var branch = await _branchService.GetByIdAsync(stylist.BranchId);
@@ -204,7 +195,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             ViewBag.Branches = branches;
 
             // Çalışma saatlerini getir
-            var workingHours = await _workingHoursService.GetByBranchAsync(stylist.BranchId);
+            var workingHours = await _stylistWorkingHoursService.GetByStylistAsync(stylist.Id);
             ViewBag.WorkingHours = workingHours.ToList();
 
             return View(stylist);
@@ -269,7 +260,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             ViewBag.Branches = branches;
 
             // Çalışma saatlerini tekrar getir
-            var workingHours = await _workingHoursService.GetByBranchAsync(stylist.BranchId);
+            var workingHours = await _stylistWorkingHoursService.GetByStylistAsync(stylist.Id);
             ViewBag.WorkingHours = workingHours.ToList();
 
             return View(stylist);
@@ -291,7 +282,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 }
 
                 // Form'dan gelen değerleri manuel olarak parse et
-                var workingHoursList = new List<WorkingHours>();
+                var workingHoursList = new List<StylistWorkingHours>();
                 
                 for (int i = 0; i < 7; i++) // 7 gün
                 {
@@ -304,9 +295,9 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                     
                     if (int.TryParse(dayOfWeekStr, out int dayOfWeekInt))
                     {
-                        var workingHour = new WorkingHours
+                        var workingHour = new StylistWorkingHours
                         {
-                            BranchId = stylist.BranchId,
+                            StylistId = stylistId,
                             DayOfWeek = (DayOfWeek)dayOfWeekInt,
                             IsWorkingDay = isWorkingDayStr.ToString().Contains("true"),
                             OpenTime = TimeSpan.TryParse(openTimeStr, out var openTime) ? openTime : TimeSpan.FromHours(9),
@@ -322,7 +313,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                     }
                 }
 
-                await _workingHoursService.SetBranchWorkingHoursAsync(stylist.BranchId, workingHoursList);
+                await _stylistWorkingHoursService.SetStylistWorkingHoursAsync(stylistId, workingHoursList);
                 
                 TempData["Success"] = $"✅ {stylist.FirstName} {stylist.LastName} için çalışma saatleri başarıyla güncellendi!";
                 Console.WriteLine($"DEBUG: Çalışma saatleri başarıyla güncellendi. Kuaför: {stylist.FirstName} {stylist.LastName}");

@@ -111,6 +111,44 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             return Redirect("/Admin/Appointments");
         }
 
+        // GET: /Admin/Appointments/Cancel/5 - Confirmation sayfası
+        [HttpGet]
+        [Route("Cancel/{id:int}")]
+        public async Task<IActionResult> Cancel(int id)
+        {
+            var appointment = await _appointmentService.GetByIdAsync(id);
+            if (appointment == null)
+            {
+                return NotFound();
+            }
+
+            ViewBag.Services = await _serviceService.GetAllAsync();
+            ViewBag.Stylists = await _stylistService.GetAllAsync();
+            ViewBag.Customers = await _customerService.GetAllAsync();
+            ViewBag.Branches = await _branchService.GetAllAsync();
+
+            return View(appointment);
+        }
+
+        // POST: /Admin/Appointments/Cancel/5 - Gerçek iptal işlemi
+        [HttpPost]
+        [Route("Cancel/{id:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> CancelConfirmed(int id, string? reason = null)
+        {
+            try
+            {
+                var appointment = await _appointmentService.CancelAsync(id, reason);
+                TempData["Success"] = "Randevu başarıyla iptal edildi.";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Hata: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
         // POST: /Admin/Appointments/UpdateStatus
         [HttpPost]
         [ValidateAntiForgeryToken]

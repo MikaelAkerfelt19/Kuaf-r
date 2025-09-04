@@ -26,7 +26,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
         public async Task<IActionResult> Index()
         {
             var customerId = await GetCurrentCustomerIdAsync();
-            var upcomingAppointments = await _appointmentService.GetUpcomingAsync(customerId);
+            var upcomingAppointments = await _appointmentService.GetUpcomingByCustomerAsync(customerId);
 
             var vm = new CustomerDashboardViewModel
             {
