@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using Kuafor.Web.Areas.Admin.Controllers;
 
 namespace Kuafor.Web.Models.Admin.Reports
 {
@@ -22,6 +23,10 @@ namespace Kuafor.Web.Models.Admin.Reports
         public List<TopStylist> TopStylistsByWeek { get; set; } = new(); // Bu hafta en çok randevu
         public List<TopStylist> TopStylistsByMonth { get; set; } = new(); // Bu ay en çok randevu
         public List<BranchPerformance> BranchPerformance { get; set; } = new(); // Şube performansı
+        public FinancialAnalytics FinancialAnalytics { get; internal set; } = null!;
+        public CustomerAnalytics CustomerAnalytics { get; internal set; } = null!;
+        public InventoryAnalytics InventoryAnalytics { get; internal set; } = null!;
+        public PerformanceMetrics PerformanceMetrics { get; internal set; } = null!;
     }
 
     public class DayBucket

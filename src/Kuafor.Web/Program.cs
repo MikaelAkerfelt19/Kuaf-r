@@ -12,6 +12,7 @@ using Kuafor.Web.Services;
 using Kuafor.Web.Services.BackgroundServices;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using DotNetEnv;
+using Kuafor.Web.Models.Entities;
 
 
 var envPath = Path.Combine(Directory.GetCurrentDirectory(), "..", "..", ".env");
@@ -169,6 +170,23 @@ builder.Services.AddScoped<IWorkingHoursService, WorkingHoursService>();
 builder.Services.AddScoped<ILoyaltyService, LoyaltyService>();
 builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<ITemplateService, RazorTemplateService>();
+builder.Services.AddScoped<ITimeZoneService, TimeZoneService>();
+builder.Services.AddScoped<IProductService, ProductService>();
+builder.Services.AddScoped<IAdisyonService, AdisyonService>();
+builder.Services.AddScoped<IPackageService, PackageManagementService>();
+builder.Services.AddScoped<IStylistWorkingHoursService, StylistWorkingHoursService>();
+
+// Yeni stok yönetimi servisi
+builder.Services.AddScoped<IInventoryService, InventoryService>();
+
+// Yeni müşteri analitikleri servisi
+builder.Services.AddScoped<ICustomerAnalyticsService, CustomerAnalyticsService>();
+
+// Yeni eklenen servisler
+builder.Services.AddScoped<INotificationService, NotificationService>();
+builder.Services.AddScoped<IStaffManagementService, StaffManagementService>();
+builder.Services.AddScoped<IFinancialAnalyticsService, FinancialAnalyticsService>();
+builder.Services.AddScoped<IMarketingService, MarketingService>();
 
 // Background service
 builder.Services.AddHostedService<AppointmentReminderService>();
