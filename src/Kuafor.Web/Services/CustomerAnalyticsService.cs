@@ -1,0 +1,517 @@
+using Microsoft.EntityFrameworkCore;
+using Kuafor.Web.Data;
+using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Services.Interfaces;
+
+namespace Kuafor.Web.Services;
+
+public class CustomerAnalyticsService : ICustomerAnalyticsService
+{
+    private readonly ApplicationDbContext _context;
+    private readonly IAppointmentService _appointmentService;
+
+    public CustomerAnalyticsService(ApplicationDbContext context, IAppointmentService appointmentService)
+    {
+        _context = context;
+        _appointmentService = appointmentService;
+    }
+
+    public async Task<CustomerAnalytics> CalculateRFMAsync(int customerId)
+    {
+        var customer = await _context.Customers.FindAsync(customerId);
+        if (customer == null) throw new ArgumentException("Müşteri bulunamadı");
+
+        var appointments = await _appointmentService.GetByCustomerAsync(customerId);
+        var now = DateTime.UtcNow;
+
+        // Recency: Son randevudan bu yana geçen gün sayısı
+        var lastAppointment = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault();
+        var recency = lastAppointment != null ? (now - lastAppointment.StartAt).Days : 999;
+
+        // Frequency: Toplam randevu sayısı
+        var frequency = appointments.Count();
+
+        // Monetary: Toplam harcama
+        var monetary = appointments.Sum(a => a.FinalPrice);
+
+        var analytics = new CustomerAnalytics
+        {
+            CustomerId = customerId,
+            RecencyScore = recency,
+            FrequencyScore = frequency,
+            MonetaryScore = monetary,
+            TotalSpent = monetary,
+            AverageTicketValue = frequency > 0 ? monetary / frequency : 0,
+            LastActivityDate = lastAppointment?.StartAt,
+            DaysSinceLastVisit = recency,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        // Segment hesaplama
+        analytics.Segment = CalculateSegment(recency, frequency, monetary);
+        analytics.LifecycleStage = CalculateLifecycleStage(recency, frequency);
+        analytics.ChurnRisk = await CalculateChurnRiskAsync(customerId);
+
+        // Tercih analizi
+        await AnalyzePreferencesAsync(analytics, appointments);
+
+        return analytics;
+    }
+
+    public async Task<List<CustomerAnalytics>> CalculateAllRFMAsync()
+    {
+        var customers = await _context.Customers.ToListAsync();
+        var analyticsList = new List<CustomerAnalytics>();
+
+        foreach (var customer in customers)
+        {
+            try
+            {
+                var analytics = await CalculateRFMAsync(customer.Id);
+                analyticsList.Add(analytics);
+            }
+            catch (Exception ex)
+            {
+                // Log error and continue
+                Console.WriteLine($"RFM hesaplama hatası - Müşteri ID: {customer.Id}, Hata: {ex.Message}");
+            }
+        }
+
+        return analyticsList;
+    }
+
+    public async Task UpdateCustomerSegmentAsync(int customerId)
+    {
+        var analytics = await _context.CustomerAnalytics
+            .FirstOrDefaultAsync(ca => ca.CustomerId == customerId);
+
+        if (analytics == null)
+        {
+            analytics = await CalculateRFMAsync(customerId);
+            _context.CustomerAnalytics.Add(analytics);
+        }
+        else
+        {
+            var newAnalytics = await CalculateRFMAsync(customerId);
+            analytics.RecencyScore = newAnalytics.RecencyScore;
+            analytics.FrequencyScore = newAnalytics.FrequencyScore;
+            analytics.MonetaryScore = newAnalytics.MonetaryScore;
+            analytics.Segment = newAnalytics.Segment;
+            analytics.LifecycleStage = newAnalytics.LifecycleStage;
+            analytics.ChurnRisk = newAnalytics.ChurnRisk;
+            analytics.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<CustomerSegment>> GetCustomerSegmentsAsync()
+    {
+        return await _context.CustomerSegments
+            .Where(cs => cs.IsActive)
+            .OrderBy(cs => cs.Priority)
+            .ToListAsync();
+    }
+
+    public async Task<CustomerSegment> CreateSegmentAsync(CustomerSegment segment)
+    {
+        segment.CreatedAt = DateTime.UtcNow;
+        _context.CustomerSegments.Add(segment);
+        await _context.SaveChangesAsync();
+        return segment;
+    }
+
+    public async Task<CustomerSegment> UpdateSegmentAsync(CustomerSegment segment)
+    {
+        segment.UpdatedAt = DateTime.UtcNow;
+        _context.CustomerSegments.Update(segment);
+        await _context.SaveChangesAsync();
+        return segment;
+    }
+
+    public async Task<bool> DeleteSegmentAsync(int segmentId)
+    {
+        var segment = await _context.CustomerSegments.FindAsync(segmentId);
+        if (segment == null) return false;
+
+        _context.CustomerSegments.Remove(segment);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<CustomerAnalytics?> GetCustomerAnalyticsAsync(int customerId)
+    {
+        return await _context.CustomerAnalytics
+            .Include(ca => ca.Customer)
+            .Include(ca => ca.PreferredService)
+            .Include(ca => ca.PreferredStylist)
+            .Include(ca => ca.PreferredBranch)
+            .FirstOrDefaultAsync(ca => ca.CustomerId == customerId);
+    }
+
+    public async Task<List<CustomerAnalytics>> GetCustomersBySegmentAsync(string segment)
+    {
+        return await _context.CustomerAnalytics
+            .Include(ca => ca.Customer)
+            .Where(ca => ca.Segment == segment)
+            .OrderByDescending(ca => ca.MonetaryScore)
+            .ToListAsync();
+    }
+
+    public async Task<List<CustomerAnalytics>> GetHighValueCustomersAsync(int count = 10)
+    {
+        return await _context.CustomerAnalytics
+            .Include(ca => ca.Customer)
+            .OrderByDescending(ca => ca.MonetaryScore)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task<List<CustomerAnalytics>> GetAtRiskCustomersAsync(int count = 10)
+    {
+        return await _context.CustomerAnalytics
+            .Include(ca => ca.Customer)
+            .Where(ca => ca.ChurnRisk > 70)
+            .OrderByDescending(ca => ca.ChurnRisk)
+            .Take(count)
+            .ToListAsync();
+    }
+
+    public async Task RecordCustomerBehaviorAsync(int customerId, string action, string? details = null, string? pageUrl = null)
+    {
+        var behavior = new CustomerBehavior
+        {
+            CustomerId = customerId,
+            Action = action,
+            Details = details,
+            PageUrl = pageUrl,
+            Timestamp = DateTime.UtcNow
+        };
+
+        _context.CustomerBehaviors.Add(behavior);
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<CustomerBehavior>> GetCustomerBehaviorsAsync(int customerId, DateTime? from = null, DateTime? to = null)
+    {
+        var query = _context.CustomerBehaviors
+            .Where(cb => cb.CustomerId == customerId);
+
+        if (from.HasValue)
+            query = query.Where(cb => cb.Timestamp >= from.Value);
+
+        if (to.HasValue)
+            query = query.Where(cb => cb.Timestamp <= to.Value);
+
+        return await query
+            .OrderByDescending(cb => cb.Timestamp)
+            .ToListAsync();
+    }
+
+    public async Task<List<CustomerBehavior>> GetPopularActionsAsync(DateTime? from = null, DateTime? to = null)
+    {
+        var query = _context.CustomerBehaviors.AsQueryable();
+
+        if (from.HasValue)
+            query = query.Where(cb => cb.Timestamp >= from.Value);
+
+        if (to.HasValue)
+            query = query.Where(cb => cb.Timestamp <= to.Value);
+
+        return await query
+            .GroupBy(cb => cb.Action)
+            .Select(g => new CustomerBehavior
+            {
+                Action = g.Key,
+                Timestamp = g.Max(cb => cb.Timestamp)
+            })
+            .OrderByDescending(cb => cb.Timestamp)
+            .ToListAsync();
+    }
+
+    public async Task<List<CustomerPreference>> GetCustomerPreferencesAsync(int customerId)
+    {
+        return await _context.CustomerPreferences
+            .Where(cp => cp.CustomerId == customerId)
+            .OrderByDescending(cp => cp.Weight)
+            .ToListAsync();
+    }
+
+    public async Task UpdateCustomerPreferenceAsync(int customerId, string preferenceType, string preferenceValue, int weight = 1)
+    {
+        var preference = await _context.CustomerPreferences
+            .FirstOrDefaultAsync(cp => cp.CustomerId == customerId && cp.PreferenceType == preferenceType);
+
+        if (preference == null)
+        {
+            preference = new CustomerPreference
+            {
+                CustomerId = customerId,
+                PreferenceType = preferenceType,
+                PreferenceValue = preferenceValue,
+                Weight = weight,
+                CreatedAt = DateTime.UtcNow
+            };
+            _context.CustomerPreferences.Add(preference);
+        }
+        else
+        {
+            preference.PreferenceValue = preferenceValue;
+            preference.Weight = weight;
+            preference.UpdatedAt = DateTime.UtcNow;
+        }
+
+        await _context.SaveChangesAsync();
+    }
+
+    public async Task<List<CustomerAnalytics>> GetChurnRiskCustomersAsync(double riskThreshold = 70)
+    {
+        return await _context.CustomerAnalytics
+            .Include(ca => ca.Customer)
+            .Where(ca => ca.ChurnRisk >= riskThreshold)
+            .OrderByDescending(ca => ca.ChurnRisk)
+            .ToListAsync();
+    }
+
+    public async Task<double> CalculateChurnRiskAsync(int customerId)
+    {
+        var analytics = await _context.CustomerAnalytics
+            .FirstOrDefaultAsync(ca => ca.CustomerId == customerId);
+
+        if (analytics == null) return 0;
+
+        // Churn risk hesaplama algoritması
+        var risk = 0.0;
+
+        // Son ziyaret süresi (40% ağırlık)
+        if (analytics.DaysSinceLastVisit > 90) risk += 40;
+        else if (analytics.DaysSinceLastVisit > 60) risk += 30;
+        else if (analytics.DaysSinceLastVisit > 30) risk += 20;
+        else if (analytics.DaysSinceLastVisit > 14) risk += 10;
+
+        // Randevu sıklığı (30% ağırlık)
+        if (analytics.FrequencyScore < 2) risk += 30;
+        else if (analytics.FrequencyScore < 5) risk += 20;
+        else if (analytics.FrequencyScore < 10) risk += 10;
+
+        // Harcama miktarı (20% ağırlık)
+        if (analytics.MonetaryScore < 500) risk += 20;
+        else if (analytics.MonetaryScore < 1000) risk += 15;
+        else if (analytics.MonetaryScore < 2000) risk += 10;
+
+        // Puan (10% ağırlık)
+        if (analytics.AverageRating < 3) risk += 10;
+        else if (analytics.AverageRating < 4) risk += 5;
+
+        return Math.Min(risk, 100);
+    }
+
+    public async Task<CustomerAnalyticsReport> GetAnalyticsReportAsync()
+    {
+        var customers = await _context.Customers.ToListAsync();
+        var analytics = await _context.CustomerAnalytics.ToListAsync();
+        var appointments = await _appointmentService.GetAllAsync();
+
+        var totalRevenue = appointments.Sum(a => a.FinalPrice);
+        var activeCustomers = analytics.Count(ca => ca.DaysSinceLastVisit <= 30);
+        var newCustomers = customers.Count(c => c.CreatedAt >= DateTime.UtcNow.AddDays(-30));
+        var atRiskCustomers = analytics.Count(ca => ca.ChurnRisk > 70);
+
+        return new CustomerAnalyticsReport
+        {
+            TotalCustomers = customers.Count,
+            ActiveCustomers = activeCustomers,
+            NewCustomers = newCustomers,
+            AtRiskCustomers = atRiskCustomers,
+            TotalRevenue = totalRevenue,
+            AverageCustomerValue = customers.Any() ? totalRevenue / customers.Count : 0,
+            AverageChurnRisk = analytics.Any() ? analytics.Average(ca => ca.ChurnRisk) : 0,
+            SegmentDistribution = GetSegmentDistribution(analytics),
+            TopCustomers = GetTopCustomers(analytics)
+        };
+    }
+
+    public async Task<List<SegmentPerformance>> GetSegmentPerformanceAsync()
+    {
+        var analytics = await _context.CustomerAnalytics.ToListAsync();
+        var segments = analytics.GroupBy(ca => ca.Segment);
+
+        return segments.Select(g => new SegmentPerformance
+        {
+            SegmentName = g.Key,
+            CustomerCount = g.Count(),
+            TotalRevenue = g.Sum(ca => ca.MonetaryScore),
+            AverageValue = g.Average(ca => ca.MonetaryScore),
+            AverageChurnRisk = g.Average(ca => ca.ChurnRisk),
+            GrowthRate = 0 // TODO: Gerçek büyüme oranı hesaplama
+        }).ToList();
+    }
+
+    public async Task<List<CustomerJourney>> GetCustomerJourneyAsync(int customerId)
+    {
+        var appointments = await _appointmentService.GetByCustomerAsync(customerId);
+        var behaviors = await GetCustomerBehaviorsAsync(customerId);
+
+        var journey = new List<CustomerJourney>();
+
+        // Randevuları journey'ye ekle
+        foreach (var appointment in appointments.OrderBy(a => a.StartAt))
+        {
+            journey.Add(new CustomerJourney
+            {
+                Date = appointment.StartAt,
+                Action = "Appointment",
+                Description = $"{appointment.Service.Name} - {appointment.Stylist.FirstName} {appointment.Stylist.LastName}",
+                ServiceName = appointment.Service.Name,
+                StylistName = $"{appointment.Stylist.FirstName} {appointment.Stylist.LastName}",
+                Amount = appointment.FinalPrice,
+                Rating = appointment.CustomerRating
+            });
+        }
+
+        // Davranışları journey'ye ekle
+        foreach (var behavior in behaviors.OrderBy(b => b.Timestamp))
+        {
+            journey.Add(new CustomerJourney
+            {
+                Date = behavior.Timestamp,
+                Action = behavior.Action,
+                Description = behavior.Details ?? behavior.Action
+            });
+        }
+
+        return journey.OrderBy(j => j.Date).ToList();
+    }
+
+    private string CalculateSegment(int recency, int frequency, decimal monetary)
+    {
+        // Basit segmentasyon algoritması
+        if (recency <= 30 && frequency >= 10 && monetary >= 2000)
+            return "VIP";
+        else if (recency <= 60 && frequency >= 5 && monetary >= 1000)
+            return "Altın";
+        else if (recency <= 90 && frequency >= 3 && monetary >= 500)
+            return "Gümüş";
+        else if (recency <= 180 && frequency >= 1)
+            return "Bronz";
+        else
+            return "Risk";
+    }
+
+    private string CalculateLifecycleStage(int recency, int frequency)
+    {
+        if (frequency == 0)
+            return "Yeni";
+        else if (recency <= 30)
+            return "Aktif";
+        else if (recency <= 90)
+            return "Risk";
+        else if (recency <= 180)
+            return "Kayıp";
+        else
+            return "Uyuyan";
+    }
+
+    private async Task AnalyzePreferencesAsync(CustomerAnalytics analytics, IEnumerable<Models.Entities.Appointment> appointments)
+    {
+        if (!appointments.Any()) return;
+
+        // En çok tercih edilen hizmet
+        var preferredService = appointments
+            .GroupBy(a => a.ServiceId)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (preferredService != null)
+            analytics.PreferredServiceId = preferredService.Key;
+
+        // En çok tercih edilen kuaför
+        var preferredStylist = appointments
+            .GroupBy(a => a.StylistId)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (preferredStylist != null)
+            analytics.PreferredStylistId = preferredStylist.Key;
+
+        // En çok tercih edilen şube
+        var preferredBranch = appointments
+            .GroupBy(a => a.BranchId)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (preferredBranch != null)
+            analytics.PreferredBranchId = preferredBranch.Key;
+
+        // En çok tercih edilen gün
+        var preferredDay = appointments
+            .GroupBy(a => a.StartAt.DayOfWeek)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (preferredDay != null)
+            analytics.PreferredDayOfWeek = preferredDay.Key.ToString();
+
+        // En çok tercih edilen saat dilimi
+        var timeSlots = appointments.Select(a => GetTimeSlot(a.StartAt.Hour)).ToList();
+        var preferredTimeSlot = timeSlots
+            .GroupBy(ts => ts)
+            .OrderByDescending(g => g.Count())
+            .FirstOrDefault();
+        if (preferredTimeSlot != null)
+            analytics.PreferredTimeSlot = preferredTimeSlot.Key;
+
+        // Ortalama puan
+        var ratings = appointments.Where(a => a.CustomerRating.HasValue).Select(a => a.CustomerRating.Value).ToList();
+        if (ratings.Any())
+        {
+            analytics.AverageRating = ratings.Average();
+            analytics.TotalRatings = ratings.Count;
+        }
+    }
+
+    private string GetTimeSlot(int hour)
+    {
+        return hour switch
+        {
+            >= 6 and < 12 => "Sabah",
+            >= 12 and < 18 => "Öğle",
+            _ => "Akşam"
+        };
+    }
+
+    private List<SegmentDistribution> GetSegmentDistribution(List<CustomerAnalytics> analytics)
+    {
+        var total = analytics.Count;
+        if (total == 0) return new List<SegmentDistribution>();
+
+        return analytics
+            .GroupBy(ca => ca.Segment)
+            .Select(g => new SegmentDistribution
+            {
+                Segment = g.Key,
+                Count = g.Count(),
+                Percentage = $"{g.Count() * 100.0 / total:F1}%",
+                Revenue = g.Sum(ca => ca.MonetaryScore)
+            })
+            .OrderByDescending(sd => sd.Count)
+            .ToList();
+    }
+
+    private List<TopCustomer> GetTopCustomers(List<CustomerAnalytics> analytics)
+    {
+        return analytics
+            .OrderByDescending(ca => ca.MonetaryScore)
+            .Take(10)
+            .Select(ca => new TopCustomer
+            {
+                CustomerId = ca.CustomerId,
+                CustomerName = $"{ca.Customer.FirstName} {ca.Customer.LastName}",
+                Segment = ca.Segment,
+                TotalSpent = ca.MonetaryScore,
+                AppointmentCount = ca.FrequencyScore,
+                ChurnRisk = ca.ChurnRisk,
+                LastVisit = ca.LastActivityDate ?? DateTime.MinValue
+            })
+            .ToList();
+    }
+}
+
+

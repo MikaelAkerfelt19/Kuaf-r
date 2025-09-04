@@ -19,7 +19,6 @@ public interface IAppointmentService
     Task<IEnumerable<Appointment>> GetByBranchAsync(int branchId, DateTime? from = null, DateTime? to = null);
     Task<IEnumerable<Appointment>> GetByDateRangeAsync(DateTime start, DateTime end);
     Task<IEnumerable<Appointment>> GetByDateAsync(DateTime date);
-    Task<IEnumerable<Appointment>> GetUpcomingAsync(int customerId);
     
     // Business Logic
     Task<Appointment> RescheduleAsync(int id, DateTime newStartAt);

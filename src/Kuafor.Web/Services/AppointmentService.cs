@@ -10,6 +10,7 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
     private readonly IWorkingHoursService _workingHoursService;
+    private readonly Dictionary<int, int> _stylistBranchCache = new();
     
     public AppointmentService(ApplicationDbContext context, IWorkingHoursService workingHoursService)
     {
@@ -124,11 +125,19 @@ public class AppointmentService : IAppointmentService
     public async Task<Appointment> RescheduleAsync(int id, DateTime newStartAt)
     {
         var appointment = await _context.Appointments.FindAsync(id);
-        if (appointment == null)
+        if (appointment == null || appointment.Status != AppointmentStatus.Confirmed)
             throw new ArgumentException("Appointment not found");
 
+        var newEndAt = newStartAt.AddMinutes(30); // Default 30 minutes
+        
+        // Çakışma kontrolü - mevcut randevu ID'sini hariç tut
+        if (await HasTimeConflictAsync(appointment.StylistId, newStartAt, newEndAt, id))
+        {
+            throw new InvalidOperationException("Seçilen zaman diliminde başka bir randevu bulunmaktadır");
+        }
+
         appointment.StartAt = newStartAt;
-        appointment.EndAt = newStartAt.AddMinutes(30); // Default 30 minutes
+        appointment.EndAt = newEndAt;
         appointment.Status = AppointmentStatus.Rescheduled;
         appointment.UpdatedAt = DateTime.UtcNow;
 
@@ -139,7 +148,7 @@ public class AppointmentService : IAppointmentService
     public async Task<Appointment> CancelAsync(int id, string? reason = null)
     {
         var appointment = await _context.Appointments.FindAsync(id);
-        if (appointment == null)
+        if (appointment == null || appointment.Status != AppointmentStatus.Confirmed)
             throw new ArgumentException("Appointment not found");
 
         appointment.Status = AppointmentStatus.Cancelled;
@@ -158,7 +167,18 @@ public class AppointmentService : IAppointmentService
     
     public async Task<bool> HasTimeConflictAsync(int stylistId, DateTime startAt, DateTime endAt, int? excludeId = null)
     {
-        return !await IsTimeSlotAvailableAsync(stylistId, startAt, endAt, excludeId);
+        var query = _context.Appointments
+            .Where(a => a.StylistId == stylistId &&
+                       a.Status != AppointmentStatus.Cancelled &&
+                       a.StartAt < endAt &&
+                       a.EndAt > startAt);
+        
+        if (excludeId.HasValue)
+        {
+            query = query.Where(a => a.Id != excludeId.Value);
+        }
+        
+        return await query.AnyAsync();
     }
 
     public async Task<bool> HasConflictAsync(int stylistId, DateTime startAt, DateTime endAt, int? excludeId = null)
@@ -170,13 +190,14 @@ public class AppointmentService : IAppointmentService
     {
         var slots = new List<string>();
         
-        // Stylist bilgisini al
         var stylist = await _context.Stylists
             .Include(s => s.Branch)
             .FirstOrDefaultAsync(s => s.Id == stylistId);
             
-        if (stylist == null)
+        if (stylist?.Branch == null)
+        {
             return slots;
+        }
 
         // WorkingHoursService kullanarak dinamik çalışma saatlerini al
         var workingHours = await _context.WorkingHours
@@ -185,7 +206,7 @@ public class AppointmentService : IAppointmentService
         if (workingHours == null || !workingHours.IsWorkingDay)
             return slots;
 
-        // Çalışma saatleri içinde slotlar oluştur
+        // Çalışma saatleri içinde slotlar oluştur - Local time olarak
         var currentTime = date.Date.Add(workingHours.OpenTime);
         var endTime = date.Date.Add(workingHours.CloseTime);
         
@@ -208,9 +229,12 @@ public class AppointmentService : IAppointmentService
                 }
             }
             
-            // Çakışma kontrolü
+            // Çakışma kontrolü - UTC dönüşümü ile
             var slotEnd = currentTime.AddMinutes(durationMin);
-            if (await IsTimeSlotAvailableAsync(stylistId, currentTime, slotEnd))
+            var currentTimeUtc = currentTime.ToUniversalTime();
+            var slotEndUtc = slotEnd.ToUniversalTime();
+            
+            if (await IsTimeSlotAvailableAsync(stylistId, currentTimeUtc, slotEndUtc))
             {
                 slots.Add(currentTime.ToString("HH:mm"));
             }
@@ -240,19 +264,7 @@ public class AppointmentService : IAppointmentService
         return await GetByDateRangeAsync(start, end);
     }
 
-    public async Task<IEnumerable<Appointment>> GetUpcomingAsync(int customerId)
-    {
-        var now = DateTime.UtcNow;
-        return await _context.Appointments
-            .Include(a => a.Service)
-            .Include(a => a.Stylist)
-            .Include(a => a.Branch)
-            .Where(a => a.CustomerId == customerId && 
-                       a.StartAt > now && 
-                       a.Status != AppointmentStatus.Cancelled)
-            .OrderBy(a => a.StartAt)
-            .ToListAsync();
-    }
+
     
     public async Task<Appointment> UpdateAsync(Appointment appointment)
     {
@@ -341,22 +353,17 @@ public class AppointmentService : IAppointmentService
 
     public async Task<bool> IsTimeSlotAvailableAsync(int stylistId, DateTime startTime, DateTime endTime, int? excludeAppointmentId = null)
     {
-        Console.WriteLine($"DEBUG: IsTimeSlotAvailableAsync - Stylist: {stylistId}, Start: {startTime:yyyy-MM-dd HH:mm}, End: {endTime:yyyy-MM-dd HH:mm}");
-        
         // 1. Çalışma günü kontrolü
         var branchId = await GetStylistBranchIdAsync(stylistId);
-        Console.WriteLine($"DEBUG: Branch ID: {branchId}");
         
         if (!await _workingHoursService.IsWorkingDayAsync(branchId, startTime.Date))
         {
-            Console.WriteLine("DEBUG: Çalışma günü değil");
             return false;
         }
         
         // 2. Çalışma saatleri kontrolü
         if (!await _workingHoursService.IsWithinWorkingHoursAsync(branchId, startTime))
         {
-            Console.WriteLine("DEBUG: Çalışma saatleri dışında");
             return false;
         }
         
@@ -364,18 +371,11 @@ public class AppointmentService : IAppointmentService
         var hasConflict = await HasExistingConflictAsync(stylistId, startTime, endTime, excludeAppointmentId);
         if (hasConflict)
         {
-            Console.WriteLine("DEBUG: Çakışma var");
             return false;
         }
         
-        // 4. Minimum önceden bildirim süresi kontrolü kaldırıldı (test için)
-        Console.WriteLine("DEBUG: Minimum bildirim süresi kontrolü atlandı");
-        
-        Console.WriteLine("DEBUG: Slot müsait");
         return true;
     }
-    
-    private readonly Dictionary<int, int> _stylistBranchCache = new();
     
     private async Task<int> GetStylistBranchIdAsync(int stylistId)
     {
@@ -393,36 +393,18 @@ public class AppointmentService : IAppointmentService
     
     private async Task<bool> HasExistingConflictAsync(int stylistId, DateTime startTime, DateTime endTime, int? excludeAppointmentId)
     {
-        Console.WriteLine($"DEBUG: HasExistingConflictAsync - Stylist: {stylistId}, Start: {startTime:yyyy-MM-dd HH:mm}, End: {endTime:yyyy-MM-dd HH:mm}");
-        
         var query = _context.Appointments
-            .Where(a => a.StylistId == stylistId && 
+            .Where(a => a.StylistId == stylistId &&
                        a.Status != AppointmentStatus.Cancelled &&
-                       a.Status != AppointmentStatus.Completed &&
-                       ((a.StartAt < endTime && a.EndAt > startTime)));
-
+                       a.StartAt < endTime &&
+                       a.EndAt > startTime);
+        
         if (excludeAppointmentId.HasValue)
         {
             query = query.Where(a => a.Id != excludeAppointmentId.Value);
         }
-
-        var conflictingAppointments = await query.ToListAsync();
         
-        // Debug log
-        if (conflictingAppointments.Any())
-        {
-            Console.WriteLine($"DEBUG: Çakışan randevular bulundu. Stylist: {stylistId}, İstenen: {startTime:yyyy-MM-dd HH:mm} - {endTime:yyyy-MM-dd HH:mm}");
-            foreach (var appt in conflictingAppointments)
-            {
-                Console.WriteLine($"  - Mevcut randevu: {appt.StartAt:yyyy-MM-dd HH:mm} - {appt.EndAt:yyyy-MM-dd HH:mm} (Status: {appt.Status})");
-            }
-        }
-        else
-        {
-            Console.WriteLine($"DEBUG: Çakışma yok. Stylist: {stylistId}, İstenen: {startTime:yyyy-MM-dd HH:mm} - {endTime:yyyy-MM-dd HH:mm}");
-        }
-
-        return conflictingAppointments.Any();
+        return await query.AnyAsync();
     }
 }
 
