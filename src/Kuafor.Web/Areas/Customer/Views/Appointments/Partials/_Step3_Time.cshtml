@@ -35,7 +35,7 @@
         <a class="btn btn-outline-primary w-100 slot-link"
           asp-area="Customer" asp-controller="Appointments" asp-action="New"
           asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@Model.SelectedStylistId"
-          asp-route-start="@slot.Start.ToString("yyyy-MM-dd HH:mm:ss")"
+          asp-route-start="@slot.Start.ToUniversalTime().ToString("yyyy-MM-dd HH:mm:ss")"
           onclick="showLoadingSpinner(this)">
           @slot.Start.ToString("dd MMM HH:mm")
           <br><small class="text-success">Uygun</small>

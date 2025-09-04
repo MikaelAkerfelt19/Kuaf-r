@@ -1,0 +1,261 @@
+@{
+    ViewData["Title"] = "Stok Yönetimi";
+    var lowStockProducts = ViewBag.LowStockProducts as List<Kuafor.Web.Models.Entities.Product>;
+    var outOfStockProducts = ViewBag.OutOfStockProducts as List<Kuafor.Web.Models.Entities.Product>;
+    var inventoryReport = ViewBag.InventoryReport as List<Kuafor.Web.Services.Interfaces.InventoryReport>;
+    var inventoryValue = ViewBag.InventoryValue as decimal?;
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">📦 Stok Yönetimi</h2>
+    <div class="d-flex gap-2">
+        <a class="btn btn-primary" asp-area="Admin" asp-controller="Products" asp-action="Create">
+            <i class="bi bi-plus-circle"></i> Yeni Ürün
+        </a>
+        <button class="btn btn-outline-primary" onclick="refreshInventory()">
+            <i class="bi bi-arrow-clockwise"></i> Yenile
+        </button>
+    </div>
+</div>
+
+<!-- Stok Özeti -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-box-seam text-primary fs-1"></i>
+                <div class="fs-4 fw-bold mt-2">@inventoryReport.Count</div>
+                <div class="text-muted">Toplam Ürün</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-currency-dollar text-success fs-1"></i>
+                <div class="fs-4 fw-bold mt-2">₺@inventoryValue?.ToString("N0")</div>
+                <div class="text-muted">Stok Değeri</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
+                <div class="fs-4 fw-bold mt-2">@lowStockProducts.Count</div>
+                <div class="text-muted">Düşük Stok</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center">
+                <i class="bi bi-x-circle text-danger fs-1"></i>
+                <div class="fs-4 fw-bold mt-2">@outOfStockProducts.Count</div>
+                <div class="text-muted">Stokta Yok</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Stok Uyarıları -->
+@if (lowStockProducts.Any() || outOfStockProducts.Any())
+{
+    <div class="row g-3 mb-4">
+        @if (outOfStockProducts.Any())
+        {
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm border-danger">
+                    <div class="card-header bg-danger text-white">
+                        <h6 class="mb-0"><i class="bi bi-x-circle"></i> Stokta Olmayan Ürünler</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var product in outOfStockProducts.Take(5))
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <div class="fw-semibold">@product.Name</div>
+                                        <small class="text-muted">@product.Category</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-danger">0</span>
+                                        <div class="mt-1">
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="AddStock" asp-route-id="@product.Id">
+                                                <i class="bi bi-plus"></i> Stok Ekle
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (outOfStockProducts.Count > 5)
+                        {
+                            <div class="text-center mt-2">
+                                <small class="text-muted">ve @(outOfStockProducts.Count - 5) ürün daha...</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+
+        @if (lowStockProducts.Any())
+        {
+            <div class="col-md-6">
+                <div class="card border-0 shadow-sm border-warning">
+                    <div class="card-header bg-warning text-dark">
+                        <h6 class="mb-0"><i class="bi bi-exclamation-triangle"></i> Düşük Stok Uyarıları</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group list-group-flush">
+                            @foreach (var product in lowStockProducts.Take(5))
+                            {
+                                <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                    <div>
+                                        <div class="fw-semibold">@product.Name</div>
+                                        <small class="text-muted">@product.Category</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="badge bg-warning">@product.Stock</span>
+                                        <div class="mt-1">
+                                            <a class="btn btn-sm btn-outline-primary" asp-action="AddStock" asp-route-id="@product.Id">
+                                                <i class="bi bi-plus"></i> Stok Ekle
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        @if (lowStockProducts.Count > 5)
+                        {
+                            <div class="text-center mt-2">
+                                <small class="text-muted">ve @(lowStockProducts.Count - 5) ürün daha...</small>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Stok Raporu -->
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <h6 class="mb-0">Stok Raporu</h6>
+            <div class="d-flex gap-2">
+                <a class="btn btn-sm btn-outline-primary" asp-action="StockMovements">
+                    <i class="bi bi-arrow-left-right"></i> Stok Hareketleri
+                </a>
+                <button class="btn btn-sm btn-outline-success" onclick="exportInventory()">
+                    <i class="bi bi-download"></i> Dışa Aktar
+                </button>
+            </div>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0" id="inventoryTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Ürün</th>
+                        <th>Kategori</th>
+                        <th>Mevcut Stok</th>
+                        <th>Min. Stok</th>
+                        <th>Maks. Stok</th>
+                        <th>Birim Maliyet</th>
+                        <th>Toplam Değer</th>
+                        <th>Durum</th>
+                        <th>İşlemler</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in inventoryReport)
+                    {
+                        <tr>
+                            <td>
+                                <div class="fw-semibold">@item.ProductName</div>
+                                <small class="text-muted">ID: @item.ProductId</small>
+                            </td>
+                            <td>@item.Category</td>
+                            <td>
+                                <span class="fw-semibold">@item.CurrentStock</span>
+                            </td>
+                            <td>@item.MinimumStock</td>
+                            <td>@item.MaximumStock</td>
+                            <td>₺@item.UnitCost.ToString("N2")</td>
+                            <td>₺@item.TotalValue.ToString("N2")</td>
+                            <td>
+                                @if (item.StockStatus == "Out")
+                                {
+                                    <span class="badge bg-danger">Stokta Yok</span>
+                                }
+                                else if (item.StockStatus == "Low")
+                                {
+                                    <span class="badge bg-warning">Düşük Stok</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success">Normal</span>
+                                }
+                            </td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    <a class="btn btn-outline-primary" asp-action="StockHistory" asp-route-id="@item.ProductId">
+                                        <i class="bi bi-clock-history"></i>
+                                    </a>
+                                    <a class="btn btn-outline-success" asp-action="AddStock" asp-route-id="@item.ProductId">
+                                        <i class="bi bi-plus"></i>
+                                    </a>
+                                    <a class="btn btn-outline-warning" asp-action="AdjustStock" asp-route-id="@item.ProductId">
+                                        <i class="bi bi-gear"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/inventory-management.js"></script>
+    <script>
+        function refreshInventory() {
+            location.reload();
+        }
+
+        function exportInventory() {
+            // Excel export işlemi
+            console.log('Stok raporu dışa aktarılıyor...');
+        }
+
+        // Otomatik yenileme
+        setInterval(() => {
+            updateStockAlerts();
+        }, 60000); // Her dakika
+
+        function updateStockAlerts() {
+            fetch('/Admin/Inventory/GetStockAlerts')
+                .then(response => response.json())
+                .then(data => {
+                    // Stok uyarılarını güncelle
+                    updateAlertBadges(data);
+                })
+                .catch(error => console.error('Stok uyarıları güncellenemedi:', error));
+        }
+
+        function updateAlertBadges(data) {
+            // Badge'leri güncelle
+            const lowStockBadge = document.querySelector('.text-warning').parentElement.querySelector('.fs-4');
+            const outOfStockBadge = document.querySelector('.text-danger').parentElement.querySelector('.fs-4');
+            
+            if (lowStockBadge) lowStockBadge.textContent = data.lowStock.length;
+            if (outOfStockBadge) outOfStockBadge.textContent = data.outOfStock.length;
+        }
+    </script>
+}

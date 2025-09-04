@@ -1,0 +1,194 @@
+@{
+    ViewData["Title"] = "Kayıtlı Müşteri Adisyonu";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Kayıtlı Müşteri Adisyonu</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Geri Dön
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Adisyon Bilgileri</h6>
+                </div>
+                <div class="card-body">
+                    <form id="receiptForm" method="post" asp-action="CreateForRegistered">
+                        @Html.AntiForgeryToken()
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Müşteri Seçin <span class="text-danger">*</span></label>
+                            <select id="customerSelect" name="customerId" class="form-select" required>
+                                <option value="">Müşteri seçin...</option>
+                                @if (ViewBag.Customers != null)
+                                {
+                                    @foreach (var customer in (ViewBag.Customers as IEnumerable<Kuafor.Web.Models.Entities.Customer>) ?? Enumerable.Empty<Kuafor.Web.Models.Entities.Customer>())
+                                    {
+                                        <option value="@customer.Id">@customer.FirstName @customer.LastName - @(customer.Phone ?? "")</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Hizmetler</label>
+                            <div id="servicesContainer">
+                                <div class="service-item row mb-2">
+                                    <div class="col-md-6">
+                                        <select name="services[0].serviceId" class="form-select service-select">
+                                            <option value="">Hizmet seçin...</option>
+                                            @if (ViewBag.Services != null)
+                                            {
+                                                @foreach (var service in (ViewBag.Services as IEnumerable<Kuafor.Web.Models.Entities.Service>) ?? Enumerable.Empty<Kuafor.Web.Models.Entities.Service>())
+                                                {
+                                                    <option value="@service.Id" data-price="@service.Price">@service.Name - @service.Price.ToString("C")</option>
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" name="services[0].quantity" class="form-control quantity-input" value="1" min="1" placeholder="Adet">
+                                    </div>
+                                    <div class="col-md-3">
+                                        <input type="number" name="services[0].price" class="form-control price-input" step="0.01" min="0" placeholder="Fiyat" readonly>
+                                    </div>
+                                </div>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" onclick="addService()">
+                                <i class="fas fa-plus"></i> Hizmet Ekle
+                            </button>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Toplam Tutar</label>
+                                    <input type="number" id="totalAmount" class="form-control" step="0.01" readonly>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Ödenen Tutar</label>
+                                    <input type="number" name="paidAmount" class="form-control" step="0.01" min="0" placeholder="0.00">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Notlar</label>
+                            <textarea name="notes" class="form-control" rows="3" placeholder="Adisyon notları..."></textarea>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> İptal
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Adisyon Oluştur
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Bilgi</h6>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted">
+                        <strong>Adisyon Sistemi:</strong><br>
+                        • Kayıtlı müşteriler için adisyon oluşturulur<br>
+                        • Birden fazla hizmet eklenebilir<br>
+                        • Kısmi ödeme yapılabilir<br>
+                        • Kalan tutar takip edilir
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let serviceIndex = 1;
+
+function addService() {
+    const container = document.getElementById('servicesContainer');
+    const newService = document.createElement('div');
+    newService.className = 'service-item row mb-2';
+    newService.innerHTML = `
+        <div class="col-md-6">
+            <select name="services[${serviceIndex}].serviceId" class="form-select service-select">
+                <option value="">Hizmet seçin...</option>
+                @if (ViewBag.Services != null)
+                {
+                    @foreach (var service in (ViewBag.Services as IEnumerable<Kuafor.Web.Models.Entities.Service>) ?? Enumerable.Empty<Kuafor.Web.Models.Entities.Service>())
+                    {
+                        <option value="@service.Id" data-price="@service.Price">@service.Name - @service.Price.ToString("C")</option>
+                    }
+                }
+            </select>
+        </div>
+        <div class="col-md-3">
+            <input type="number" name="services[${serviceIndex}].quantity" class="form-control quantity-input" value="1" min="1" placeholder="Adet">
+        </div>
+        <div class="col-md-3">
+            <input type="number" name="services[${serviceIndex}].price" class="form-control price-input" step="0.01" min="0" placeholder="Fiyat" readonly>
+        </div>
+    `;
+    container.appendChild(newService);
+    serviceIndex++;
+    
+    // Event listener'ları ekle
+    addServiceEventListeners(newService);
+}
+
+function addServiceEventListeners(serviceElement) {
+    const serviceSelect = serviceElement.querySelector('.service-select');
+    const quantityInput = serviceElement.querySelector('.quantity-input');
+    const priceInput = serviceElement.querySelector('.price-input');
+    
+    serviceSelect.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const price = selectedOption.getAttribute('data-price');
+        if (price) {
+            priceInput.value = price;
+            calculateTotal();
+        }
+    });
+    
+    quantityInput.addEventListener('input', function() {
+        const serviceSelect = this.closest('.service-item').querySelector('.service-select');
+        const selectedOption = serviceSelect.options[serviceSelect.selectedIndex];
+        const basePrice = selectedOption.getAttribute('data-price');
+        if (basePrice) {
+            const totalPrice = parseFloat(basePrice) * parseInt(this.value);
+            const priceInput = this.closest('.service-item').querySelector('.price-input');
+            priceInput.value = totalPrice.toFixed(2);
+            calculateTotal();
+        }
+    });
+}
+
+function calculateTotal() {
+    let total = 0;
+    document.querySelectorAll('.price-input').forEach(input => {
+        if (input.value) {
+            total += parseFloat(input.value);
+        }
+    });
+    document.getElementById('totalAmount').value = total.toFixed(2);
+}
+
+// İlk hizmet için event listener'ları ekle
+document.addEventListener('DOMContentLoaded', function() {
+    addServiceEventListeners(document.querySelector('.service-item'));
+});
+</script>

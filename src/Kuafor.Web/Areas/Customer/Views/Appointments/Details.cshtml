@@ -1,5 +1,6 @@
 @model Kuafor.Web.Models.Appointments.AppointmentDetailViewModel
 @using Kuafor.Web.Models.Enums
+@inject Kuafor.Web.Services.ITimeZoneService TimeZoneService
 @{
     ViewData["Title"] = "Randevu Detayları";
 }
@@ -30,8 +31,12 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h6 class="text-muted">Tarih & Saat</h6>
-                            <p class="h5">@Model.Appointment.StartAt.ToString("dd MMMM yyyy, dddd")</p>
-                            <p class="text-muted">@Model.Appointment.StartAt.ToString("HH:mm") - @Model.Appointment.EndAt.ToString("HH:mm")</p>
+                            @{
+                                var localStart = TimeZoneService.ConvertToLocalTime(Model.Appointment.StartAt);
+                                var localEnd = TimeZoneService.ConvertToLocalTime(Model.Appointment.EndAt);
+                            }
+                            <p class="h5">@localStart.ToString("dd MMMM yyyy, dddd")</p>
+                            <p class="text-muted">@localStart.ToString("HH:mm") - @localEnd.ToString("HH:mm")</p>
                         </div>
                         <div class="col-md-6">
                             <h6 class="text-muted">Durum</h6>

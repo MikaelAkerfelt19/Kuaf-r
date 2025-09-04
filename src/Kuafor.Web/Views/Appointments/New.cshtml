@@ -124,11 +124,11 @@
                 const stylistSelect = $('#stylistSelect');
                 
                 if (branchId) {
-                    $.get('/api/v1/stylists/branch/' + branchId)
+                    $.get('/Appointments/GetStylistsByBranch', { branchId: branchId })
                         .done(function(data) {
                             stylistSelect.empty().append('<option value="">Kuaför seçiniz...</option>');
                             data.forEach(function(stylist) {
-                                stylistSelect.append(`<option value="${stylist.id}">${stylist.firstName} ${stylist.lastName}</option>`);
+                                stylistSelect.append(`<option value="${stylist.id}">${stylist.name}</option>`);
                             });
                             stylistSelect.prop('disabled', false);
                         })
@@ -217,6 +217,7 @@
             function updateStartAt() {
                 const date = $('#dateSelect').val();
                 if (date && selectedTime) {
+                    // Timezone düzeltmesi: Local time olarak ayarla
                     const startAt = new Date(date + 'T' + selectedTime + ':00');
                     $('#StartAt').val(startAt.toISOString().slice(0, 16));
                 }

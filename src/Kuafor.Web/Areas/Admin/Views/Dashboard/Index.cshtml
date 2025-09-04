@@ -1,64 +1,184 @@
 @model Kuafor.Web.Models.Admin.AdminDashboardViewModel
 @{
-    ViewData["Title"] = "Pano";
+    ViewData["Title"] = "Gelişmiş Pano";
 }
-<h3 class="mb-3">Pano</h3>
 
-<div class="row g-3">
-    @foreach (var k in Model.Kpis)
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">📊 Gelişmiş Pano</h2>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-primary btn-sm" onclick="refreshDashboard()">
+            <i class="bi bi-arrow-clockwise"></i> Yenile
+        </button>
+        <div class="dropdown">
+            <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                <i class="bi bi-calendar"></i> Son 30 Gün
+            </button>
+            <ul class="dropdown-menu">
+                <li><a class="dropdown-item" href="#" onclick="changePeriod(7)">Son 7 Gün</a></li>
+                <li><a class="dropdown-item" href="#" onclick="changePeriod(30)">Son 30 Gün</a></li>
+                <li><a class="dropdown-item" href="#" onclick="changePeriod(90)">Son 90 Gün</a></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- KPI Kartları -->
+<div class="row g-3 mb-4">
+    @foreach (var kpi in Model.Kpis)
     {
         <div class="col-6 col-md-3">
-            <div class="card border-0 shadow-sm h-100">
+            <div class="card border-0 shadow-sm h-100 kpi-card" data-color="@kpi.Color">
                 <div class="card-body">
-                    <div class="text-muted small">@k.Label</div>
-                    <div class="fs-4 fw-semibold">@k.Value</div>
-                    <div class="d-flex justify-content-between">
-                        <div class="text-muted small">@k.SubText</div>
-                        @if (!string.IsNullOrEmpty(k.Badge))
+                    <div class="d-flex align-items-center justify-content-between mb-2">
+                        <div class="kpi-icon">
+                            <i class="@kpi.Icon text-@kpi.Color"></i>
+                        </div>
+                        @if (!string.IsNullOrEmpty(kpi.Badge))
                         {
-                            <span class="badge bg-light text-dark">@k.Badge</span>
+                            <span class="badge bg-@(kpi.Badge.StartsWith("+") ? "success" : "danger")">@kpi.Badge</span>
                         }
                     </div>
+                    <div class="text-muted small">@kpi.Label</div>
+                    <div class="fs-4 fw-bold text-@kpi.Color">@kpi.Value</div>
+                    <div class="text-muted small">@kpi.SubText</div>
                 </div>
             </div>
         </div>
     }
 </div>
 
-<div class="row g-3 mt-1">
-    <div class="col-lg-7">
+<!-- Trend Analizi -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
         <div class="card border-0 shadow-sm">
             <div class="card-body">
-                <div class="d-flex justify-content-between align-items-center mb-2">
-                    <h5 class="mb-0">Bugünün Randevuları</h5>
-                    <a class="btn btn-sm btn-outline-secondary" asp-area="Admin" asp-controller="Appointments"
-                        asp-action="Index">Tümü</a>
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="mb-0">Ciro Trendi</h6>
+                    <i class="@Model.RevenueTrend.TrendIcon text-@(Model.RevenueTrend.Trend == "up" ? "success" : Model.RevenueTrend.Trend == "down" ? "danger" : "secondary")"></i>
                 </div>
+                <div class="fs-5 fw-bold">₺@Model.RevenueTrend.CurrentValue.ToString("N0")</div>
+                <div class="text-muted small">
+                    @Model.RevenueTrend.ChangePercentage.ToString("+0.0;-0.0;0")% 
+                    <span class="text-@(Model.RevenueTrend.Trend == "up" ? "success" : Model.RevenueTrend.Trend == "down" ? "danger" : "secondary")">
+                        (@Model.RevenueTrend.Trend)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="mb-0">Randevu Trendi</h6>
+                    <i class="@Model.AppointmentTrend.TrendIcon text-@(Model.AppointmentTrend.Trend == "up" ? "success" : Model.AppointmentTrend.Trend == "down" ? "danger" : "secondary")"></i>
+                </div>
+                <div class="fs-5 fw-bold">@Model.AppointmentTrend.CurrentValue.ToString("N0")</div>
+                <div class="text-muted small">
+                    @Model.AppointmentTrend.ChangePercentage.ToString("+0.0;-0.0;0")% 
+                    <span class="text-@(Model.AppointmentTrend.Trend == "up" ? "success" : Model.AppointmentTrend.Trend == "down" ? "danger" : "secondary")">
+                        (@Model.AppointmentTrend.Trend)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                    <h6 class="mb-0">Müşteri Trendi</h6>
+                    <i class="@Model.CustomerTrend.TrendIcon text-@(Model.CustomerTrend.Trend == "up" ? "success" : Model.CustomerTrend.Trend == "down" ? "danger" : "secondary")"></i>
+                </div>
+                <div class="fs-5 fw-bold">@Model.CustomerTrend.CurrentValue.ToString("N0")</div>
+                <div class="text-muted small">
+                    @Model.CustomerTrend.ChangePercentage.ToString("+0.0;-0.0;0")% 
+                    <span class="text-@(Model.CustomerTrend.Trend == "up" ? "success" : Model.CustomerTrend.Trend == "down" ? "danger" : "secondary")">
+                        (@Model.CustomerTrend.Trend)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafikler -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Ciro ve Randevu Grafiği</h6>
+                    <div class="btn-group btn-group-sm" role="group">
+                        <button type="button" class="btn btn-outline-primary active" onclick="showChart('revenue')">Ciro</button>
+                        <button type="button" class="btn btn-outline-primary" onclick="showChart('appointments')">Randevular</button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <canvas id="mainChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0">Müşteri Segmentasyonu</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="customerSegmentChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ana İçerik -->
+<div class="row g-3 mb-4">
+    <!-- Bugünün Randevuları -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h6 class="mb-0">Bugünün Randevuları</h6>
+                    <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Appointments" asp-action="Index">
+                        Tümü <i class="bi bi-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+            <div class="card-body p-0">
                 <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
                             <tr>
                                 <th>Saat</th>
                                 <th>Müşteri</th>
                                 <th>Hizmet</th>
                                 <th>Kuaför</th>
-                                <th>Şube</th>
+                                <th>Durum</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
-                            @foreach (var a in Model.Upcoming)
+                            @foreach (var appointment in Model.Upcoming)
                             {
                                 <tr>
-                                    <td>@a.When.ToString("HH:mm")</td>
-                                    <td>@a.Customer</td>
-                                    <td>@a.Service</td>
-                                    <td>@a.Stylist</td>
-                                    <td>@a.Branch</td>
+                                    <td>
+                                        <div class="fw-semibold">@appointment.When.ToString("HH:mm")</div>
+                                        <small class="text-muted">@appointment.When.ToString("dd/MM")</small>
+                                    </td>
+                                    <td>
+                                        <div class="fw-semibold">@appointment.Customer</div>
+                                        <small class="text-muted">@appointment.Branch</small>
+                                    </td>
+                                    <td>@appointment.Service</td>
+                                    <td>@appointment.Stylist</td>
+                                    <td>
+                                        <span class="badge bg-success">Aktif</span>
+                                    </td>
                                     <td class="text-end">
-                                        <a class="btn btn-sm btn-outline-primary" asp-area="Admin"
-                                            asp-controller="Appointments" asp-action="Details"
-                                            asp-route-id="@a.Id">Detay</a>
+                                        <a class="btn btn-sm btn-outline-primary" asp-area="Admin" asp-controller="Appointments" asp-action="Details" asp-route-id="@appointment.Id">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
                                     </td>
                                 </tr>
                             }
@@ -69,25 +189,195 @@
         </div>
     </div>
 
+    <!-- En Çok Tercih Edilen Hizmetler -->
     <div class="col-lg-5">
         <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0">En Çok Tercih Edilen Hizmetler</h6>
+            </div>
             <div class="card-body">
-                <h5 class="mb-2">En Çok Tercih Edilen Hizmetler</h5>
-                <ul class="list-group list-group-flush">
-                    @foreach (var s in Model.TopServices)
+                <div class="list-group list-group-flush">
+                    @foreach (var service in Model.TopServices)
                     {
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <span>@s.Service</span>
-                            <span class="badge bg-primary rounded-pill">@s.Count</span>
-                        </li>
+                        <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                            <div>
+                                <div class="fw-semibold">@service.Service</div>
+                                <small class="text-muted">Son 7 gün</small>
+                            </div>
+                            <div class="text-end">
+                                <span class="badge bg-primary rounded-pill fs-6">@service.Count</span>
+                                <div class="text-success small">@service.Trend</div>
+                            </div>
+                        </div>
                     }
-                </ul>
-                <div class="text-muted small mt-2">Günlük toplam rezervasyon adedi.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Performans Kartları -->
+<div class="row g-3 mb-4">
+    <!-- En İyi Kuaförler -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0">En İyi Performans Gösteren Kuaförler</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Kuaför</th>
+                                <th>Randevu</th>
+                                <th>Ciro</th>
+                                <th>Puan</th>
+                                <th>Trend</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var stylist in Model.TopStylists)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@stylist.Name</td>
+                                    <td>@stylist.AppointmentCount</td>
+                                    <td>₺@stylist.Revenue.ToString("N0")</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <span class="me-1">@stylist.Rating.ToString("F1")</span>
+                                            <i class="bi bi-star-fill text-warning"></i>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-success">@stylist.Trend</span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Şube Performansları -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0">Şube Performansları</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm mb-0">
+                        <thead>
+                            <tr>
+                                <th>Şube</th>
+                                <th>Randevu</th>
+                                <th>Ciro</th>
+                                <th>Kuaför</th>
+                                <th>Kullanım</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var branch in Model.BranchPerformances)
+                            {
+                                <tr>
+                                    <td class="fw-semibold">@branch.Name</td>
+                                    <td>@branch.AppointmentCount</td>
+                                    <td>₺@branch.Revenue.ToString("N0")</td>
+                                    <td>@branch.ActiveStylists</td>
+                                    <td>
+                                        <div class="progress" style="height: 6px;">
+                                            <div class="progress-bar" style="width: @branch.UtilizationRate%"></div>
+                                        </div>
+                                        <small class="text-muted">@branch.UtilizationRate.ToString("F1")%</small>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alt Kartlar -->
+<div class="row g-3">
+    <!-- Son Aktiviteler -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0">Son Aktiviteler</h6>
+            </div>
+            <div class="card-body">
+                <div class="timeline">
+                    @foreach (var activity in Model.RecentActivities)
+                    {
+                        <div class="timeline-item">
+                            <div class="timeline-marker bg-@activity.Color"></div>
+                            <div class="timeline-content">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <div class="fw-semibold">@activity.Type</div>
+                                        <div class="text-muted small">@activity.Description</div>
+                                    </div>
+                                    <small class="text-muted">@activity.Timestamp.ToString("HH:mm")</small>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stok Uyarıları -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0">
+                <h6 class="mb-0">Stok Uyarıları</h6>
+            </div>
+            <div class="card-body">
+                @if (Model.InventoryAlerts.Any())
+                {
+                    <div class="list-group list-group-flush">
+                        @foreach (var alert in Model.InventoryAlerts)
+                        {
+                            <div class="list-group-item d-flex justify-content-between align-items-center px-0">
+                                <div>
+                                    <div class="fw-semibold">@alert.ProductName</div>
+                                    <small class="text-muted">Mevcut: @alert.CurrentStock, Min: @alert.MinimumStock</small>
+                                </div>
+                                <span class="badge bg-@alert.AlertLevel">
+                                    @(alert.AlertLevel == "danger" ? "Kritik" : alert.AlertLevel == "warning" ? "Dikkat" : "Bilgi")
+                                </span>
+                            </div>
+                        }
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center text-muted py-3">
+                        <i class="bi bi-check-circle-fill text-success fs-1"></i>
+                        <div class="mt-2">Tüm ürünler stokta yeterli</div>
+                    </div>
+                }
             </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    <script src="~/js/admin-dashboard.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="~/js/advanced-dashboard.js"></script>
+    <script>
+        // Dashboard verilerini JavaScript'e aktar
+        window.dashboardData = {
+            revenueChart: @Html.Raw(Json.Serialize(Model.RevenueChart)),
+            appointmentChart: @Html.Raw(Json.Serialize(Model.AppointmentChart)),
+            customerSegments: @Html.Raw(Json.Serialize(Model.CustomerSegments))
+        };
+    </script>
 }

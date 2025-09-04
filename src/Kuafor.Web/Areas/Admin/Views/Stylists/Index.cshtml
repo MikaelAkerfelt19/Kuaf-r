@@ -100,7 +100,7 @@
                                                 <i class="fas fa-edit"></i>
                                             </a>
                                             <button type="button" class="btn btn-sm btn-danger" title="Sil"
-                                                    onclick="deleteStylist(@stylist.Id)">
+                                                    onclick="showDeleteModal(@stylist.Id, '@Html.Raw($"{stylist.Name}")')">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </div>
@@ -138,13 +138,14 @@
                 </button>
             </div>
             <div class="modal-body">
-                <p>Bu kuaförü silmek istediğinizden emin misiniz?</p>
+                <p><strong id="stylistName"></strong> adlı kuaförü silmek istediğinizden emin misiniz?</p>
                 <p class="text-danger"><strong>Bu işlem geri alınamaz!</strong></p>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
                 <form id="deleteForm" method="post" style="display: inline;">
                     @Html.AntiForgeryToken()
+                    <input type="hidden" id="stylistId" name="id" />
                     <button type="submit" class="btn btn-danger">Sil</button>
                 </form>
             </div>
@@ -154,11 +155,11 @@
 
 @section Scripts {
     <script>
-        function deleteStylist(id) {
-            if (confirm('Bu kuaförü silmek istediğinizden emin misiniz?')) {
-                // Doğru URL'ye yönlendir
-                window.location.href = '/Admin/Stylists/Delete/' + id;
-            }
+        function showDeleteModal(id, name) {
+            $('#stylistId').val(id);
+            $('#stylistName').text(name);
+            $('#deleteForm').attr('action', '/Admin/Stylists/Delete/' + id);
+            $('#deleteModal').modal('show');
         }
 
         $(document).ready(function() {

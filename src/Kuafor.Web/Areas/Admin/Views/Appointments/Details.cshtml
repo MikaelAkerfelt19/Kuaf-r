@@ -1,0 +1,146 @@
+@model Kuafor.Web.Models.Entities.Appointment
+
+@{
+    ViewData["Title"] = "Randevu Detayları";
+}
+
+<div class="container-fluid p-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex align-items-center justify-content-between mb-4">
+                <h2 class="mb-0">Randevu Detayları</h2>
+                <div>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> Geri Dön
+                    </a>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h5 class="card-title">Randevu Bilgileri</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>ID:</strong></td>
+                                    <td>@Model.Id</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Durum:</strong></td>
+                                    <td>
+                                        @switch (Model.Status)
+                                        {
+                                            case Kuafor.Web.Models.Enums.AppointmentStatus.Confirmed:
+                                                <span class="badge bg-success">Onaylandı</span>
+                                                break;
+                                            case Kuafor.Web.Models.Enums.AppointmentStatus.Pending:
+                                                <span class="badge bg-warning">Beklemede</span>
+                                                break;
+                                            case Kuafor.Web.Models.Enums.AppointmentStatus.Cancelled:
+                                                <span class="badge bg-danger">İptal Edildi</span>
+                                                break;
+                                            case Kuafor.Web.Models.Enums.AppointmentStatus.Rescheduled:
+                                                <span class="badge bg-info">Yeniden Planlandı</span>
+                                                break;
+                                            default:
+                                                <span class="badge bg-secondary">@Model.Status</span>
+                                                break;
+                                        }
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Başlangıç:</strong></td>
+                                    <td>@Model.StartAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Bitiş:</strong></td>
+                                    <td>@Model.EndAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Oluşturulma:</strong></td>
+                                    <td>@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                </tr>
+                                @if (Model.UpdatedAt.HasValue)
+                                {
+                                    <tr>
+                                        <td><strong>Güncellenme:</strong></td>
+                                        <td>@Model.UpdatedAt.Value.ToString("dd.MM.yyyy HH:mm")</td>
+                                    </tr>
+                                }
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <h5 class="card-title">Müşteri Bilgileri</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Ad Soyad:</strong></td>
+                                    <td>@Model.Customer?.FirstName @Model.Customer?.LastName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>E-posta:</strong></td>
+                                    <td>@Model.Customer?.Email</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Telefon:</strong></td>
+                                    <td>@Model.Customer?.Phone</td>
+                                </tr>
+                            </table>
+
+                            <h5 class="card-title mt-4">Hizmet Bilgileri</h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td><strong>Hizmet:</strong></td>
+                                    <td>@Model.Service?.Name</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kuaför:</strong></td>
+                                    <td>@Model.Stylist?.FirstName @Model.Stylist?.LastName</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Şube:</strong></td>
+                                    <td>@Model.Branch?.Name</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Notes))
+                    {
+                        <div class="mt-4">
+                            <h5 class="card-title">Notlar</h5>
+                            <p class="card-text">@Model.Notes</p>
+                        </div>
+                    }
+
+                    @if (Model.Status == Kuafor.Web.Models.Enums.AppointmentStatus.Cancelled && !string.IsNullOrEmpty(Model.CancellationReason))
+                    {
+                        <div class="mt-4">
+                            <h5 class="card-title text-danger">İptal Nedeni</h5>
+                            <p class="card-text text-danger">@Model.CancellationReason</p>
+                        </div>
+                    }
+
+                    @if (Model.CustomerRating.HasValue)
+                    {
+                        <div class="mt-4">
+                            <h5 class="card-title">Müşteri Değerlendirmesi</h5>
+                            <div class="d-flex align-items-center">
+                                <span class="me-2">Puan:</span>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <i class="bi bi-star@(i <= Model.CustomerRating ? "-fill text-warning" : "")"></i>
+                                }
+                                <span class="ms-2">(@Model.CustomerRating/5)</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.CustomerFeedback))
+                            {
+                                <p class="card-text mt-2">@Model.CustomerFeedback</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

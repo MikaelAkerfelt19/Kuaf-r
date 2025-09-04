@@ -37,7 +37,7 @@
                             <div class="service-icon-large mb-3">
                                 <i class="@(Model.Service.IconClass ?? "bi bi-scissors") fa-5x text-primary"></i>
                             </div>
-                            <a href="@Url.Action("New", "Appointments", new { serviceId = Model.Service.Id })" 
+                            <a href="@Url.Action("New", "Appointments", new { area = "", serviceId = Model.Service.Id })" 
                                class="btn btn-primary btn-lg">
                                 <i class="bi bi-calendar-plus"></i> Randevu Al
                             </a>
@@ -88,7 +88,7 @@
                                             }
                                         </div>
                                         <div class="flex-shrink-0">
-                                            <a href="@Url.Action("New", "Appointments", new { serviceId = Model.Service.Id, stylistId = stylist.Id })" 
+                                            <a href="@Url.Action("New", "Appointments", new { area = "", serviceId = Model.Service.Id, stylistId = stylist.Id })" 
                                                class="btn btn-outline-primary btn-sm">
                                                 Seç
                                             </a>
@@ -144,7 +144,7 @@
                     <h5 class="mb-0">Hızlı Randevu</h5>
                 </div>
                 <div class="card-body">
-                    <form action="@Url.Action("New", "Appointments")" method="get">
+                    <form action="@Url.Action("New", "Appointments", new { area = "" })" method="get">
                         <input type="hidden" name="serviceId" value="@Model.Service.Id">
                         
                         <div class="mb-3">

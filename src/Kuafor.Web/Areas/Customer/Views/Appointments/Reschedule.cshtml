@@ -1,4 +1,5 @@
 @model Kuafor.Web.Models.Appointments.RescheduleViewModel
+@inject Kuafor.Web.Services.ITimeZoneService TimeZoneService
 @{
     ViewData["Title"] = "Randevu Ertele";
 }
@@ -11,7 +12,10 @@
             <h5 class="card-title">Mevcut Randevu Bilgileri</h5>
             <p class="mb-2"><strong>Hizmet:</strong> @Model.ServiceName</p>
             <p class="mb-2"><strong>Kuaför:</strong> @Model.StylistName</p>
-            <p class="mb-0"><strong>Mevcut Tarih/Saat:</strong> @Model.CurrentStartTime.ToString("dd MMM yyyy, dddd, HH:mm")</p>
+            @{
+                var localCurrentStart = TimeZoneService.ConvertToLocalTime(Model.CurrentStartTime);
+            }
+            <p class="mb-0"><strong>Mevcut Tarih/Saat:</strong> @localCurrentStart.ToString("dd MMM yyyy, dddd, HH:mm")</p>
         </div>
     </div>
 

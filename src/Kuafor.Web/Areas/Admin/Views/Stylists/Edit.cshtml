@@ -146,7 +146,7 @@
                         @Html.AntiForgeryToken()
                         
                         @{
-                            var workingHours = (List<Kuafor.Web.Models.Entities.WorkingHours>)ViewBag.WorkingHours ?? new List<Kuafor.Web.Models.Entities.WorkingHours>();
+                            var workingHours = (List<Kuafor.Web.Models.Entities.StylistWorkingHours>)ViewBag.WorkingHours ?? new List<Kuafor.Web.Models.Entities.StylistWorkingHours>();
                             var daysOfWeek = new[] { 
                                 new { Value = DayOfWeek.Monday, Name = "Pazartesi" },
                                 new { Value = DayOfWeek.Tuesday, Name = "Salı" },

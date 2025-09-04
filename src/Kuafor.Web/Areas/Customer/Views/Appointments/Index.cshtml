@@ -1,6 +1,8 @@
 @{
   ViewData["Title"] = "Randevularım";
 }
+@inject Kuafor.Web.Services.ITimeZoneService TimeZoneService
+
 <div class="container py-4">
   <h3 class="mb-3">Randevularım</h3>
   @if (TempData["Booked"] != null)
@@ -16,7 +18,7 @@
         <div class="d-flex justify-content-between align-items-center">
           <a class="text-decoration-none" asp-area="Customer" asp-controller="Appointments" asp-action="Details"
             asp-route-id="@a.Id">
-            <strong>@a.StartAt.ToString("dd MMM ddd HH:mm")</strong> · @a.Service.Name · @a.Stylist.FirstName @a.Stylist.LastName · (@a.Branch.Name)
+            <strong>@TimeZoneService.ConvertToLocalTime(a.StartAt).ToString("dd MMM ddd HH:mm")</strong> · @a.Service.Name · @a.Stylist.FirstName @a.Stylist.LastName · (@a.Branch.Name)
           </a>
           <div class="btn-group btn-group-sm" role="group" aria-label="Aksiyonlar">
             <a class="btn btn-outline-primary" asp-area="Customer" asp-controller="Appointments" asp-action="Reschedule"
@@ -37,7 +39,7 @@
     {
       <a class="list-group-item list-group-item-action d-flex justify-content-between" asp-area="Customer"
         asp-controller="Appointments" asp-action="Details" asp-route-id="@a.Id">
-        <span><strong>@a.StartAt.ToString("dd MMM ddd HH:mm")</strong> · @a.Service.Name · @a.Stylist.FirstName @a.Stylist.LastName · (@a.Branch.Name)</span>
+        <span><strong>@TimeZoneService.ConvertToLocalTime(a.StartAt).ToString("dd MMM ddd HH:mm")</strong> · @a.Service.Name · @a.Stylist.FirstName @a.Stylist.LastName · (@a.Branch.Name)</span>
         <span class="text-muted">Detay →</span>
       </a>
     }

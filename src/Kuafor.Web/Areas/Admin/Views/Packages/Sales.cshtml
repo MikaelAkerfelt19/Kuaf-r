@@ -1,0 +1,94 @@
+@model IEnumerable<Kuafor.Web.Models.Entities.PackageSale>
+
+@{
+    ViewData["Title"] = "Paket Satışları";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Paket Satışları</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Paket Listesi
+        </a>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Satış Geçmişi</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Müşteri</th>
+                            <th>Paket</th>
+                            <th>Satın Alma Tarihi</th>
+                            <th>Kalan Seans</th>
+                            <th>Bitiş Tarihi</th>
+                            <th>Durum</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @if (Model.Any())
+                        {
+                            @foreach (var sale in Model)
+                            {
+                                <tr>
+                                    <td>@sale.Id</td>
+                                    <td>
+                                        <strong>@sale.Customer.FirstName @sale.Customer.LastName</strong><br>
+                                        <small class="text-muted">@sale.Customer.Email</small>
+                                    </td>
+                                    <td>
+                                        <strong>@sale.Package.Name</strong><br>
+                                        <small class="text-muted">@sale.Package.SessionCount seans</small>
+                                    </td>
+                                    <td>@sale.PurchaseDate.ToString("dd.MM.yyyy")</td>
+                                    <td>
+                                        <span class="badge @(sale.RemainingSessions > 0 ? "bg-success" : "bg-secondary")">
+                                            @sale.RemainingSessions
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @if (sale.ExpiryDate.HasValue)
+                                        {
+                                            <span class="@(sale.ExpiryDate.Value < DateTime.Now ? "text-danger" : "text-success")">
+                                                @sale.ExpiryDate.Value.ToString("dd.MM.yyyy")
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Sınırsız</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (sale.RemainingSessions > 0)
+                                        {
+                                            <span class="badge bg-success">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Tamamlandı</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        }
+                        else
+                        {
+                            <tr>
+                                <td colspan="7" class="text-center text-muted py-4">
+                                    <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+                                    Henüz paket satışı yapılmamış
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
