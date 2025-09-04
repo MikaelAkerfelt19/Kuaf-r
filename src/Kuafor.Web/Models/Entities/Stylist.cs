@@ -34,9 +34,12 @@ public class Stylist
     public int BranchId { get; set; }
     public string? UserId { get; set; } // Identity User ID
     
+    // Computed property for full name
+    public string Name => $"{FirstName} {LastName}";
+    
     // Navigation properties
     public virtual Branch Branch { get; set; } = null!;
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
-    // WorkingHours tablosu zaten veritabanında mevcut
+    public virtual ICollection<StylistWorkingHours> WorkingHours { get; set; } = new List<StylistWorkingHours>();
 }

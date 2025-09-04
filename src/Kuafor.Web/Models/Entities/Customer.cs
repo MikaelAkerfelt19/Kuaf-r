@@ -19,6 +19,15 @@ public class Customer
     public string? Email { get; set; }
     
     public DateTime? DateOfBirth { get; set; }
+    public DateTime? BirthDate { get; set; } // Alias for DateOfBirth
+    
+    [StringLength(10)]
+    public string? Gender { get; set; }
+    
+    [StringLength(50)]
+    public string? Segment { get; set; }
+    
+    public DateTime? LastVisitDate { get; set; }
     
     public bool IsActive { get; set; } = true;
     
@@ -27,6 +36,9 @@ public class Customer
     
     [Required]
     public string UserId { get; set; } = string.Empty;
+    
+    // Computed property for full name
+    public string Name => $"{FirstName} {LastName}";
     
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

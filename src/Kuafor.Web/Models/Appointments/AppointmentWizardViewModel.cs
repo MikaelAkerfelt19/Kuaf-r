@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Kuafor.Web.Models.Profile; 
 
 namespace Kuafor.Web.Models.Appointments
 {
@@ -7,7 +8,11 @@ namespace Kuafor.Web.Models.Appointments
 
     public record ServiceVm(int Id, string Name, string DurationText, string Description);
     public record StylistVm(int Id, string Name, double Rating, string Bio, int BranchId);
-    public record TimeSlotVm(DateTime Start, bool IsAvailable);
+    public record TimeSlotVm(DateTime Start, bool IsAvailable)
+    {
+        public DateTime StartUtc => Start.ToUniversalTime();
+        public DateTime StartLocal => Start;
+    }
 
     public class AppointmentWizardViewModel
     {
@@ -23,5 +28,12 @@ namespace Kuafor.Web.Models.Appointments
         // Özet için kolaylık
         public ServiceVm? SelectedService => Services.Find(s => s.Id == SelectedServiceId);
         public StylistVm? SelectedStylist => Stylists.Find(s => s.Id == SelectedStylistId);
+
+        // Kupon özellikleri
+        public string? SelectedCouponCode { get; set; }
+        public decimal OriginalPrice { get; set; }
+        public decimal DiscountAmount { get; set; }
+        public decimal FinalPrice { get; set; }
+        public List<CouponVm> AvailableCoupons { get; set; } = new();
     }
 }
