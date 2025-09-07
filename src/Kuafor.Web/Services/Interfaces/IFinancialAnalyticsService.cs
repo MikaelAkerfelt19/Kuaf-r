@@ -5,12 +5,12 @@ namespace Kuafor.Web.Services.Interfaces;
 public interface IFinancialAnalyticsService
 {
     // Maliyet analizi
-    Task<CostAnalysis> GetCostAnalysisAsync(int serviceId, int productId, DateTime startDate, DateTime endDate);
+    Task<CostAnalysis?> GetCostAnalysisAsync(int serviceId, int productId, DateTime startDate, DateTime endDate);
     Task<List<CostAnalysis>> GetAllCostAnalysesAsync(DateTime startDate, DateTime endDate);
     Task<CostAnalysis> CreateCostAnalysisAsync(CostAnalysis analysis);
     
     // Bütçe yönetimi
-    Task<Budget> GetBudgetAsync(int year, int? month, int? quarter);
+    Task<Budget?> GetBudgetAsync(int year, int? month, int? quarter);
     Task<List<Budget>> GetAllBudgetsAsync();
     Task<Budget> CreateBudgetAsync(Budget budget);
     Task<Budget> UpdateBudgetAsync(Budget budget);
@@ -23,7 +23,7 @@ public interface IFinancialAnalyticsService
     Task<bool> DeleteBudgetItemAsync(int itemId);
     
     // Nakit akış takibi
-    Task<CashFlow> GetCashFlowAsync(DateTime date);
+    Task<CashFlow?> GetCashFlowAsync(DateTime date);
     Task<List<CashFlow>> GetCashFlowRangeAsync(DateTime startDate, DateTime endDate);
     Task<CashFlow> CreateCashFlowAsync(CashFlow cashFlow);
     Task<CashFlow> UpdateCashFlowAsync(CashFlow cashFlow);

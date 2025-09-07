@@ -10,9 +10,9 @@ public interface IStaffManagementService
     Task UpdateStaffPerformanceAsync(int stylistId, DateTime startDate, DateTime endDate);
     
     // Personel maaş yönetimi
-    Task<StaffSalary> GetStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd);
+    Task<StaffSalary?> GetStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd);
     Task<List<StaffSalary>> GetAllStaffSalariesAsync(DateTime payPeriodStart, DateTime payPeriodEnd);
-    Task<StaffSalary> CalculateStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd);
+    Task<StaffSalary?> CalculateStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd);
     Task<bool> PayStaffSalaryAsync(int salaryId);
     
     // Personel eğitim takibi
@@ -22,7 +22,7 @@ public interface IStaffManagementService
     Task<bool> DeleteStaffTrainingAsync(int trainingId);
     
     // Personel devam takibi
-    Task<StaffAttendance> GetStaffAttendanceAsync(int stylistId, DateTime date);
+    Task<StaffAttendance?> GetStaffAttendanceAsync(int stylistId, DateTime date);
     Task<List<StaffAttendance>> GetStaffAttendanceRangeAsync(int stylistId, DateTime startDate, DateTime endDate);
     Task<StaffAttendance> CheckInAsync(int stylistId, DateTime checkInTime);
     Task<StaffAttendance> CheckOutAsync(int stylistId, DateTime checkOutTime);

@@ -16,7 +16,7 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
         _context = context;
     }
 
-    public async Task<CostAnalysis> GetCostAnalysisAsync(int serviceId, int productId, DateTime startDate, DateTime endDate)
+    public async Task<CostAnalysis?> GetCostAnalysisAsync(int serviceId, int productId, DateTime startDate, DateTime endDate)
     {
         return await _context.CostAnalyses
             .Include(ca => ca.Service)
@@ -44,7 +44,7 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
         return analysis;
     }
 
-    public async Task<Budget> GetBudgetAsync(int year, int? month, int? quarter)
+    public async Task<Budget?> GetBudgetAsync(int year, int? month, int? quarter)
     {
         return await _context.Budgets
             .Include(b => b.BudgetItems)
@@ -126,7 +126,7 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
         return true;
     }
 
-    public async Task<CashFlow> GetCashFlowAsync(DateTime date)
+    public async Task<CashFlow?> GetCashFlowAsync(DateTime date)
     {
         return await _context.CashFlows
             .FirstOrDefaultAsync(cf => cf.Date.Date == date.Date);
@@ -263,7 +263,7 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
             .Include(b => b.BudgetItems)
             .FirstOrDefaultAsync(b => b.Id == budgetId);
 
-        if (budget == null) return null;
+        if (budget == null) return null!;
 
         var reportData = new
         {

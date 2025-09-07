@@ -24,7 +24,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-box-seam text-primary fs-1"></i>
-                <div class="fs-4 fw-bold mt-2">@inventoryReport.Count</div>
+                <div class="fs-4 fw-bold mt-2">@(inventoryReport?.Count ?? 0)</div>
                 <div class="text-muted">Toplam Ürün</div>
             </div>
         </div>
@@ -42,7 +42,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-exclamation-triangle text-warning fs-1"></i>
-                <div class="fs-4 fw-bold mt-2">@lowStockProducts.Count</div>
+                <div class="fs-4 fw-bold mt-2">@(lowStockProducts?.Count ?? 0)</div>
                 <div class="text-muted">Düşük Stok</div>
             </div>
         </div>
@@ -51,7 +51,7 @@
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center">
                 <i class="bi bi-x-circle text-danger fs-1"></i>
-                <div class="fs-4 fw-bold mt-2">@outOfStockProducts.Count</div>
+                <div class="fs-4 fw-bold mt-2">@(outOfStockProducts?.Count ?? 0)</div>
                 <div class="text-muted">Stokta Yok</div>
             </div>
         </div>
@@ -59,10 +59,10 @@
 </div>
 
 <!-- Stok Uyarıları -->
-@if (lowStockProducts.Any() || outOfStockProducts.Any())
+@if ((lowStockProducts?.Any() == true) || (outOfStockProducts?.Any() == true))
 {
     <div class="row g-3 mb-4">
-        @if (outOfStockProducts.Any())
+        @if (outOfStockProducts?.Any() == true)
         {
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm border-danger">
@@ -71,7 +71,7 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            @foreach (var product in outOfStockProducts.Take(5))
+                            @foreach (var product in (outOfStockProducts ?? new List<Kuafor.Web.Models.Entities.Product>()).Take(5))
                             {
                                 <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <div>
@@ -89,10 +89,10 @@
                                 </div>
                             }
                         </div>
-                        @if (outOfStockProducts.Count > 5)
+                        @if ((outOfStockProducts?.Count ?? 0) > 5)
                         {
                             <div class="text-center mt-2">
-                                <small class="text-muted">ve @(outOfStockProducts.Count - 5) ürün daha...</small>
+                                <small class="text-muted">ve @((outOfStockProducts?.Count ?? 0) - 5) ürün daha...</small>
                             </div>
                         }
                     </div>
@@ -100,7 +100,7 @@
             </div>
         }
 
-        @if (lowStockProducts.Any())
+        @if (lowStockProducts?.Any() == true)
         {
             <div class="col-md-6">
                 <div class="card border-0 shadow-sm border-warning">
@@ -109,7 +109,7 @@
                     </div>
                     <div class="card-body">
                         <div class="list-group list-group-flush">
-                            @foreach (var product in lowStockProducts.Take(5))
+                            @foreach (var product in (lowStockProducts ?? new List<Kuafor.Web.Models.Entities.Product>()).Take(5))
                             {
                                 <div class="list-group-item d-flex justify-content-between align-items-center px-0">
                                     <div>
@@ -127,10 +127,10 @@
                                 </div>
                             }
                         </div>
-                        @if (lowStockProducts.Count > 5)
+                        @if ((lowStockProducts?.Count ?? 0) > 5)
                         {
                             <div class="text-center mt-2">
-                                <small class="text-muted">ve @(lowStockProducts.Count - 5) ürün daha...</small>
+                                <small class="text-muted">ve @((lowStockProducts?.Count ?? 0) - 5) ürün daha...</small>
                             </div>
                         }
                     </div>
@@ -172,7 +172,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var item in inventoryReport)
+                    @foreach (var item in inventoryReport ?? new List<Kuafor.Web.Services.Interfaces.InventoryReport>())
                     {
                         <tr>
                             <td>

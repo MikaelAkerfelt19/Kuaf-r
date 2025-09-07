@@ -132,7 +132,7 @@ public class StaffManagementService : IStaffManagementService
         };
     }
 
-    public async Task<StaffSalary> GetStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd)
+    public async Task<StaffSalary?> GetStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd)
     {
         return await _context.StaffSalaries
             .FirstOrDefaultAsync(ss => ss.StylistId == stylistId && 
@@ -148,7 +148,7 @@ public class StaffManagementService : IStaffManagementService
             .ToListAsync();
     }
 
-    public async Task<StaffSalary> CalculateStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd)
+    public async Task<StaffSalary?> CalculateStaffSalaryAsync(int stylistId, DateTime payPeriodStart, DateTime payPeriodEnd)
     {
         var stylist = await _context.Stylists.FirstOrDefaultAsync(s => s.Id == stylistId);
         if (stylist == null) return null;
@@ -246,7 +246,7 @@ public class StaffManagementService : IStaffManagementService
         return true;
     }
 
-    public async Task<StaffAttendance> GetStaffAttendanceAsync(int stylistId, DateTime date)
+    public async Task<StaffAttendance?> GetStaffAttendanceAsync(int stylistId, DateTime date)
     {
         return await _context.StaffAttendances
             .FirstOrDefaultAsync(sa => sa.StylistId == stylistId && sa.Date.Date == date.Date);
@@ -307,7 +307,7 @@ public class StaffManagementService : IStaffManagementService
             await _context.SaveChangesAsync();
         }
 
-        return attendance;
+        return attendance!;
     }
 
     public async Task<List<StaffEvaluation>> GetStaffEvaluationsAsync(int stylistId)

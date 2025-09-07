@@ -459,7 +459,7 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
             analytics.PreferredTimeSlot = preferredTimeSlot.Key;
 
         // Ortalama puan
-        var ratings = appointments.Where(a => a.CustomerRating.HasValue).Select(a => a.CustomerRating.Value).ToList();
+        var ratings = appointments.Where(a => a.CustomerRating.HasValue).Select(a => a.CustomerRating!.Value).ToList();
         if (ratings.Any())
         {
             analytics.AverageRating = ratings.Average();

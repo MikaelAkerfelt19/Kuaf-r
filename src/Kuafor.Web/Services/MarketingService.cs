@@ -104,7 +104,7 @@ public class MarketingService : IMarketingService
             .ToListAsync();
     }
 
-    public async Task<Models.Entities.CampaignPerformance> GetCampaignPerformanceAsync(int campaignId)
+    public async Task<Models.Entities.CampaignPerformance?> GetCampaignPerformanceAsync(int campaignId)
     {
         return await _context.CampaignPerformances
             .FirstOrDefaultAsync(cp => cp.CampaignId == campaignId);
@@ -289,7 +289,7 @@ public class MarketingService : IMarketingService
     public async Task<Models.Entities.CampaignPerformance> GetCampaignAnalyticsAsync(int campaignId)
     {
         var performance = await GetCampaignPerformanceAsync(campaignId);
-        if (performance == null) return null;
+        if (performance == null) return null!;
 
         // Ek analitik hesaplamalar
         performance.DeliveryRate = performance.SentCount > 0 ? 
