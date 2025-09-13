@@ -4,7 +4,7 @@ using Kuafor.Web.Models.Profile;
 
 namespace Kuafor.Web.Models.Appointments
 {
-    public enum WizardStep { Service = 1, Stylist = 2, Time = 3, Confirm = 4 }
+    public enum WizardStep { Branch = 0, Service = 1, Stylist = 2, Time = 3, Confirm = 4 }
 
     public record ServiceVm(int Id, string Name, string DurationText, string Description);
     public record StylistVm(int Id, string Name, double Rating, string Bio, int BranchId);
@@ -16,16 +16,20 @@ namespace Kuafor.Web.Models.Appointments
 
     public class AppointmentWizardViewModel
     {
-        public WizardStep Step { get; set; } = WizardStep.Service;
+        public WizardStep Step { get; set; } = WizardStep.Branch;
+        public int? SelectedBranchId { get; set; }
         public int? SelectedServiceId { get; set; }
         public int? SelectedStylistId { get; set; }
         public DateTime? SelectedStart { get; set; }
+        public string? Notes { get; set; }
 
+        public List<BranchVm> Branches { get; set; } = new();
         public List<ServiceVm> Services { get; set; } = new();
         public List<StylistVm> Stylists { get; set; } = new();
         public List<TimeSlotVm> TimeSlots { get; set; } = new();
 
         // Özet için kolaylık
+        public BranchVm? SelectedBranch => Branches.Find(b => b.Id == SelectedBranchId);
         public ServiceVm? SelectedService => Services.Find(s => s.Id == SelectedServiceId);
         public StylistVm? SelectedStylist => Stylists.Find(s => s.Id == SelectedStylistId);
 
@@ -36,4 +40,6 @@ namespace Kuafor.Web.Models.Appointments
         public decimal FinalPrice { get; set; }
         public List<CouponVm> AvailableCoupons { get; set; } = new();
     }
+
+    public record BranchVm(int Id, string Name, string Address);
 }

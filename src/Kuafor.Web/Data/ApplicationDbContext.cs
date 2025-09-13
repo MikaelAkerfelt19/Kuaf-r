@@ -81,6 +81,9 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<BirthdayCampaign> BirthdayCampaigns { get; set; } = null!;
     public DbSet<BirthdayMessage> BirthdayMessages { get; set; } = null!;
     
+    // JWT Refresh Tokens
+    public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
@@ -129,12 +132,90 @@ public class ApplicationDbContext : IdentityDbContext
             
         // Appointment time conflict prevention
         builder.Entity<Appointment>()
-            .HasIndex(a => new { a.StylistId, a.StartAt, a.EndAt });
+            .HasIndex(a => new { a.StylistId, a.StartAt, a.EndAt })
+            .HasDatabaseName("IX_Appointments_StylistId_StartAt_EndAt");
             
-        // Customer UserId unique constraint
+        // Performance indexes
+        builder.Entity<Appointment>()
+            .HasIndex(a => a.StartAt)
+            .HasDatabaseName("IX_Appointments_StartAt");
+            
+        builder.Entity<Appointment>()
+            .HasIndex(a => a.CustomerId)
+            .HasDatabaseName("IX_Appointments_CustomerId");
+            
+        builder.Entity<Appointment>()
+            .HasIndex(a => a.StylistId)
+            .HasDatabaseName("IX_Appointments_StylistId");
+            
+        builder.Entity<Appointment>()
+            .HasIndex(a => a.BranchId)
+            .HasDatabaseName("IX_Appointments_BranchId");
+            
+        builder.Entity<Appointment>()
+            .HasIndex(a => a.Status)
+            .HasDatabaseName("IX_Appointments_Status");
+            
+        // Customer indexes
         builder.Entity<Customer>()
             .HasIndex(c => c.UserId)
-            .IsUnique();
+            .IsUnique()
+            .HasDatabaseName("IX_Customers_UserId");
+            
+        builder.Entity<Customer>()
+            .HasIndex(c => c.Email)
+            .HasDatabaseName("IX_Customers_Email");
+            
+        builder.Entity<Customer>()
+            .HasIndex(c => c.Phone)
+            .HasDatabaseName("IX_Customers_Phone");
+            
+        // Stylist indexes
+        builder.Entity<Stylist>()
+            .HasIndex(s => s.BranchId)
+            .HasDatabaseName("IX_Stylists_BranchId");
+            
+        builder.Entity<Stylist>()
+            .HasIndex(s => s.IsActive)
+            .HasDatabaseName("IX_Stylists_IsActive");
+            
+        // Service indexes
+        builder.Entity<Service>()
+            .HasIndex(s => s.IsActive)
+            .HasDatabaseName("IX_Services_IsActive");
+            
+        // Branch indexes
+        builder.Entity<Branch>()
+            .HasIndex(b => b.IsActive)
+            .HasDatabaseName("IX_Branches_IsActive");
+            
+        // Payment indexes
+        builder.Entity<Payment>()
+            .HasIndex(p => p.AppointmentId)
+            .HasDatabaseName("IX_Payments_AppointmentId");
+            
+        // Notification indexes
+        builder.Entity<Notification>()
+            .HasIndex(n => n.UserId)
+            .HasDatabaseName("IX_Notifications_UserId");
+            
+        builder.Entity<Notification>()
+            .HasIndex(n => n.CreatedAt)
+            .HasDatabaseName("IX_Notifications_CreatedAt");
+            
+        // RefreshToken indexes
+        builder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.Token)
+            .IsUnique()
+            .HasDatabaseName("IX_RefreshTokens_Token");
+            
+        builder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.UserId)
+            .HasDatabaseName("IX_RefreshTokens_UserId");
+            
+        builder.Entity<RefreshToken>()
+            .HasIndex(rt => rt.ExpiresAt)
+            .HasDatabaseName("IX_RefreshTokens_ExpiresAt");
             
         // Stylist BranchId foreign key
         builder.Entity<Stylist>()

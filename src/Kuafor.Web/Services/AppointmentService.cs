@@ -10,7 +10,6 @@ public class AppointmentService : IAppointmentService
 {
     private readonly ApplicationDbContext _context;
     private readonly IWorkingHoursService _workingHoursService;
-    private readonly Dictionary<int, int> _stylistBranchCache = new();
     
     public AppointmentService(ApplicationDbContext context, IWorkingHoursService workingHoursService)
     {
@@ -21,6 +20,7 @@ public class AppointmentService : IAppointmentService
     public async Task<IEnumerable<Appointment>> GetAllAsync()
     {
         return await _context.Appointments
+            .AsNoTracking() // Read-only için performans artışı
             .Include(a => a.Service)
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
@@ -33,6 +33,7 @@ public class AppointmentService : IAppointmentService
     public async Task<Appointment?> GetByIdAsync(int id)
     {
         return await _context.Appointments
+            .AsNoTracking() // Read-only için performans artışı
             .Include(a => a.Service)
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
@@ -44,6 +45,7 @@ public class AppointmentService : IAppointmentService
     public async Task<IEnumerable<Appointment>> GetByCustomerAsync(int customerId, DateTime? from = null, DateTime? to = null)
     {
         var query = _context.Appointments
+            .AsNoTracking() // Read-only için performans artışı
             .Include(a => a.Customer)
             .Include(a => a.Service)
             .Include(a => a.Stylist)
@@ -61,6 +63,7 @@ public class AppointmentService : IAppointmentService
     public async Task<IEnumerable<Appointment>> GetUpcomingByCustomerAsync(int customerId)
     {
         return await _context.Appointments
+            .AsNoTracking() // Read-only için performans artışı
             .Include(a => a.Service)
             .Include(a => a.Stylist)
             .Include(a => a.Branch)
@@ -75,6 +78,7 @@ public class AppointmentService : IAppointmentService
     public async Task<IEnumerable<Appointment>> GetByStylistAsync(int stylistId, DateTime? from = null, DateTime? to = null)
     {
         var query = _context.Appointments
+            .AsNoTracking() // Read-only için performans artışı
             .Include(a => a.Customer)
             .Include(a => a.Service)
             .Include(a => a.Stylist)
@@ -92,6 +96,7 @@ public class AppointmentService : IAppointmentService
     public async Task<IEnumerable<Appointment>> GetByBranchAsync(int branchId, DateTime? from = null, DateTime? to = null)
     {
         var query = _context.Appointments
+            .AsNoTracking() // Read-only için performans artışı
             .Include(a => a.Customer)
             .Include(a => a.Service)
             .Include(a => a.Branch)
@@ -379,16 +384,8 @@ public class AppointmentService : IAppointmentService
     
     private async Task<int> GetStylistBranchIdAsync(int stylistId)
     {
-        if (_stylistBranchCache.TryGetValue(stylistId, out int cachedBranchId))
-            return cachedBranchId;
-            
         var stylist = await _context.Stylists.FindAsync(stylistId);
-        var branchId = stylist?.BranchId ?? 0;
-        
-        if (branchId > 0)
-            _stylistBranchCache[stylistId] = branchId;
-            
-        return branchId;
+        return stylist?.BranchId ?? 0;
     }
     
     private async Task<bool> HasExistingConflictAsync(int stylistId, DateTime startTime, DateTime endTime, int? excludeAppointmentId)

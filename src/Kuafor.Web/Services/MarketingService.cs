@@ -146,8 +146,8 @@ public class MarketingService : IMarketingService
                     if (int.TryParse(target.TargetValue, out int age))
                     {
                         var ageCustomers = await _context.Customers
-                            .Where(c => c.BirthDate.HasValue && 
-                                      DateTime.Now.Year - c.BirthDate.Value.Year == age)
+                            .Where(c => c.DateOfBirth.HasValue && 
+                                      DateTime.Now.Year - c.DateOfBirth.Value.Year == age)
                             .ToListAsync();
                         customers.AddRange(ageCustomers);
                     }

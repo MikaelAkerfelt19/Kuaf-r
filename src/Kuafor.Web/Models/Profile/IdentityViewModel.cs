@@ -8,7 +8,7 @@ namespace Kuafor.Web.Models.Profile
         [Required, StringLength(80)] public string FullName { get; set; } = string.Empty;
         [StringLength(40)] public string? DisplayName { get; set; }
         public string? Gender { get; set; }
-        [DataType(DataType.Date)] public DateTime? BirthDate { get; set; }
+        [DataType(DataType.Date)] public DateTime? DateOfBirth { get; set; }
 
         [EmailAddress] public string Email { get; set; } = string.Empty;
         [Phone] public string? Phone { get; set; }

@@ -91,7 +91,23 @@ builder.Services.ConfigureApplicationCookie(options =>
 
 // JWT Authentication (API için)
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var key = Encoding.ASCII.GetBytes(jwtSettings["SecretKey"] ?? "default-secret-key-for-development-only");
+var jwtSecret = jwtSettings["SecretKey"];
+
+// JWT Secret Key validation
+if (string.IsNullOrEmpty(jwtSecret) || jwtSecret == "REPLACE_WITH_USER_SECRETS_OR_ENVIRONMENT_VARIABLE")
+{
+    throw new InvalidOperationException(
+        "JWT Secret Key is required! " +
+        "Set it using: dotnet user-secrets set \"JwtSettings:SecretKey\" \"your-secret-key\" " +
+        "or set JWT_SECRET_KEY environment variable.");
+}
+
+if (jwtSecret.Length < 32)
+{
+    throw new InvalidOperationException("JWT Secret Key must be at least 32 characters long for security!");
+}
+
+var key = Encoding.ASCII.GetBytes(jwtSecret);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -99,16 +115,18 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = IdentityConstants.ApplicationScheme;
     options.DefaultSignInScheme = IdentityConstants.ExternalScheme;
 })
-.AddJwtBearer(options =>
+.AddJwtBearer(JwtBearerDefaults.AuthenticationScheme, options =>
 {
-    options.RequireHttpsMetadata = false;
+    options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveToken = true;
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
         IssuerSigningKey = new SymmetricSecurityKey(key),
-        ValidateIssuer = false,
-        ValidateAudience = false,
+        ValidateIssuer = true,
+        ValidIssuer = jwtSettings["Issuer"] ?? "KuaforApp",
+        ValidateAudience = true,
+        ValidAudience = jwtSettings["Audience"] ?? "KuaforUsers",
         ClockSkew = TimeSpan.Zero
     };
 });
@@ -116,11 +134,20 @@ builder.Services.AddAuthentication(options =>
 // CORS Policy
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowAll", policy =>
+    options.AddPolicy("Development", policy =>
     {
-        policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+        policy.WithOrigins("http://localhost:3000", "http://localhost:5000", "http://localhost:5001")
+              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
+              .AllowCredentials();
+    });
+    
+    options.AddPolicy("Production", policy =>
+    {
+        policy.WithOrigins("https://yourdomain.com", "https://www.yourdomain.com")
+              .WithMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+              .WithHeaders("Content-Type", "Authorization", "X-Requested-With")
+              .AllowCredentials();
     });
 });
 
@@ -148,6 +175,7 @@ builder.Services.AddScoped<INotificationService, NotificationService>();
 builder.Services.AddScoped<IStaffManagementService, StaffManagementService>();
 builder.Services.AddScoped<IFinancialAnalyticsService, FinancialAnalyticsService>();
 builder.Services.AddScoped<IMarketingService, MarketingService>();
+builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddHostedService<AppointmentReminderService>();
 
 // Authorization policies
@@ -186,7 +214,15 @@ else
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseRouting();
-app.UseCors("AllowAll");
+// CORS Policy'yi environment'a göre seç
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors("Development");
+}
+else
+{
+    app.UseCors("Production");
+}
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapStaticAssets();

@@ -25,6 +25,19 @@ namespace Kuafor.Web.Services
 
         public DateTime ConvertToUtc(DateTime localDateTime)
         {
+            // DateTime'ın Kind property'sini kontrol et
+            if (localDateTime.Kind == DateTimeKind.Unspecified)
+            {
+                // Unspecified ise Local olarak işaretle
+                localDateTime = DateTime.SpecifyKind(localDateTime, DateTimeKind.Local);
+            }
+            
+            // Eğer zaten UTC ise, direkt döndür
+            if (localDateTime.Kind == DateTimeKind.Utc)
+            {
+                return localDateTime;
+            }
+            
             return TimeZoneInfo.ConvertTimeToUtc(localDateTime, _turkeyTimeZone);
         }
 

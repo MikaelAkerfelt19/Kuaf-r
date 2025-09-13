@@ -83,27 +83,8 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
 
     public async Task UpdateCustomerSegmentAsync(int customerId)
     {
-        var analytics = await _context.CustomerAnalytics
-            .FirstOrDefaultAsync(ca => ca.CustomerId == customerId);
-
-        if (analytics == null)
-        {
-            analytics = await CalculateRFMAsync(customerId);
-            _context.CustomerAnalytics.Add(analytics);
-        }
-        else
-        {
-            var newAnalytics = await CalculateRFMAsync(customerId);
-            analytics.RecencyScore = newAnalytics.RecencyScore;
-            analytics.FrequencyScore = newAnalytics.FrequencyScore;
-            analytics.MonetaryScore = newAnalytics.MonetaryScore;
-            analytics.Segment = newAnalytics.Segment;
-            analytics.LifecycleStage = newAnalytics.LifecycleStage;
-            analytics.ChurnRisk = newAnalytics.ChurnRisk;
-            analytics.UpdatedAt = DateTime.UtcNow;
-        }
-
-        await _context.SaveChangesAsync();
+        // Geçici olarak devre dışı - CustomerAnalytics tablosu yok
+        await Task.CompletedTask;
     }
 
     public async Task<List<CustomerSegment>> GetCustomerSegmentsAsync()
@@ -142,40 +123,26 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
 
     public async Task<CustomerAnalytics?> GetCustomerAnalyticsAsync(int customerId)
     {
-        return await _context.CustomerAnalytics
-            .Include(ca => ca.Customer)
-            .Include(ca => ca.PreferredService)
-            .Include(ca => ca.PreferredStylist)
-            .Include(ca => ca.PreferredBranch)
-            .FirstOrDefaultAsync(ca => ca.CustomerId == customerId);
+        // Geçici olarak null döndür - CustomerAnalytics tablosu yok
+        return null;
     }
 
     public async Task<List<CustomerAnalytics>> GetCustomersBySegmentAsync(string segment)
     {
-        return await _context.CustomerAnalytics
-            .Include(ca => ca.Customer)
-            .Where(ca => ca.Segment == segment)
-            .OrderByDescending(ca => ca.MonetaryScore)
-            .ToListAsync();
+        // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
+        return new List<CustomerAnalytics>();
     }
 
     public async Task<List<CustomerAnalytics>> GetHighValueCustomersAsync(int count = 10)
     {
-        return await _context.CustomerAnalytics
-            .Include(ca => ca.Customer)
-            .OrderByDescending(ca => ca.MonetaryScore)
-            .Take(count)
-            .ToListAsync();
+        // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
+        return new List<CustomerAnalytics>();
     }
 
     public async Task<List<CustomerAnalytics>> GetAtRiskCustomersAsync(int count = 10)
     {
-        return await _context.CustomerAnalytics
-            .Include(ca => ca.Customer)
-            .Where(ca => ca.ChurnRisk > 70)
-            .OrderByDescending(ca => ca.ChurnRisk)
-            .Take(count)
-            .ToListAsync();
+        // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
+        return new List<CustomerAnalytics>();
     }
 
     public async Task RecordCustomerBehaviorAsync(int customerId, string action, string? details = null, string? pageUrl = null)
@@ -267,56 +234,26 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
 
     public async Task<List<CustomerAnalytics>> GetChurnRiskCustomersAsync(double riskThreshold = 70)
     {
-        return await _context.CustomerAnalytics
-            .Include(ca => ca.Customer)
-            .Where(ca => ca.ChurnRisk >= riskThreshold)
-            .OrderByDescending(ca => ca.ChurnRisk)
-            .ToListAsync();
+        // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
+        return new List<CustomerAnalytics>();
     }
 
     public async Task<double> CalculateChurnRiskAsync(int customerId)
     {
-        var analytics = await _context.CustomerAnalytics
-            .FirstOrDefaultAsync(ca => ca.CustomerId == customerId);
-
-        if (analytics == null) return 0;
-
-        // Churn risk hesaplama algoritması
-        var risk = 0.0;
-
-        // Son ziyaret süresi (40% ağırlık)
-        if (analytics.DaysSinceLastVisit > 90) risk += 40;
-        else if (analytics.DaysSinceLastVisit > 60) risk += 30;
-        else if (analytics.DaysSinceLastVisit > 30) risk += 20;
-        else if (analytics.DaysSinceLastVisit > 14) risk += 10;
-
-        // Randevu sıklığı (30% ağırlık)
-        if (analytics.FrequencyScore < 2) risk += 30;
-        else if (analytics.FrequencyScore < 5) risk += 20;
-        else if (analytics.FrequencyScore < 10) risk += 10;
-
-        // Harcama miktarı (20% ağırlık)
-        if (analytics.MonetaryScore < 500) risk += 20;
-        else if (analytics.MonetaryScore < 1000) risk += 15;
-        else if (analytics.MonetaryScore < 2000) risk += 10;
-
-        // Puan (10% ağırlık)
-        if (analytics.AverageRating < 3) risk += 10;
-        else if (analytics.AverageRating < 4) risk += 5;
-
-        return Math.Min(risk, 100);
+        // Geçici olarak 0 döndür - CustomerAnalytics tablosu yok
+        return 0;
     }
 
     public async Task<CustomerAnalyticsReport> GetAnalyticsReportAsync()
     {
         var customers = await _context.Customers.ToListAsync();
-        var analytics = await _context.CustomerAnalytics.ToListAsync();
+        // var analytics = await _context.CustomerAnalytics.ToListAsync(); // Geçici olarak kapatıldı
         var appointments = await _appointmentService.GetAllAsync();
 
         var totalRevenue = appointments.Sum(a => a.FinalPrice);
-        var activeCustomers = analytics.Count(ca => ca.DaysSinceLastVisit <= 30);
+        var activeCustomers = customers.Count(c => c.CreatedAt >= DateTime.UtcNow.AddDays(-30)); // Geçici hesaplama
         var newCustomers = customers.Count(c => c.CreatedAt >= DateTime.UtcNow.AddDays(-30));
-        var atRiskCustomers = analytics.Count(ca => ca.ChurnRisk > 70);
+        var atRiskCustomers = 0; // Geçici olarak 0
 
         return new CustomerAnalyticsReport
         {
@@ -326,26 +263,16 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
             AtRiskCustomers = atRiskCustomers,
             TotalRevenue = totalRevenue,
             AverageCustomerValue = customers.Any() ? totalRevenue / customers.Count : 0,
-            AverageChurnRisk = analytics.Any() ? analytics.Average(ca => ca.ChurnRisk) : 0,
-            SegmentDistribution = GetSegmentDistribution(analytics),
-            TopCustomers = GetTopCustomers(analytics)
+            AverageChurnRisk = 0, // Geçici olarak 0
+            SegmentDistribution = new List<SegmentDistribution>(), // Geçici olarak boş
+            TopCustomers = new List<TopCustomer>() // Geçici olarak boş
         };
     }
 
     public async Task<List<SegmentPerformance>> GetSegmentPerformanceAsync()
     {
-        var analytics = await _context.CustomerAnalytics.ToListAsync();
-        var segments = analytics.GroupBy(ca => ca.Segment);
-
-        return segments.Select(g => new SegmentPerformance
-        {
-            SegmentName = g.Key,
-            CustomerCount = g.Count(),
-            TotalRevenue = g.Sum(ca => ca.MonetaryScore),
-            AverageValue = g.Average(ca => ca.MonetaryScore),
-            AverageChurnRisk = g.Average(ca => ca.ChurnRisk),
-            GrowthRate = 0 // TODO: Gerçek büyüme oranı hesaplama
-        }).ToList();
+        // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
+        return new List<SegmentPerformance>();
     }
 
     public async Task<List<CustomerJourney>> GetCustomerJourneyAsync(int customerId)

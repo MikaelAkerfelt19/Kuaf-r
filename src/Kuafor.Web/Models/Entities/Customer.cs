@@ -19,7 +19,6 @@ public class Customer
     public string? Email { get; set; }
     
     public DateTime? DateOfBirth { get; set; }
-    public DateTime? BirthDate { get; set; } // Alias for DateOfBirth
     
     [StringLength(10)]
     public string? Gender { get; set; }

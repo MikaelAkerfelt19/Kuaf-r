@@ -18,6 +18,7 @@ public class CustomerService : ICustomerService
     public async Task<IEnumerable<Customer>> GetAllAsync()
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .Include(c => c.Appointments)
             .OrderBy(c => c.FirstName)
             .ThenBy(c => c.LastName)
