@@ -56,89 +56,13 @@ public class AppointmentsController : Controller
         return View(appointments);
     }
 
-    // GET: /Appointments/New
+    // GET: /Appointments/New - Redirect to Customer Area
     [AllowAnonymous]
-    public async Task<IActionResult> New()
+    public IActionResult New()
     {
-        var viewModel = new CreateAppointmentViewModel
-        {
-            Services = await _serviceService.GetAllAsync(),
-            Branches = await _branchService.GetAllAsync()
-        };
-
-        return View(viewModel);
+        return RedirectToAction("New", "Appointments", new { area = "Customer" });
     }
 
-    // POST: /Appointments/New
-    [HttpPost]
-    [AllowAnonymous]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> New(CreateAppointmentViewModel model)
-    {
-        if (!ModelState.IsValid)
-        {
-            model.Services = await _serviceService.GetAllAsync();
-            model.Branches = await _branchService.GetAllAsync();
-            return View(model);
-        }
-
-        try
-        {
-            // Müşteri kontrolü
-            var customerId = await GetCurrentCustomerId();
-            if (customerId == null)
-            {
-                TempData["Error"] = "Randevu oluşturmak için giriş yapmanız gerekiyor.";
-                return RedirectToAction("Login", "Account");
-            }
-
-            // Timezone düzeltmesi: Local time'ı UTC'ye çevir
-            var startUtc = _timeZoneService.ConvertToUtc(model.StartAt);
-            var endUtc = _timeZoneService.ConvertToUtc(model.StartAt.AddMinutes(model.DurationMin));
-
-            // Çakışma kontrolü - UTC zamanları ile
-            var existingAppointments = await _appointmentService.GetByStylistAsync(
-                model.StylistId, startUtc.Date, startUtc.Date.AddDays(1));
-            
-            var hasSimpleConflict = existingAppointments.Any(a => 
-                a.Status != Models.Enums.AppointmentStatus.Cancelled &&
-                a.StartAt < endUtc && a.EndAt > startUtc);
-
-            if (hasSimpleConflict)
-            {
-                ModelState.AddModelError("", "Seçilen tarih ve saatte kuaför müsait değil. Lütfen başka bir zaman seçin.");
-                model.Services = await _serviceService.GetAllAsync();
-                model.Branches = await _branchService.GetAllAsync();
-                return View(model);
-            }
-
-            var appointment = new Appointment
-            {
-                ServiceId = model.ServiceId,
-                StylistId = model.StylistId,
-                BranchId = model.BranchId,
-                CustomerId = customerId.Value,
-                StartAt = startUtc,
-                EndAt = endUtc,
-                Notes = model.Notes,
-                Status = AppointmentStatus.Confirmed
-            };
-
-            await _appointmentService.CreateAsync(appointment);
-
-            // Başarı mesajında local time kullan
-            var localStart = _timeZoneService.ConvertToLocalTime(appointment.StartAt);
-            TempData["Success"] = $"Randevunuz başarıyla oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {model.SelectedServiceName}";
-            return RedirectToAction("Index");
-        }
-        catch (Exception ex)
-        {
-            ModelState.AddModelError("", "Randevu oluşturulurken bir hata oluştu: " + ex.Message);
-            model.Services = await _serviceService.GetAllAsync();
-            model.Branches = await _branchService.GetAllAsync();
-            return View(model);
-        }
-    }
 
     // GET: /Appointments/Details/5
     public async Task<IActionResult> Details(int id)
@@ -242,27 +166,6 @@ public class AppointmentsController : Controller
             return null;
 
         var customer = await _customerService.GetByUserIdAsync(userId);
-        if (customer == null)
-        {
-            // Customer kaydı yoksa otomatik oluştur
-            var userEmail = User.FindFirst(ClaimTypes.Email)?.Value ?? "";
-            var userName = User.Identity?.Name ?? "";
-            var nameParts = userName.Split(' ');
-            
-            customer = new Models.Entities.Customer
-            {
-                UserId = userId,
-                FirstName = nameParts.Length > 0 ? nameParts[0] : "Müşteri",
-                LastName = nameParts.Length > 1 ? string.Join(" ", nameParts.Skip(1)) : "",
-                Email = userEmail,
-                Phone = "",
-                IsActive = true,
-                CreatedAt = DateTime.UtcNow
-            };
-            
-            await _customerService.CreateAsync(customer);
-        }
-
         return customer?.Id;
     }
 }

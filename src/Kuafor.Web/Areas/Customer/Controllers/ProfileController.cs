@@ -68,7 +68,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 {
                     FullName = $"{customer.FirstName} {customer.LastName}",
                     DisplayName = customer.FirstName,
-                    BirthDate = customer.DateOfBirth,
+                    DateOfBirth = customer.DateOfBirth,
                     Email = customer.Email ?? string.Empty,
                     Phone = customer.Phone ?? string.Empty,
                     WhatsappOptIn = true, 

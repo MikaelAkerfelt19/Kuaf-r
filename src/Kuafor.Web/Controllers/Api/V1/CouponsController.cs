@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
 using System.ComponentModel.DataAnnotations;
@@ -8,6 +9,7 @@ namespace Kuafor.Web.Controllers.Api.V1;
 [ApiController]
 [Route("api/v1/[controller]")]
 [Produces("application/json")]
+[Authorize] // JWT token gerekli
 public class CouponsController : ControllerBase
 {
     private readonly ICouponService _couponService;

@@ -150,21 +150,36 @@ public class ReportsController : Controller
 
     // API: Rapor verilerini JSON olarak döndür
     [HttpGet]
+    [Route("GetReportData")]
     public async Task<IActionResult> GetReportData(string reportType, DateTime? from, DateTime? to)
     {
-        var fromDate = from ?? DateTime.Today.AddDays(-30);
-        var toDate = to ?? DateTime.Today;
-
-        switch (reportType.ToLower())
+        try
         {
-            case "revenue":
-                return Json(await GetRevenueChartData(fromDate, toDate));
-            case "appointments":
-                return Json(await GetAppointmentChartData(fromDate, toDate));
-            case "customers":
-                return Json(await GetCustomerChartData(fromDate, toDate));
-            default:
-                return BadRequest("Geçersiz rapor tipi");
+            var fromDate = from ?? DateTime.Today.AddDays(-30);
+            var toDate = to ?? DateTime.Today;
+
+            if (string.IsNullOrEmpty(reportType))
+            {
+                return BadRequest("Rapor tipi belirtilmedi");
+            }
+
+            switch (reportType.ToLower())
+            {
+                case "revenue":
+                    return Json(await GetRevenueChartData(fromDate, toDate));
+                case "appointments":
+                    return Json(await GetAppointmentChartData(fromDate, toDate));
+                case "customers":
+                    return Json(await GetCustomerChartData(fromDate, toDate));
+                default:
+                    return BadRequest("Geçersiz rapor tipi");
+            }
+        }
+        catch (Exception ex)
+        {
+            // Log the error
+            Console.WriteLine($"GetReportData Error: {ex.Message}");
+            return StatusCode(500, new { error = "Rapor verisi alınırken hata oluştu" });
         }
     }
 

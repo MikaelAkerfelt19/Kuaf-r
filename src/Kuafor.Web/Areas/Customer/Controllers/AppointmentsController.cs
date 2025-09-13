@@ -38,39 +38,63 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             _timeZoneService = timeZoneService; 
         }
 
-        public async Task<IActionResult> New(int? serviceId, int? stylistId, string? start)
+        public async Task<IActionResult> New(int? branchId, int? serviceId, int? stylistId, string? start)
         {
             var vm = new AppointmentWizardViewModel
             {
+                Branches = (await _branchService.GetAllAsync()).Select(b => new BranchVm(b.Id, b.Name, b.Address ?? "")).ToList(),
                 Services = (await _serviceService.GetAllAsync()).Select(s => new ServiceVm(s.Id, s.Name, $"{s.DurationMin} dakika", "")).ToList(),
                 Stylists = (await _stylistService.GetAllAsync()).Select(s => new StylistVm(s.Id, $"{s.FirstName} {s.LastName}", (double)s.Rating, s.Bio ?? "", s.BranchId)).ToList(),
                 TimeSlots = await BuildAvailableSlotsAsync(stylistId, serviceId)
             };
 
+            // Step belirleme mantığı
+            if (branchId.HasValue) 
+            { 
+                vm.SelectedBranchId = branchId; 
+                vm.Stylists = vm.Stylists.Where(s => s.BranchId == branchId).ToList(); // Şubeye göre filtrele
+                vm.Step = WizardStep.Service; 
+            }
             if (serviceId.HasValue) { vm.SelectedServiceId = serviceId; vm.Step = WizardStep.Stylist; }
             if (stylistId.HasValue) { vm.SelectedStylistId = stylistId; vm.Step = WizardStep.Time; }
             if (!string.IsNullOrEmpty(start) && DateTime.TryParse(start, out var dt))
-            { vm.SelectedStart = dt; vm.Step = WizardStep.Confirm; }
+            { 
+                // DateTime'ı local time olarak işaretle
+                if (dt.Kind == DateTimeKind.Unspecified)
+                {
+                    dt = DateTime.SpecifyKind(dt, DateTimeKind.Local);
+                }
+                vm.SelectedStart = dt; 
+                vm.Step = WizardStep.Confirm; 
+                Console.WriteLine($"DEBUG: Selected start time: {dt:yyyy-MM-dd HH:mm:ss} (Kind: {dt.Kind})");
+            }
 
             return View(vm);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Confirm(int serviceId, int stylistId, DateTime start)
+        public async Task<IActionResult> Confirm(int branchId, int serviceId, int stylistId, DateTime start, string? notes)
         {
             try
             {
                 var service = await _serviceService.GetByIdAsync(serviceId);
                 var stylist = await _stylistService.GetByIdAsync(stylistId);
+                var branch = await _branchService.GetByIdAsync(branchId);
                 
-                if (service == null || stylist == null)
-                    return BadRequest("Geçersiz hizmet veya kuaför");
+                if (service == null || stylist == null || branch == null)
+                    return BadRequest("Geçersiz hizmet, kuaför veya şube");
 
                 var customerId = await GetCurrentCustomerId();
                 if (customerId == 0)
                     return BadRequest("Müşteri bilgisi bulunamadı");
 
                 // Timezone dönüşümü düzeltildi
+                // DateTime'ın Kind property'sini kontrol et
+                if (start.Kind == DateTimeKind.Unspecified)
+                {
+                    start = DateTime.SpecifyKind(start, DateTimeKind.Local);
+                }
+                
                 var startUtc = _timeZoneService.ConvertToUtc(start);
                 var endUtc = _timeZoneService.ConvertToUtc(start.AddMinutes(service.DurationMin));
 
@@ -78,10 +102,11 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 {
                     ServiceId = serviceId,
                     StylistId = stylistId,
-                    BranchId = stylist.BranchId,
+                    BranchId = branchId,
                     CustomerId = customerId,
                     StartAt = startUtc,
                     EndAt = endUtc,
+                    Notes = notes,
                     Status = AppointmentStatus.Confirmed
                 };
 
@@ -89,13 +114,13 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 
                 // Başarı mesajında local time kullan
                 var localStart = _timeZoneService.ConvertToLocalTime(created.StartAt);
-                TempData["Success"] = $"Randevu oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName}";
+                TempData["Success"] = $"Randevu oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName} · {branch.Name}";
                 return RedirectToAction("Index");
             }
             catch (InvalidOperationException ex)
             {
                 TempData["Error"] = ex.Message;
-                return RedirectToAction("New", new { serviceId, stylistId, start = start.ToString("yyyy-MM-ddTHH:mm") });
+                return RedirectToAction("New", new { branchId, serviceId, stylistId, start = start.ToString("yyyy-MM-ddTHH:mm") });
             }
         }
 

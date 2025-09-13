@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Identity;
 using Kuafor.Web.ViewModels;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Data;
+using Kuafor.Web.Services.Interfaces;
 
 namespace Kuafor.Web.Controllers;
 
@@ -12,17 +13,20 @@ public class AuthController : Controller
     private readonly SignInManager<IdentityUser> _userSignInManager;
     private readonly RoleManager<IdentityRole> _roleManager;
     private readonly ApplicationDbContext _context;
+    private readonly IJwtService _jwtService;
 
     public AuthController(
         UserManager<IdentityUser> userManager,
         SignInManager<IdentityUser> userSignInManager,
         RoleManager<IdentityRole> roleManager,
-        ApplicationDbContext context)
+        ApplicationDbContext context,
+        IJwtService jwtService)
     {
         _userManager = userManager;
         _userSignInManager = userSignInManager;
         _roleManager = roleManager;
         _context = context;
+        _jwtService = jwtService;
     }
 
     [HttpGet]
@@ -50,8 +54,12 @@ public class AuthController : Controller
                 {
                     var roles = await _userManager.GetRolesAsync(user);
 
+                    // JWT Token oluştur
+                    var token = _jwtService.GenerateToken(user.Id, user.Email ?? "", roles.ToList());
+
                     // Başarılı giriş mesajı
                     TempData["Success"] = "Giriş işlemi başarıyla tamamlandı!";
+                    TempData["JwtToken"] = token; // Token'ı TempData'ya ekle (isteğe bağlı)
 
                     if (roles.Contains("Admin"))
                     {
@@ -149,7 +157,12 @@ public class AuthController : Controller
                     // Başarılı kayıt sonrası otomatik giriş
                     await _userSignInManager.SignInAsync(user, isPersistent: false);
                     
+                    // JWT Token oluştur
+                    var roles = await _userManager.GetRolesAsync(user);
+                    var token = _jwtService.GenerateToken(user.Id, user.Email ?? "", roles.ToList());
+                    
                     TempData["Success"] = "Kayıt işlemi başarıyla tamamlandı!";
+                    TempData["JwtToken"] = token; // Token'ı TempData'ya ekle (isteğe bağlı)
                     return RedirectToAction("Index", "Home", new { area = "Customer" });
                 }
                 catch (Exception ex)
