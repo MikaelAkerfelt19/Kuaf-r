@@ -1,4 +1,5 @@
 @model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
+<div class="mb-3"><a class="btn btn-link" asp-area="Customer" asp-controller="Appointments" asp-action="New">← Geri: Şube</a></div>
 <div class="row g-3">
     @foreach (var s in Model.Services)
     {
@@ -9,7 +10,8 @@
                     <div class="text-muted small">@s.DurationText</div>
                     <p class="mt-2 text-muted">@s.Description</p>
                     <div class="mt-auto">
-                        <a class="btn btn-primary" asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-serviceId="@s.Id">Seç ve Devam Et</a>
+                        <a class="btn btn-primary" asp-area="Customer" asp-controller="Appointments" asp-action="New" 
+                           asp-route-branchId="@Model.SelectedBranchId" asp-route-serviceId="@s.Id">Seç ve Devam Et</a>
                     </div>
                 </div>
             </div>

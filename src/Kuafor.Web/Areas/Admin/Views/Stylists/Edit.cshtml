@@ -189,14 +189,16 @@
                                             <label class="form-label small">Açılış</label>
                                             <input type="time" 
                                                    name="workingHours[@i].OpenTime" 
-                                                   class="form-control form-control-sm"
+                                                   class="form-control form-control-sm open-time"
+                                                   data-day="@i"
                                                    value="@(workingHour?.OpenTime.ToString(@"hh\:mm") ?? "09:00")" />
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label small">Kapanış</label>
                                             <input type="time" 
                                                    name="workingHours[@i].CloseTime" 
-                                                   class="form-control form-control-sm"
+                                                   class="form-control form-control-sm close-time"
+                                                   data-day="@i"
                                                    value="@(workingHour?.CloseTime.ToString(@"hh\:mm") ?? "18:00")" />
                                         </div>
                                     </div>
@@ -206,16 +208,25 @@
                                             <label class="form-label small">Öğle Başı</label>
                                             <input type="time" 
                                                    name="workingHours[@i].BreakStart" 
-                                                   class="form-control form-control-sm"
+                                                   class="form-control form-control-sm break-start"
+                                                   data-day="@i"
                                                    value="@(workingHour?.BreakStart?.ToString(@"hh\:mm") ?? "12:00")" />
                                         </div>
                                         <div class="col-6">
                                             <label class="form-label small">Öğle Sonu</label>
                                             <input type="time" 
                                                    name="workingHours[@i].BreakEnd" 
-                                                   class="form-control form-control-sm"
+                                                   class="form-control form-control-sm break-end"
+                                                   data-day="@i"
                                                    value="@(workingHour?.BreakEnd?.ToString(@"hh\:mm") ?? "13:00")" />
                                         </div>
+                                    </div>
+                                    
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-info-circle"></i> 
+                                            Öğle arası saatleri çalışma saatleri içinde olmalıdır.
+                                        </small>
                                     </div>
                                 </div>
                             </div>
@@ -233,6 +244,55 @@
     </div>
 </div>
 
+@section Styles {
+    <style>
+        .working-hours-details {
+            transition: all 0.3s ease;
+        }
+        
+        .time-warning {
+            font-size: 0.875rem;
+            padding: 0.5rem;
+            margin-top: 0.5rem;
+        }
+        
+        .working-day-checkbox:checked + .form-check-label {
+            color: #28a745;
+            font-weight: 600;
+        }
+        
+        .form-control-sm:focus {
+            border-color: #28a745;
+            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
+        }
+        
+        .border.rounded {
+            border-color: #e3e6f0 !important;
+        }
+        
+        .border.rounded:hover {
+            border-color: #28a745 !important;
+            box-shadow: 0 0.15rem 0.35rem rgba(0, 0, 0, 0.1);
+        }
+        
+        .card-header h6 {
+            color: #5a5c69;
+        }
+        
+        .btn-success {
+            background: linear-gradient(45deg, #28a745, #20c997);
+            border: none;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-success:hover {
+            background: linear-gradient(45deg, #218838, #1ea085);
+            transform: translateY(-1px);
+            box-shadow: 0 0.5rem 1rem rgba(40, 167, 69, 0.3);
+        }
+    </style>
+}
+
 @section Scripts {
     <script>
         // Çalışma günü checkbox'larını yönet
@@ -244,9 +304,94 @@
                     const target = document.getElementById(this.dataset.target);
                     if (target) {
                         target.style.display = this.checked ? 'block' : 'none';
+                        
+                        // Çalışma günü seçildiğinde saatleri sıfırla
+                        if (this.checked) {
+                            resetWorkingHours(this.dataset.target);
+                        }
                     }
                 });
             });
+            
+            // Saat validasyonu
+            document.querySelectorAll('.open-time, .close-time, .break-start, .break-end').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    validateWorkingHours(this.dataset.day);
+                });
+            });
         });
+        
+        function resetWorkingHours(dayId) {
+            const dayElement = document.getElementById(dayId);
+            if (dayElement) {
+                const openTime = dayElement.querySelector('.open-time');
+                const closeTime = dayElement.querySelector('.close-time');
+                const breakStart = dayElement.querySelector('.break-start');
+                const breakEnd = dayElement.querySelector('.break-end');
+                
+                if (openTime && !openTime.value) openTime.value = '09:00';
+                if (closeTime && !closeTime.value) closeTime.value = '18:00';
+                if (breakStart && !breakStart.value) breakStart.value = '12:00';
+                if (breakEnd && !breakEnd.value) breakEnd.value = '13:00';
+            }
+        }
+        
+        function validateWorkingHours(dayIndex) {
+            const dayElement = document.getElementById('day-' + dayIndex);
+            if (!dayElement) return;
+            
+            const openTime = dayElement.querySelector('.open-time');
+            const closeTime = dayElement.querySelector('.close-time');
+            const breakStart = dayElement.querySelector('.break-start');
+            const breakEnd = dayElement.querySelector('.break-end');
+            
+            if (!openTime || !closeTime || !breakStart || !breakEnd) return;
+            
+            const open = new Date('2000-01-01 ' + openTime.value);
+            const close = new Date('2000-01-01 ' + closeTime.value);
+            const breakS = new Date('2000-01-01 ' + breakStart.value);
+            const breakE = new Date('2000-01-01 ' + breakEnd.value);
+            
+            // Açılış kapanıştan önce olmalı
+            if (open >= close) {
+                closeTime.value = new Date(open.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
+            }
+            
+            // Öğle arası çalışma saatleri içinde olmalı
+            if (breakS < open) {
+                breakStart.value = openTime.value;
+            }
+            if (breakE > close) {
+                breakEnd.value = closeTime.value;
+            }
+            if (breakS >= breakE) {
+                breakEnd.value = new Date(breakS.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
+            }
+            
+            // Uyarı göster
+            if (breakS < open || breakE > close) {
+                showTimeWarning(dayElement, 'Öğle arası saatleri çalışma saatleri içinde olmalıdır!');
+            } else {
+                hideTimeWarning(dayElement);
+            }
+        }
+        
+        function showTimeWarning(element, message) {
+            let warning = element.querySelector('.time-warning');
+            if (!warning) {
+                warning = document.createElement('div');
+                warning.className = 'time-warning alert alert-warning alert-sm mt-2';
+                element.appendChild(warning);
+            }
+            warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + message;
+            warning.style.display = 'block';
+        }
+        
+        function hideTimeWarning(element) {
+            const warning = element.querySelector('.time-warning');
+            if (warning) {
+                warning.style.display = 'none';
+            }
+        }
     </script>
 }

@@ -1,5 +1,5 @@
 @model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
-<div class="mb-3"><a class="btn btn-link" asp-area="Customer" asp-controller="Appointments" asp-action="New">← Geri: Hizmet</a></div>
+<div class="mb-3"><a class="btn btn-link" asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-branchId="@Model.SelectedBranchId" asp-route-serviceId="@Model.SelectedServiceId">← Geri: Hizmet</a></div>
 <div class="row g-3">
     @foreach (var st in Model.Stylists)
     {
@@ -17,7 +17,7 @@
                     
                     <div class="mt-auto">
                         <a class="btn btn-primary" asp-area="Customer" asp-controller="Appointments" asp-action="New" 
-                            asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@st.Id">Seç ve Devam Et</a>
+                            asp-route-branchId="@Model.SelectedBranchId" asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@st.Id">Seç ve Devam Et</a>
                     </div>
                 </div>
             </div>

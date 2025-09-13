@@ -1,0 +1,17 @@
+@model Kuafor.Web.Models.Appointments.AppointmentWizardViewModel
+<div class="row g-3">
+    @foreach (var branch in Model.Branches)
+    {
+        <div class="col-12 col-md-6 col-lg-4">
+            <div class="card h-100 border-0 shadow-sm">
+                <div class="card-body d-flex flex-column">
+                    <div class="fw-semibold">@branch.Name</div>
+                    <div class="text-muted small">@branch.Address</div>
+                    <div class="mt-auto">
+                        <a class="btn btn-primary" asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-branchId="@branch.Id">Seç ve Devam Et</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>

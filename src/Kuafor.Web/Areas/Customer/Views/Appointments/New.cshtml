@@ -8,12 +8,15 @@
     <h3 class="mb-3">Randevu Al</h3>
     <div class="mb-3">
         <div class="progress" style="height: 8px;">
-            <div class="progress-bar" role="progressbar" style="width:@(((int)Model.Step*25))%;"></div>
+            <div class="progress-bar" role="progressbar" style="width:@(((int)Model.Step*20))%;"></div>
         </div>
     </div>
 
     @switch (Model.Step)
     {
+        case WizardStep.Branch:
+            @await Html.PartialAsync("Partials/_Step0_Branch", Model)
+            break;
         case WizardStep.Service:
             @await Html.PartialAsync("Partials/_Step1_Service", Model)
             break;

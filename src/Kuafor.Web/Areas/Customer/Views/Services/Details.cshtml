@@ -144,24 +144,9 @@
                     <h5 class="mb-0">Hızlı Randevu</h5>
                 </div>
                 <div class="card-body">
-                    <form action="@Url.Action("New", "Appointments", new { area = "" })" method="get">
-                        <input type="hidden" name="serviceId" value="@Model.Service.Id">
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Kuaför Seçin</label>
-                            <select name="stylistId" class="form-select" required>
-                                <option value="">Kuaför seçin...</option>
-                                @foreach (var stylist in Model.Stylists)
-                                {
-                                    <option value="@stylist.Id">@stylist.FirstName @stylist.LastName</option>
-                                }
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary w-100">
-                            <i class="bi bi-calendar-plus"></i> Randevu Al
-                        </button>
-                    </form>
+                    <a href="@Url.Action("New", "Appointments", new { area = "Customer" })" class="btn btn-primary w-100">
+                        <i class="bi bi-calendar-plus"></i> Randevu Al
+                    </a>
                 </div>
             </div>
         </div>

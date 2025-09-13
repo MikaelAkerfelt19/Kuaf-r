@@ -2,22 +2,26 @@
 @using System.Globalization
 
 <div class="mb-3 d-flex justify-content-between align-items-center">
-  <a class="btn btn-link" asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@Model.SelectedStylistId">← Geri: Saat</a>
+  <a class="btn btn-link" asp-area="Customer" asp-controller="Appointments" asp-action="New" asp-route-branchId="@Model.SelectedBranchId" asp-route-serviceId="@Model.SelectedServiceId" asp-route-stylistId="@Model.SelectedStylistId">← Geri: Saat</a>
 </div>
 
 <div class="card border-0 shadow-sm">
   <div class="card-body">
     <h5 class="card-title">Onay</h5>
     <ul class="list-unstyled mb-4">
+      <li><strong>Şube:</strong> @Model.SelectedBranch?.Name</li>
       <li><strong>Hizmet:</strong> @Model.SelectedService?.Name</li>
       <li><strong>Kuaför:</strong> @Model.SelectedStylist?.Name</li>
       <li><strong>Tarih & Saat:</strong> @Model.SelectedStart?.ToString("dd MMM dddd, HH:mm", CultureInfo.GetCultureInfo("tr-TR"))</li>
+      <li><strong>Debug:</strong> @Model.SelectedStart?.ToString("yyyy-MM-dd HH:mm:ss") (Kind: @Model.SelectedStart?.Kind)</li>
     </ul>
 
     <form method="post" action="@Url.Action("Confirm","Appointments")">
+      <input type="hidden" name="branchId" value="@Model.SelectedBranchId" />
       <input type="hidden" name="serviceId" value="@Model.SelectedServiceId" />
       <input type="hidden" name="stylistId" value="@Model.SelectedStylistId" />
       <input type="hidden" name="start" value="@Model.SelectedStart?.ToString("o")" />
+      <input type="hidden" name="notes" value="@Model.Notes" />
       <button class="btn btn-primary btn-lg" type="submit">Randevuyu Oluştur</button>
       <a class="btn btn-outline-secondary ms-2" asp-area="Customer" asp-controller="Appointments" asp-action="New">Baştan Başla</a>
     </form>
