@@ -10,6 +10,7 @@
     <title>@title · Admin · xxx-hairdresser</title>
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/admin.css" />
+    @RenderSection("Styles", required: false)
 </head>
 
 <body>
@@ -51,10 +52,10 @@
         </main>
     </div>
 
+    @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/admin-common.js"></script>
     @RenderSection("Scripts", required: false)
-    @await Html.PartialAsync("_ValidationScriptsPartial")
 </body>
 
 </html>

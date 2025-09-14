@@ -145,7 +145,6 @@
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
                 <form id="deleteForm" method="post" style="display: inline;">
                     @Html.AntiForgeryToken()
-                    <input type="hidden" id="stylistId" name="id" />
                     <button type="submit" class="btn btn-danger">Sil</button>
                 </form>
             </div>
@@ -156,7 +155,6 @@
 @section Scripts {
     <script>
         function showDeleteModal(id, name) {
-            $('#stylistId').val(id);
             $('#stylistName').text(name);
             $('#deleteForm').attr('action', '/Admin/Stylists/Delete/' + id);
             $('#deleteModal').modal('show');

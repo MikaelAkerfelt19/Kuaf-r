@@ -5,10 +5,14 @@
     ViewData["Title"] = "Randevular";
     Func<string, string> statusBadge = s => s switch
     {
+        "Pending" => "bg-secondary",
+        "Confirmed" => "bg-primary",
         "Scheduled" => "bg-primary",
+        "InProgress" => "bg-warning text-dark",
         "Completed" => "bg-success",
         "Cancelled" => "bg-danger",
-        "Rescheduled" => "bg-warning text-dark",
+        "NoShow" => "bg-danger",
+        "Rescheduled" => "bg-info",
         _ => "bg-secondary"
     };
     Func<DateTime, string> toLocal = d => d.ToString("yyyy-MM-dd HH:mm");
@@ -84,10 +88,14 @@
                 <label class="form-label">Durum</label>
                 <select name="Status" class="form-select">
                     <option value="">Tümü</option>
-                    <option value="Scheduled">Scheduled</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Rescheduled">Rescheduled</option>
+                    <option value="Pending">Beklemede</option>
+                    <option value="Confirmed">Onaylandı</option>
+                    <option value="Scheduled">Planlandı</option>
+                    <option value="InProgress">Devam Ediyor</option>
+                    <option value="Completed">Tamamlandı</option>
+                    <option value="Cancelled">İptal Edildi</option>
+                    <option value="NoShow">Gelmedi</option>
+                    <option value="Rescheduled">Erteklendi</option>
                 </select>
             </div>
             <div class="col-md-9 d-flex align-items-end justify-content-end">
@@ -144,30 +152,64 @@
                                     <span class="badge @statusBadge(a.Status)">@a.Status</span>
                                 </td>
                                 <td class="text-end">
+                                    <!-- Detay butonu - her zaman görünür -->
                                     <button type="button" class="btn btn-sm btn-outline-secondary me-1" data-bs-toggle="modal"
                                         data-bs-target="#appointmentDetailModal" data-id="@a.Id" data-when="@toLocal(a.StartAt)"
                                         data-duration="@a.DurationMin" data-customer="@a.CustomerName"
                                         data-service="@a.ServiceName" data-branch="@bname" data-stylist="@sname"
                                         data-price="@a.Price.ToString("0.##")" data-status="@a.Status"
-                                        data-note="@(a.Note ?? "")">
-                                        Detay
+                                        data-note="@(a.Note ?? "")" title="Randevu detaylarını görüntüle">
+                                        <i class="fas fa-eye"></i> Detay
                                     </button>
 
-                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
-                                        data-bs-target="#rescheduleModal" data-id="@a.Id"
-                                        data-current="@a.StartAt.ToString("yyyy-MM-ddTHH:mm")" data-duration="@a.DurationMin">
-                                        Ertele
-                                    </button>
+                                    @if (a.Status != "Cancelled" && a.Status != "Completed")
+                                    {
+                                        <!-- Ertele butonu - sadece aktif randevular için -->
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
+                                            data-bs-target="#rescheduleModal" data-id="@a.Id"
+                                            data-current="@a.StartAt.ToString("yyyy-MM-ddTHH:mm")" data-duration="@a.DurationMin"
+                                            title="Randevuyu ertele">
+                                            <i class="fas fa-calendar-alt"></i> Ertele
+                                        </button>
 
-                                    <button type="button" class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
-                                        data-bs-target="#cancelModal" data-id="@a.Id">
-                                        İptal
-                                    </button>
+                                        <!-- İptal butonu - sadece aktif randevular için -->
+                                        <button type="button" class="btn btn-sm btn-outline-warning me-1" data-bs-toggle="modal"
+                                            data-bs-target="#cancelModal" data-id="@a.Id" title="Randevuyu iptal et">
+                                            <i class="fas fa-times"></i> İptal
+                                        </button>
+                                    }
 
-                                    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
-                                        data-bs-target="#deleteModal" data-id="@a.Id" data-customer="@a.CustomerName"
-                                        data-service="@a.ServiceName" data-when="@toLocal(a.StartAt)">
-                                        Sil
+                                    @if (a.Status == "Cancelled" || a.Status == "Completed")
+                                    {
+                                        <!-- Durum güncelleme butonu - iptal edilmiş veya tamamlanmış randevular için -->
+                                        <div class="btn-group me-1" role="group">
+                                            <button type="button" class="btn btn-sm btn-outline-info dropdown-toggle" 
+                                                data-bs-toggle="dropdown" title="Durum güncelle">
+                                                <i class="fas fa-edit"></i> Durum
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus(@a.Id, 'Scheduled')">
+                                                    <i class="fas fa-clock text-primary"></i> Scheduled
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus(@a.Id, 'InProgress')">
+                                                    <i class="fas fa-play text-warning"></i> In Progress
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus(@a.Id, 'Completed')">
+                                                    <i class="fas fa-check text-success"></i> Completed
+                                                </a></li>
+                                                <li><a class="dropdown-item" href="#" onclick="updateStatus(@a.Id, 'NoShow')">
+                                                    <i class="fas fa-user-times text-danger"></i> No Show
+                                                </a></li>
+                                            </ul>
+                                        </div>
+                                    }
+
+                                    <!-- Sil butonu - her zaman görünür ama iptal edilmiş randevular için daha belirgin -->
+                                    <button type="button" class="btn btn-sm @(a.Status == "Cancelled" ? "btn-danger" : "btn-outline-danger")" 
+                                        data-bs-toggle="modal" data-bs-target="#deleteModal" data-id="@a.Id" 
+                                        data-customer="@a.CustomerName" data-service="@a.ServiceName" 
+                                        data-when="@toLocal(a.StartAt)" title="Randevuyu kalıcı olarak sil">
+                                        <i class="fas fa-trash"></i> Sil
                                     </button>
                                 </td>
                             </tr>
@@ -182,6 +224,7 @@
 @await Html.PartialAsync("Partials/_AppointmentDetailModal")
 @await Html.PartialAsync("Partials/_RescheduleModal", new Kuafor.Web.Models.Admin.Appointments.RescheduleForm())
 @await Html.PartialAsync("Partials/_CancelModal", new Kuafor.Web.Models.Admin.Appointments.CancelForm())
+@await Html.PartialAsync("Partials/_DeleteModal", new Kuafor.Web.Models.Admin.Appointments.DeleteForm())
 
 @section Scripts {
     <script src="~/js/admin-appointments.js" asp-append-version="true"></script>

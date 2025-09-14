@@ -3,90 +3,174 @@
 
 <div class="card border-0 shadow-sm">
     <div class="card-body">
-        <h5 class="card-title mb-3">Kuponlar</h5>
+        <div class="d-flex justify-content-between align-items-center">
+            <h5 class="card-title mb-0">
+                <i class="fas fa-ticket-alt me-2"></i>Kuponlarım
+            </h5>
+            <button class="btn btn-outline-primary btn-sm" data-bs-toggle="modal" data-bs-target="#availableCouponsModal">
+                <i class="fas fa-plus me-1"></i>Kuponları Gör
+            </button>
+        </div>
 
-        <h6 class="mb-2">Aktif</h6>
-        @if (Model.Active.Count == 0)
-        {
-            <div class="text-muted mb-3">Aktif kupon bulunmamaktadır.</div>
-        }
-        else
-        {
-            <div class="row g-3 mb-3">
-                @foreach (var c in Model.Active)
-                {
-                    <div class="col-12 col-md-6">
-                        <div class="border rounded p-3 h-100 d-flex flex-column">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="fw-semibold">@c.Title</div>
-                                    <div class="text-muted small">
-                                        @c.DiscountText
-                                        @if (c.MinSpend.HasValue)
-                                        {
-                                            @: · Min @c.MinSpend.Value.ToString("C0", CultureInfo.GetCultureInfo("tr-TR"))
-                                        }
+        <!-- İstatistikler -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="text-center">
+                    <h4 class="text-primary">@Model.TotalSavings.ToString("C", CultureInfo.GetCultureInfo("tr-TR"))</h4>
+                    <small class="text-muted">Toplam Tasarruf</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <h4 class="text-success">@Model.UsedCoupons.Count()</h4>
+                    <small class="text-muted">Kullanılan Kupon</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="text-center">
+                    <h4 class="text-info">@Model.CouponsUsedThisMonth</h4>
+                    <small class="text-muted">Bu Ay Kullanılan</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-3">
+            @if (Model.UsedCoupons == null || !Model.UsedCoupons.Any())
+            {
+                <div class="text-center py-4">
+                    <i class="fas fa-ticket-alt fa-3x text-muted mb-3"></i>
+                    <p class="text-muted">Henüz kullandığınız kupon bulunmuyor.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#availableCouponsModal">
+                        Mevcut Kuponları Gör
+                    </button>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    @foreach (var usage in Model.UsedCoupons.Take(6))
+                    {
+                        <div class="col-md-6 mb-3">
+                            <div class="card border-0 bg-light">
+                                <div class="card-body p-3">
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <h6 class="mb-1">@usage.Coupon.Title</h6>
+                                            <small class="text-muted">@usage.Coupon.Code</small>
+                                        </div>
+                                        <span class="badge bg-success">-@usage.DiscountAmount.ToString("C", CultureInfo.GetCultureInfo("tr-TR"))</span>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">
+                                            <i class="fas fa-calendar me-1"></i>
+                                            @usage.UsedAt.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))
+                                        </small>
                                     </div>
                                 </div>
-                                <span class="badge bg-success">Aktif</span>
-                            </div>
-
-                            @if (!string.IsNullOrWhiteSpace(c.Description))
-                            {
-                                <div class="mt-2 text-muted small">@c.Description</div>
-                            }
-
-                            <div class="mt-auto d-flex flex-wrap gap-2 align-items-center">
-                                <code class="px-2 py-1 bg-light rounded" id="code_@c.Code">@c.Code</code>
-                                <button class="btn btn-sm btn-outline-secondary" type="button" onclick="copyCouponCode('@c.Code')">Kodu Kopyala</button>
-                                <a class="btn btn-sm btn-primary"
-                                    asp-area="Customer" asp-controller="Appointments" asp-action="New"
-                                    asp-route-coupon="@c.Code">Uygula</a>
-                                @if (c.ExpiresAt.HasValue)
-                                {
-                                    <span class="ms-auto text-muted small">Son: @c.ExpiresAt.Value.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))</span>
-                                }
                             </div>
                         </div>
-                    </div>
-                }
-            </div>
-        }
-
-        <h6 class="mb-2 mt-2">Süresi Dolan / Kullanılmış</h6>
-        @if (Model.Expired.Count == 0)
-        {
-            <div class="text-muted">Listelenecek kupon bulunmamaktadır.</div>
-        }
-        else
-        {
-            <div class="row g-3">
-                @foreach (var c in Model.Expired)
+                    }
+                </div>
+                
+                @if (Model.UsedCoupons.Count() > 6)
                 {
-                    <div class="col-12 col-md-6">
-                        <div class="border rounded p-3 h-100 d-flex flex-column opacity-75">
-                            <div class="d-flex justify-content-between align-items-start">
-                                <div>
-                                    <div class="fw-semibold">@c.Title</div>
-                                    <div class="text-muted small">@c.DiscountText</div>
-                                </div>
-                                <span class="badge bg-secondary">@((c.IsUsed) ? "Kullanıldı" : "Süresi Dolmuş")</span>
+                    <div class="text-center mt-3">
+                        <button class="btn btn-outline-secondary btn-sm">Tümünü Gör</button>
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Mevcut Kuponlar Modal -->
+<div class="modal fade" id="availableCouponsModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="fas fa-ticket-alt me-2"></i>Mevcut Kuponlar
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="availableCouponsList">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">Yükleniyor...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Modal açıldığında kuponları yükle
+    $('#availableCouponsModal').on('show.bs.modal', function() {
+        loadAvailableCoupons();
+    });
+    
+    function loadAvailableCoupons() {
+        $.ajax({
+            url: '/api/v1/coupon/active',
+            method: 'GET',
+            success: function(response) {
+                if (response.success) {
+                    displayCoupons(response.coupons);
+                } else {
+                    $('#availableCouponsList').html('<div class="text-center py-4"><p class="text-muted">Kupon yüklenirken hata oluştu.</p></div>');
+                }
+            },
+            error: function() {
+                $('#availableCouponsList').html('<div class="text-center py-4"><p class="text-muted">Kupon yüklenirken hata oluştu.</p></div>');
+            }
+        });
+    }
+    
+    function displayCoupons(coupons) {
+        if (coupons.length === 0) {
+            $('#availableCouponsList').html('<div class="text-center py-4"><p class="text-muted">Şu anda aktif kupon bulunmuyor.</p></div>');
+            return;
+        }
+        
+        let html = '<div class="row">';
+        coupons.forEach(function(coupon) {
+            const discountText = coupon.discountType === 'Percent' 
+                ? '%' + coupon.amount + ' indirim'
+                : '₺' + coupon.amount + ' indirim';
+                
+            const minSpendText = coupon.minSpend 
+                ? 'Min. ' + coupon.minSpend + '₺ harcama'
+                : 'Herhangi bir tutar';
+                
+            const expiresText = coupon.expiresAt 
+                ? 'Son kullanım: ' + new Date(coupon.expiresAt).toLocaleDateString('tr-TR')
+                : 'Süresiz';
+            
+            html += `
+                <div class="col-md-6 mb-3">
+                    <div class="card border-primary">
+                        <div class="card-body">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <h6 class="card-title mb-0">${coupon.title}</h6>
+                                <span class="badge bg-primary">${coupon.code}</span>
                             </div>
-                            @if (!string.IsNullOrWhiteSpace(c.Description))
-                            {
-                                <div class="mt-2 text-muted small">@c.Description</div>
-                            }
-                            <div class="mt-auto d-flex flex-wrap gap-2 align-items-center">
-                                <code class="px-2 py-1 bg-light rounded">@c.Code</code>
-                                @if (c.ExpiresAt.HasValue)
-                                {
-                                    <span class="ms-auto text-muted small">Son: @c.ExpiresAt.Value.ToString("dd MMM yyyy", CultureInfo.GetCultureInfo("tr-TR"))</span>
-                                }
+                            <p class="text-success fw-bold mb-2">${discountText}</p>
+                            <div class="small text-muted">
+                                <div>${minSpendText}</div>
+                                <div>${expiresText}</div>
                             </div>
                         </div>
                     </div>
-                }
-            </div>
-        }
-    </div>    
-</div>
+                </div>
+            `;
+        });
+        html += '</div>';
+        
+        $('#availableCouponsList').html(html);
+    }
+});
+</script>

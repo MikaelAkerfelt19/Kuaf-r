@@ -22,7 +22,7 @@
                     </ul>
                 </div>
 
-                <form method="post" action="/Admin/Appointments/Delete" id="deleteForm">
+                <form method="post" action="/Admin/Appointments/DeleteConfirmed" id="deleteForm">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="id" id="deleteAppointmentId" />
                     

@@ -1,4 +1,4 @@
-@model Kuafor.Web.Models.Profile.CouponsViewModel
+@model Kuafor.Web.Models.Customer.CouponsViewModel
 
 @{
     ViewData["Title"] = "Kuponlarım";
@@ -28,9 +28,9 @@
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 class="card-title text-success mb-0">@coupon.Title</h6>
-                                                <span class="badge bg-success">@coupon.DiscountText</span>
+                                                <span class="badge bg-success">@(coupon.DiscountType == "Percent" ? $"%{coupon.Amount}" : $"₺{coupon.Amount}")</span>
                                             </div>
-                                            <p class="card-text small text-muted mb-2">@coupon.Description</p>
+                                            <p class="card-text small text-muted mb-2">@(coupon.DiscountType == "Percent" ? $"%{coupon.Amount} indirim" : $"₺{coupon.Amount} indirim")</p>
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <code class="text-primary">@coupon.Code</code>
                                                 @if (coupon.ExpiresAt.HasValue)
@@ -73,9 +73,9 @@
                                         <div class="card-body">
                                             <div class="d-flex justify-content-between align-items-start mb-2">
                                                 <h6 class="card-title text-secondary mb-0">@coupon.Title</h6>
-                                                <span class="badge bg-secondary">@coupon.DiscountText</span>
+                                                <span class="badge bg-secondary">@(coupon.DiscountType == "Percent" ? $"%{coupon.Amount}" : $"₺{coupon.Amount}")</span>
                                             </div>
-                                            <p class="card-text small text-muted mb-2">@coupon.Description</p>
+                                            <p class="card-text small text-muted mb-2">@(coupon.DiscountType == "Percent" ? $"%{coupon.Amount} indirim" : $"₺{coupon.Amount} indirim")</p>
                                             <div class="d-flex justify-content-between align-items-center">
                                                 <code class="text-secondary">@coupon.Code</code>
                                                 @if (coupon.ExpiresAt.HasValue)

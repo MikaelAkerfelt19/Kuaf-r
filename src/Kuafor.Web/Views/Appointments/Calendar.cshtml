@@ -1,16 +1,140 @@
-<div id="calendar"></div>
+@{
+    ViewData["Title"] = "Randevu Takvimi";
+}
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    var calendarEl = document.getElementById('calendar');
-    var calendar = new FullCalendar.Calendar(calendarEl, {
-        initialView: 'dayGridMonth',
-        locale: 'tr',
-        events: '/Appointments/GetCalendarEvents',
-        eventClick: function(info) {
-            window.location.href = '/Appointments/Details/' + info.event.id;
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">
+                        <i class="fas fa-calendar-alt"></i> Randevu Takvimi
+                    </h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-tool" data-card-widget="collapse">
+                            <i class="fas fa-minus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="calendar"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Legend -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6>Renk Açıklaması:</h6>
+                <div class="row">
+                    <div class="col-md-3">
+                        <span class="badge" style="background-color: #28a745; color: white;">✓ Onaylandı</span>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge" style="background-color: #17a2b8; color: white;">✓ Tamamlandı</span>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge" style="background-color: #dc3545; color: white;">✗ İptal</span>
+                    </div>
+                    <div class="col-md-3">
+                        <span class="badge" style="background-color: #ffc107; color: black;">⚠ Gelmedi</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var calendarEl = document.getElementById('calendar');
+            var calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                locale: 'tr',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,timeGridWeek,timeGridDay'
+                },
+                buttonText: {
+                    today: 'Bugün',
+                    month: 'Ay',
+                    week: 'Hafta',
+                    day: 'Gün'
+                },
+                events: '/Appointments/GetCalendarEvents',
+                eventClick: function(info) {
+                    window.location.href = '/Appointments/Details/' + info.event.id;
+                },
+                eventMouseEnter: function(info) {
+                    // Tooltip göster
+                    var tooltip = document.createElement('div');
+                    tooltip.className = 'calendar-tooltip';
+                    tooltip.innerHTML = `
+                        <strong>${info.event.title}</strong><br>
+                        <small>Kuaför: ${info.event.extendedProps.stylist}</small><br>
+                        <small>Şube: ${info.event.extendedProps.branch}</small><br>
+                        <small>Durum: ${info.event.extendedProps.status}</small>
+                    `;
+                    tooltip.style.cssText = `
+                        position: absolute;
+                        background: #333;
+                        color: white;
+                        padding: 8px;
+                        border-radius: 4px;
+                        font-size: 12px;
+                        z-index: 1000;
+                        pointer-events: none;
+                        max-width: 200px;
+                    `;
+                    document.body.appendChild(tooltip);
+                    
+                    info.jsEvent.target.addEventListener('mousemove', function(e) {
+                        tooltip.style.left = e.pageX + 10 + 'px';
+                        tooltip.style.top = e.pageY - 10 + 'px';
+                    });
+                    
+                    info.jsEvent.target.addEventListener('mouseleave', function() {
+                        document.body.removeChild(tooltip);
+                    });
+                },
+                loading: function(bool) {
+                    if (bool) {
+                        $('#calendar').append('<div class="loading-overlay"><i class="fas fa-spinner fa-spin"></i> Yükleniyor...</div>');
+                    } else {
+                        $('.loading-overlay').remove();
+                    }
+                }
+            });
+            calendar.render();
+        });
+    </script>
+}
+
+@section Styles {
+    <style>
+        .loading-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 8px;
+            z-index: 1000;
         }
-    });
-    calendar.render();
-});
-</script>
+        
+        .calendar-tooltip {
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        
+        #calendar {
+            min-height: 600px;
+        }
+    </style>
+}

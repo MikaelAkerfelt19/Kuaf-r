@@ -1,0 +1,407 @@
+@model Kuafor.Web.Models.Admin.Reports.CustomerReport
+@{
+    ViewData["Title"] = "Müşteri Raporu";
+}
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <h2 class="mb-0">Müşteri Raporu</h2>
+    <div class="d-flex gap-2">
+        <button type="button" class="btn btn-outline-primary" onclick="exportReport('excel')">
+            <i class="fas fa-file-excel"></i> Excel
+        </button>
+        <button type="button" class="btn btn-outline-danger" onclick="exportReport('pdf')">
+            <i class="fas fa-file-pdf"></i> PDF
+        </button>
+        <button type="button" class="btn btn-outline-secondary" onclick="exportReport('csv')">
+            <i class="fas fa-file-csv"></i> CSV
+        </button>
+    </div>
+</div>
+
+<!-- Tarih Filtreleri -->
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="from" class="form-label">Başlangıç Tarihi</label>
+                <input type="date" class="form-control" id="from" name="from" value="@ViewBag.FromDate?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-4">
+                <label for="to" class="form-label">Bitiş Tarihi</label>
+                <input type="date" class="form-control" id="to" name="to" value="@ViewBag.ToDate?.ToString("yyyy-MM-dd")">
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">
+                    <i class="fas fa-search"></i> Filtrele
+                </button>
+                <a href="@Url.Action("Customers")" class="btn btn-outline-secondary">
+                    <i class="fas fa-times"></i> Temizle
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Özet Kartları -->
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Toplam Müşteri</div>
+                <div class="display-6 fw-bold text-primary">@Model.TotalCustomers</div>
+                <small class="text-muted">Kişi</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Yeni Müşteri</div>
+                <div class="display-6 fw-bold text-success">@Model.NewCustomers</div>
+                <small class="text-muted">@Model.Period</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Aktif Müşteri</div>
+                <div class="display-6 fw-bold text-info">@Model.ActiveCustomers</div>
+                <small class="text-muted">@Model.Period</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Sadakat Oranı</div>
+                <div class="display-6 fw-bold text-warning">%@Model.CustomerRetentionRate.ToString("F1")</div>
+                <small class="text-muted">Geri Dönen</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- İstatistikler -->
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Ortalama Randevu/Müşteri</div>
+                <div class="display-6 fw-bold text-secondary">@Model.AverageAppointmentsPerCustomer.ToString("F1")</div>
+                <small class="text-muted">Adet</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Müşteri Yaşam Değeri</div>
+                <div class="display-6 fw-bold text-danger">@Model.CustomerLifetimeValue.ToString("N2") ₺</div>
+                <small class="text-muted">Ortalama</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card h-100">
+            <div class="card-body text-center">
+                <div class="text-muted mb-2">Yeni Müşteri Oranı</div>
+                <div class="display-6 fw-bold text-info">@((Model.NewCustomers / Math.Max(1, Model.TotalCustomers) * 100).ToString("F1"))%</div>
+                <small class="text-muted">Bu Dönem</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grafikler -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Müşteri Segmentasyonu</span>
+            </div>
+            <div class="card-body">
+                <canvas id="customerSegmentChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Müşteri Dağılımı</div>
+            <div class="card-body">
+                <div class="row text-center">
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-3">
+                            <div class="h4 mb-1 text-primary">@Model.TotalCustomers</div>
+                            <small class="text-muted">Toplam</small>
+                        </div>
+                    </div>
+                    <div class="col-6 mb-3">
+                        <div class="border rounded p-3">
+                            <div class="h4 mb-1 text-success">@Model.NewCustomers</div>
+                            <small class="text-muted">Yeni</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <div class="h4 mb-1 text-info">@Model.ActiveCustomers</div>
+                            <small class="text-muted">Aktif</small>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3">
+                            <div class="h4 mb-1 text-warning">@(Model.TotalCustomers - Model.ActiveCustomers)</div>
+                            <small class="text-muted">Pasif</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Detaylı Tablolar -->
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">En Değerli Müşteriler</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Müşteri</th>
+                                <th class="text-end">Toplam Harcama</th>
+                                <th class="text-end">Randevu Sayısı</th>
+                                <th class="text-end">Son Randevu</th>
+                                <th class="text-end">Ortalama</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.TopCustomers.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="5" class="text-muted text-center py-3">Veri bulunamadı</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var customer in Model.TopCustomers)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-sm bg-primary rounded-circle d-flex align-items-center justify-content-center me-2">
+                                                    <i class="fas fa-user text-white"></i>
+                                                </div>
+                                                @customer.CustomerName
+                                            </div>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="fw-bold text-success">@customer.TotalSpent.ToString("N2") ₺</span>
+                                        </td>
+                                        <td class="text-end">@customer.AppointmentCount</td>
+                                        <td class="text-end">
+                                            <small class="text-muted">@customer.LastAppointment.ToString("dd.MM.yyyy")</small>
+                                        </td>
+                                        <td class="text-end">
+                                            <span class="badge bg-info">@((customer.TotalSpent / Math.Max(1, customer.AppointmentCount)).ToString("N0")) ₺</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Müşteri Segmentleri</div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-sm align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Segment</th>
+                                <th class="text-end">Sayı</th>
+                                <th class="text-end">%</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.CustomerSegments.Count == 0)
+                            {
+                                <tr>
+                                    <td colspan="3" class="text-muted text-center py-3">Veri bulunamadı</td>
+                                </tr>
+                            }
+                            else
+                            {
+                                @foreach (var segment in Model.CustomerSegments)
+                                {
+                                    <tr>
+                                        <td>
+                                            @switch (segment.SegmentName)
+                                            {
+                                                case "VIP Müşteri":
+                                                    <span class="badge bg-danger">@segment.SegmentName</span>
+                                                    break;
+                                                case "Sadık Müşteri":
+                                                    <span class="badge bg-warning">@segment.SegmentName</span>
+                                                    break;
+                                                case "Düzenli Müşteri":
+                                                    <span class="badge bg-success">@segment.SegmentName</span>
+                                                    break;
+                                                default:
+                                                    <span class="badge bg-secondary">@segment.SegmentName</span>
+                                                    break;
+                                            }
+                                        </td>
+                                        <td class="text-end">@segment.Count</td>
+                                        <td class="text-end">
+                                            <span class="badge bg-primary">%@((segment.Count / Math.Max(1, Model.TotalCustomers) * 100).ToString("F1"))</span>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Müşteri Analiz Kartları -->
+<div class="row g-3">
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Müşteri Büyümesi</div>
+            <div class="card-body text-center">
+                <div class="display-4 fw-bold text-success mb-2">@Model.NewCustomers</div>
+                <div class="text-muted">Yeni Müşteri</div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-success" style="width: @((Model.NewCustomers / Math.Max(1, Model.TotalCustomers) * 100).ToString("F1"))%"></div>
+                </div>
+                <small class="text-muted mt-2 d-block">Toplam müşterinin %@((Model.NewCustomers / Math.Max(1, Model.TotalCustomers) * 100).ToString("F1"))'i</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Müşteri Aktivitesi</div>
+            <div class="card-body text-center">
+                <div class="display-4 fw-bold text-info mb-2">@Model.ActiveCustomers</div>
+                <div class="text-muted">Aktif Müşteri</div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-info" style="width: @((Model.ActiveCustomers / Math.Max(1, Model.TotalCustomers) * 100).ToString("F1"))%"></div>
+                </div>
+                <small class="text-muted mt-2 d-block">Toplam müşterinin %@((Model.ActiveCustomers / Math.Max(1, Model.TotalCustomers) * 100).ToString("F1"))'i</small>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">Sadakat Oranı</div>
+            <div class="card-body text-center">
+                <div class="display-4 fw-bold text-warning mb-2">%@Model.CustomerRetentionRate.ToString("F1")</div>
+                <div class="text-muted">Geri Dönen Müşteri</div>
+                <div class="progress mt-3" style="height: 6px;">
+                    <div class="progress-bar bg-warning" style="width: @Model.CustomerRetentionRate.ToString("F1")%"></div>
+                </div>
+                <small class="text-muted mt-2 d-block">Müşteri sadakat oranı</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        $(document).ready(function() {
+            initializeCustomerSegmentChart();
+        });
+
+        function initializeCustomerSegmentChart() {
+            const ctx = document.getElementById('customerSegmentChart').getContext('2d');
+            
+            const segmentData = @Html.Raw(Json.Serialize(Model.CustomerSegments.Select(s => new { name = s.SegmentName, count = s.Count })));
+            
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: segmentData.map(s => s.name),
+                    datasets: [{
+                        data: segmentData.map(s => s.count),
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.8)',
+                            'rgba(255, 205, 86, 0.8)',
+                            'rgba(75, 192, 192, 0.8)',
+                            'rgba(54, 162, 235, 0.8)',
+                            'rgba(153, 102, 255, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(255, 205, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function exportReport(format) {
+            const from = $('#from').val();
+            const to = $('#to').val();
+            
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '@Url.Action("ExportReport", "Reports")';
+            
+            const formatInput = document.createElement('input');
+            formatInput.type = 'hidden';
+            formatInput.name = 'format';
+            formatInput.value = format;
+            form.appendChild(formatInput);
+            
+            const reportTypeInput = document.createElement('input');
+            reportTypeInput.type = 'hidden';
+            reportTypeInput.name = 'reportType';
+            reportTypeInput.value = 'customers';
+            form.appendChild(reportTypeInput);
+            
+            if (from) {
+                const fromInput = document.createElement('input');
+                fromInput.type = 'hidden';
+                fromInput.name = 'from';
+                fromInput.value = from;
+                form.appendChild(fromInput);
+            }
+            
+            if (to) {
+                const toInput = document.createElement('input');
+                toInput.type = 'hidden';
+                toInput.name = 'to';
+                toInput.value = to;
+                form.appendChild(toInput);
+            }
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
+    </script>
+}

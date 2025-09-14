@@ -16,14 +16,165 @@
       <li><strong>Debug:</strong> @Model.SelectedStart?.ToString("yyyy-MM-dd HH:mm:ss") (Kind: @Model.SelectedStart?.Kind)</li>
     </ul>
 
-    <form method="post" action="@Url.Action("Confirm","Appointments")">
+    <!-- Kupon Bölümü -->
+    <div class="card border-0 bg-light mb-4">
+      <div class="card-body">
+        <h6 class="card-title mb-3">
+          <i class="fas fa-ticket-alt me-2"></i>Kupon Kodu
+        </h6>
+        
+        <div class="row">
+          <div class="col-md-8">
+            <div class="input-group">
+              <input type="text" 
+                     class="form-control" 
+                     id="couponCode" 
+                     placeholder="Kupon kodunuzu girin"
+                     value="@Model.CouponCode">
+              <button class="btn btn-outline-primary" 
+                      type="button" 
+                      id="validateCouponBtn">
+                <i class="fas fa-check me-1"></i>Doğrula
+              </button>
+            </div>
+            <div id="couponMessage" class="mt-2"></div>
+          </div>
+          <div class="col-md-4">
+            <div class="text-end">
+              <small class="text-muted">İndirim tutarı otomatik hesaplanacak</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Fiyat Özeti -->
+    <div class="card border-0 bg-primary text-white mb-4">
+      <div class="card-body">
+        <h6 class="card-title mb-3">
+          <i class="fas fa-receipt me-2"></i>Fiyat Özeti
+        </h6>
+        
+        <div class="d-flex justify-content-between mb-2">
+          <span>Hizmet Ücreti:</span>
+          <span id="servicePrice">@Model.SelectedService?.Price.ToString("C", CultureInfo.GetCultureInfo("tr-TR"))</span>
+        </div>
+        
+        <div class="d-flex justify-content-between mb-2" id="discountRow" style="display: none;">
+          <span>İndirim:</span>
+          <span id="discountAmount" class="text-success">-₺0,00</span>
+        </div>
+        
+        <hr class="my-2">
+        
+        <div class="d-flex justify-content-between fw-bold">
+          <span>Toplam:</span>
+          <span id="totalPrice">@Model.SelectedService?.Price.ToString("C", CultureInfo.GetCultureInfo("tr-TR"))</span>
+        </div>
+      </div>
+    </div>
+
+    <form method="post" action="@Url.Action("Confirm","Appointments")" id="appointmentForm">
       <input type="hidden" name="branchId" value="@Model.SelectedBranchId" />
       <input type="hidden" name="serviceId" value="@Model.SelectedServiceId" />
       <input type="hidden" name="stylistId" value="@Model.SelectedStylistId" />
       <input type="hidden" name="start" value="@Model.SelectedStart?.ToString("o")" />
       <input type="hidden" name="notes" value="@Model.Notes" />
+      <input type="hidden" name="couponCode" id="couponCodeHidden" value="@Model.CouponCode" />
+      <input type="hidden" name="discountAmount" id="discountAmountHidden" value="@Model.DiscountAmount" />
       <button class="btn btn-primary btn-lg" type="submit">Randevuyu Oluştur</button>
       <a class="btn btn-outline-secondary ms-2" asp-area="Customer" asp-controller="Appointments" asp-action="New">Baştan Başla</a>
     </form>
   </div>
 </div>
+
+<script>
+$(document).ready(function() {
+    let servicePrice = @Model.SelectedService?.Price ?? 0;
+    let currentDiscount = 0;
+    let isCouponApplied = false;
+
+    // Kupon doğrulama
+    $('#validateCouponBtn').click(function() {
+        const couponCode = $('#couponCode').val().trim();
+        
+        if (!couponCode) {
+            showCouponMessage('Lütfen kupon kodunu girin', 'error');
+            return;
+        }
+
+        // Loading state
+        $(this).prop('disabled', true).html('<i class="fas fa-spinner fa-spin me-1"></i>Doğrulanıyor...');
+
+        $.ajax({
+            url: '@Url.Action("ValidateCoupon", "Appointments")',
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify({
+                code: couponCode,
+                basketTotal: servicePrice
+            }),
+            success: function(response) {
+                if (response.success) {
+                    currentDiscount = response.discountAmount;
+                    isCouponApplied = true;
+                    
+                    // Hidden field'ları güncelle
+                    $('#couponCodeHidden').val(couponCode);
+                    $('#discountAmountHidden').val(currentDiscount);
+                    
+                    // UI'yi güncelle
+                    updatePriceDisplay();
+                    showCouponMessage(response.message, 'success');
+                } else {
+                    currentDiscount = 0;
+                    isCouponApplied = false;
+                    updatePriceDisplay();
+                    showCouponMessage(response.message, 'error');
+                }
+            },
+            error: function() {
+                showCouponMessage('Kupon doğrulama sırasında hata oluştu', 'error');
+            },
+            complete: function() {
+                $('#validateCouponBtn').prop('disabled', false).html('<i class="fas fa-check me-1"></i>Doğrula');
+            }
+        });
+    });
+
+    // Fiyat görünümünü güncelle
+    function updatePriceDisplay() {
+        const totalPrice = servicePrice - currentDiscount;
+        
+        // İndirim satırını göster/gizle
+        if (currentDiscount > 0) {
+            $('#discountRow').show();
+            $('#discountAmount').text('-₺' + currentDiscount.toFixed(2).replace('.', ','));
+        } else {
+            $('#discountRow').hide();
+        }
+        
+        // Toplam fiyatı güncelle
+        $('#totalPrice').text('₺' + totalPrice.toFixed(2).replace('.', ','));
+    }
+
+    // Kupon mesajını göster
+    function showCouponMessage(message, type) {
+        const messageDiv = $('#couponMessage');
+        messageDiv.removeClass('text-success text-danger');
+        
+        if (type === 'success') {
+            messageDiv.addClass('text-success').html('<i class="fas fa-check-circle me-1"></i>' + message);
+        } else {
+            messageDiv.addClass('text-danger').html('<i class="fas fa-exclamation-circle me-1"></i>' + message);
+        }
+    }
+
+    // Enter tuşu ile kupon doğrulama
+    $('#couponCode').keypress(function(e) {
+        if (e.which === 13) {
+            $('#validateCouponBtn').click();
+        }
+    });
+});
+</script>

@@ -6,82 +6,183 @@
 }
 
 <div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0 text-gray-800">Kuaför Detayları</h1>
-        <div>
-            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning me-2">
-                <i class="fas fa-edit"></i> Düzenle
-            </a>
-            <a href="@Url.Action("Index")" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Geri Dön
-            </a>
+    <!-- Modern Header with Gradient Background -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="card-body py-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="d-flex align-items-center">
+                            <div class="me-4">
+                                <div class="bg-white bg-opacity-20 rounded-circle p-4">
+                                    <i class="fas fa-user-circle text-white" style="font-size: 3rem;"></i>
+                                </div>
+                            </div>
+                            <div>
+                                <h1 class="h3 mb-1 text-white fw-bold">@($"{Model.FirstName} {Model.LastName}")</h1>
+                                <p class="text-white-50 mb-2">Kuaför Detayları</p>
+                                <div class="d-flex align-items-center">
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-20 text-white me-2">
+                                            <i class="fas fa-check-circle me-1"></i>Aktif
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-20 text-white me-2">
+                                            <i class="fas fa-times-circle me-1"></i>Pasif
+                                        </span>
+                                    }
+                                    <span class="badge bg-warning bg-opacity-20 text-white">
+                                        <i class="fas fa-star me-1"></i>@Model.Rating/5 Puan
+                                    </span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-light btn-lg px-4">
+                                <i class="fas fa-edit me-2"></i> Düzenle
+                            </a>
+                            <a href="@Url.Action("Index")" class="btn btn-outline-light btn-lg px-4">
+                                <i class="fas fa-arrow-left me-2"></i> Geri Dön
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
     <div class="row">
+        <!-- Kişisel Bilgiler -->
         <div class="col-lg-8">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Kişisel Bilgiler</h6>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Ad Soyad:</label>
-                                <p class="form-control-plaintext">@($"{Model.FirstName} {Model.LastName}")</p>
-                            </div>
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-user text-primary fs-5"></i>
                         </div>
-                        <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">E-posta:</label>
-                                <p class="form-control-plaintext">@(Model.Email ?? "Belirtilmemiş")</p>
-                            </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">Kişisel Bilgiler</h5>
+                            <p class="text-muted mb-0">Kuaförün temel bilgileri</p>
                         </div>
                     </div>
-                    <div class="row">
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-4">
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Telefon:</label>
-                                <p class="form-control-plaintext">@(Model.Phone ?? "Belirtilmemiş")</p>
+                            <div class="info-item">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-user text-primary me-3 fs-6"></i>
+                                    <label class="form-label fw-bold text-muted mb-0">Ad Soyad</label>
+                                </div>
+                                <p class="fs-5 fw-semibold text-dark mb-0">@($"{Model.FirstName} {Model.LastName}")</p>
                             </div>
                         </div>
                         <div class="col-md-6">
-                            <div class="mb-3">
-                                <label class="form-label fw-bold">Durum:</label>
-                                <p class="form-control-plaintext">
-                                    @if (Model.IsActive)
+                            <div class="info-item">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-envelope text-info me-3 fs-6"></i>
+                                    <label class="form-label fw-bold text-muted mb-0">E-posta</label>
+                                </div>
+                                <p class="fs-5 fw-semibold text-dark mb-0">
+                                    @if (!string.IsNullOrEmpty(Model.Email))
                                     {
-                                        <span class="badge badge-success">Aktif</span>
+                                        <a href="mailto:@Model.Email" class="text-decoration-none">@Model.Email</a>
                                     }
                                     else
                                     {
-                                        <span class="badge badge-secondary">Pasif</span>
+                                        <span class="text-muted">Belirtilmemiş</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-phone text-success me-3 fs-6"></i>
+                                    <label class="form-label fw-bold text-muted mb-0">Telefon</label>
+                                </div>
+                                <p class="fs-5 fw-semibold text-dark mb-0">
+                                    @if (!string.IsNullOrEmpty(Model.Phone))
+                                    {
+                                        <a href="tel:@Model.Phone" class="text-decoration-none">@Model.Phone</a>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Belirtilmemiş</span>
+                                    }
+                                </p>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="info-item">
+                                <div class="d-flex align-items-center mb-2">
+                                    <i class="fas fa-toggle-on text-success me-3 fs-6"></i>
+                                    <label class="form-label fw-bold text-muted mb-0">Durum</label>
+                                </div>
+                                <p class="fs-5 fw-semibold mb-0">
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge bg-success bg-opacity-20 text-success px-3 py-2">
+                                            <i class="fas fa-check-circle me-1"></i>Aktif
+                                        </span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-secondary bg-opacity-20 text-secondary px-3 py-2">
+                                            <i class="fas fa-times-circle me-1"></i>Pasif
+                                        </span>
                                     }
                                 </p>
                             </div>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Biyografi:</label>
-                        <p class="form-control-plaintext">@(Model.Bio ?? "Biyografi belirtilmemiş")</p>
-                    </div>
+                    
+                    @if (!string.IsNullOrEmpty(Model.Bio))
+                    {
+                        <div class="mt-4 pt-4 border-top">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="fas fa-file-alt text-secondary me-3 fs-6"></i>
+                                <label class="form-label fw-bold text-muted mb-0">Biyografi</label>
+                            </div>
+                            <div class="bg-light rounded-3 p-4">
+                                <p class="mb-0 fs-6 text-dark lh-lg">@Model.Bio</p>
+                            </div>
+                        </div>
+                    }
                 </div>
             </div>
         </div>
 
+        <!-- Sidebar -->
         <div class="col-lg-4">
-            <div class="card shadow mb-4">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">İş Bilgileri</h6>
+            <!-- İş Bilgileri -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-info bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-briefcase text-info fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">İş Bilgileri</h5>
+                            <p class="text-muted mb-0">Çalışma detayları</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Şube:</label>
-                        <p class="form-control-plaintext">
+                <div class="card-body p-4">
+                    <div class="info-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-building text-warning me-3 fs-6"></i>
+                            <label class="form-label fw-bold text-muted mb-0">Şube</label>
+                        </div>
+                        <p class="fs-5 fw-semibold mb-0">
                             @if (ViewBag.Branch != null)
                             {
-                                <span class="badge badge-info">@ViewBag.Branch.Name</span>
+                                <span class="badge bg-warning bg-opacity-20 text-warning px-3 py-2">
+                                    <i class="fas fa-map-marker-alt me-1"></i>@ViewBag.Branch.Name
+                                </span>
                             }
                             else
                             {
@@ -89,42 +190,230 @@
                             }
                         </p>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Puan:</label>
+                    
+                    <div class="info-item mb-4">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-star text-warning me-3 fs-6"></i>
+                            <label class="form-label fw-bold text-muted mb-0">Puan</label>
+                        </div>
                         <div class="d-flex align-items-center">
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                if (i <= Model.Rating)
+                            <div class="me-3">
+                                @for (int i = 1; i <= 5; i++)
                                 {
-                                    <i class="fas fa-star text-warning"></i>
+                                    if (i <= Model.Rating)
+                                    {
+                                        <i class="fas fa-star text-warning fs-5"></i>
+                                    }
+                                    else
+                                    {
+                                        <i class="far fa-star text-muted fs-5"></i>
+                                    }
                                 }
-                                else
-                                {
-                                    <i class="far fa-star text-muted"></i>
-                                }
-                            }
-                            <span class="ml-2">@Model.Rating/5</span>
+                            </div>
+                            <span class="fs-4 fw-bold text-dark">@Model.Rating/5</span>
                         </div>
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Kayıt Tarihi:</label>
-                        <p class="form-control-plaintext">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
+                    
+                    <div class="info-item">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="fas fa-calendar-plus text-secondary me-3 fs-6"></i>
+                            <label class="form-label fw-bold text-muted mb-0">Kayıt Tarihi</label>
+                        </div>
+                        <p class="fs-5 fw-semibold text-dark mb-0">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</p>
                     </div>
                 </div>
             </div>
 
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">Hızlı İşlemler</h6>
+            <!-- Hızlı İşlemler -->
+            <div class="card border-0 shadow-lg mb-4">
+                <div class="card-header bg-white border-0 py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-danger bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-bolt text-danger fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">Hızlı İşlemler</h5>
+                            <p class="text-muted mb-0">Yönetim işlemleri</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="d-grid gap-2">
-                        <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-danger btn-sm">
-                            <i class="fas fa-trash"></i> Sil
+                <div class="card-body p-4">
+                    <div class="d-grid gap-3">
+                        <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-primary btn-lg">
+                            <i class="fas fa-edit me-2"></i> Düzenle
                         </a>
+                        <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-outline-danger btn-lg">
+                            <i class="fas fa-trash me-2"></i> Sil
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- İstatistikler -->
+            <div class="card border-0 shadow-lg">
+                <div class="card-header bg-white border-0 py-4">
+                    <div class="d-flex align-items-center">
+                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
+                            <i class="fas fa-chart-bar text-success fs-5"></i>
+                        </div>
+                        <div>
+                            <h5 class="mb-1 fw-bold text-dark">İstatistikler</h5>
+                            <p class="text-muted mb-0">Performans verileri</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3 text-center">
+                        <div class="col-6">
+                            <div class="bg-primary bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-calendar-check text-primary fs-4 mb-2"></i>
+                                <h6 class="fw-bold text-dark mb-1">0</h6>
+                                <small class="text-muted">Bu Ay</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="bg-success bg-opacity-10 rounded-3 p-3">
+                                <i class="fas fa-star text-success fs-4 mb-2"></i>
+                                <h6 class="fw-bold text-dark mb-1">@Model.Rating</h6>
+                                <small class="text-muted">Ortalama</small>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        /* Modern Card Styling */
+        .card {
+            transition: all 0.3s ease;
+            border-radius: 1rem;
+        }
+        
+        .card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.1) !important;
+        }
+        
+        /* Info Item Styling */
+        .info-item {
+            padding: 1rem;
+            border-radius: 0.75rem;
+            transition: all 0.3s ease;
+        }
+        
+        .info-item:hover {
+            background-color: #f8f9fa;
+            transform: translateX(5px);
+        }
+        
+        /* Badge Styling */
+        .badge {
+            border-radius: 0.5rem;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        /* Button Styling */
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .btn-outline-danger {
+            border-radius: 0.75rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-danger:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+        }
+        
+        /* Link Styling */
+        a.text-decoration-none {
+            transition: all 0.3s ease;
+        }
+        
+        a.text-decoration-none:hover {
+            color: #667eea !important;
+            text-decoration: underline !important;
+        }
+        
+        /* Star Rating */
+        .fa-star {
+            transition: all 0.3s ease;
+        }
+        
+        .fa-star:hover {
+            transform: scale(1.2);
+        }
+        
+        /* Statistics Cards */
+        .bg-primary.bg-opacity-10,
+        .bg-success.bg-opacity-10 {
+            transition: all 0.3s ease;
+        }
+        
+        .bg-primary.bg-opacity-10:hover,
+        .bg-success.bg-opacity-10:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Responsive Design */
+        @@media (max-width: 768px) {
+            .card-body {
+                padding: 1.5rem !important;
+            }
+            
+            .btn-lg {
+                padding: 0.75rem 1.5rem;
+                font-size: 1rem;
+            }
+            
+            .fs-5 {
+                font-size: 1.1rem !important;
+            }
+            
+            .fs-4 {
+                font-size: 1.25rem !important;
+            }
+        }
+        
+        /* Animation for page load */
+        .card {
+            animation: fadeInUp 0.6s ease-out;
+        }
+        
+        @@keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Staggered animation for cards */
+        .card:nth-child(1) { animation-delay: 0.1s; }
+        .card:nth-child(2) { animation-delay: 0.2s; }
+        .card:nth-child(3) { animation-delay: 0.3s; }
+        .card:nth-child(4) { animation-delay: 0.4s; }
+    </style>
+}
