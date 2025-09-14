@@ -53,6 +53,35 @@
             form.reset();
         });
     }
+
+    // SİLME MODAL
+    const deleteEl = document.getElementById('deleteModal');
+    if (deleteEl) {
+        const form = deleteEl.querySelector('#deleteForm');
+        deleteEl.addEventListener('show.bs.modal', function (event) {
+            const btn = event.relatedTarget;
+            const id = btn.getAttribute('data-id') || '0';
+            const customer = btn.getAttribute('data-customer') || '';
+            const service = btn.getAttribute('data-service') || '';
+            const when = btn.getAttribute('data-when') || '';
+
+            // Form alanlarını doldur
+            form.querySelector('input[name="id"]').value = parseInt(id, 10);
+            
+            // Modal içeriğini güncelle
+            const customerEl = deleteEl.querySelector('#deleteCustomerName');
+            const serviceEl = deleteEl.querySelector('#deleteServiceName');
+            const dateEl = deleteEl.querySelector('#deleteDateTime');
+            
+            if (customerEl) customerEl.textContent = customer;
+            if (serviceEl) serviceEl.textContent = service;
+            if (dateEl) dateEl.textContent = when;
+        });
+
+        deleteEl.addEventListener('hidden.bs.modal', function () {
+            form.reset();
+        });
+    }
 })();
 
 function loadAppointments() {
@@ -86,6 +115,43 @@ function createAppointment() {
     });
 }
 
+// Durum güncelleme fonksiyonu
+function updateStatus(appointmentId, newStatus) {
+    if (confirm(`Bu randevunun durumunu "${newStatus}" olarak güncellemek istediğinizden emin misiniz?`)) {
+        // Form oluştur ve submit et
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = '/Admin/Appointments/UpdateStatus';
+        
+        // CSRF token ekle
+        const csrfToken = document.querySelector('input[name="__RequestVerificationToken"]').value;
+        const csrfInput = document.createElement('input');
+        csrfInput.type = 'hidden';
+        csrfInput.name = '__RequestVerificationToken';
+        csrfInput.value = csrfToken;
+        form.appendChild(csrfInput);
+        
+        // Appointment ID ekle
+        const idInput = document.createElement('input');
+        idInput.type = 'hidden';
+        idInput.name = 'id';
+        idInput.value = appointmentId;
+        form.appendChild(idInput);
+        
+        // Status ekle
+        const statusInput = document.createElement('input');
+        statusInput.type = 'hidden';
+        statusInput.name = 'status';
+        statusInput.value = newStatus;
+        form.appendChild(statusInput);
+        
+        // Formu sayfaya ekle ve submit et
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+// Randevu iptal etme fonksiyonu (eski fonksiyon - artık modal kullanılıyor)
 function cancelAppointment(appointmentId) {
     if (confirm('Bu randevuyu iptal etmek istediğinizden emin misiniz?')) {
         // Form oluştur ve submit et
@@ -111,5 +177,47 @@ function cancelAppointment(appointmentId) {
         // Formu sayfaya ekle ve submit et
         document.body.appendChild(form);
         form.submit();
+    }
+}
+
+// Başarı mesajı gösterme
+function showSuccess(message) {
+    // Mevcut alert'leri temizle
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Yeni başarı alert'i oluştur
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    `;
+    
+    // Sayfanın üstüne ekle
+    const container = document.querySelector('.container-fluid') || document.querySelector('.container');
+    if (container) {
+        container.insertBefore(alertDiv, container.firstChild);
+    }
+}
+
+// Hata mesajı gösterme
+function showError(message) {
+    // Mevcut alert'leri temizle
+    const existingAlerts = document.querySelectorAll('.alert');
+    existingAlerts.forEach(alert => alert.remove());
+    
+    // Yeni hata alert'i oluştur
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-danger alert-dismissible fade show';
+    alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+    `;
+    
+    // Sayfanın üstüne ekle
+    const container = document.querySelector('.container-fluid') || document.querySelector('.container');
+    if (container) {
+        container.insertBefore(alertDiv, container.firstChild);
     }
 }

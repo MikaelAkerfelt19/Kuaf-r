@@ -17,6 +17,7 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<Service> Services { get; set; } = null!;
     public DbSet<Stylist> Stylists { get; set; } = null!;
     public DbSet<Coupon> Coupons { get; set; } = null!;
+    public DbSet<CouponUsage> CouponUsages { get; set; } = null!;
     public DbSet<Customer> Customers { get; set; } = null!;
     public DbSet<Appointment> Appointments { get; set; } = null!;
     public DbSet<Testimonial> Testimonials { get; set; } = null!;
@@ -914,6 +915,30 @@ public class ApplicationDbContext : IdentityDbContext
             entity.HasOne(e => e.Campaign)
                 .WithMany(c => c.Performance)
                 .HasForeignKey(e => e.CampaignId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // CouponUsage configuration
+        builder.Entity<CouponUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.DiscountAmount).HasPrecision(18, 2);
+            entity.Property(e => e.UsedAt).IsRequired();
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            
+            entity.HasOne(e => e.Coupon)
+                .WithMany()
+                .HasForeignKey(e => e.CouponId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.Appointment)
+                .WithMany()
+                .HasForeignKey(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
     }

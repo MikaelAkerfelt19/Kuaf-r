@@ -12,17 +12,17 @@ using Kuafor.Web.Services;
 using Kuafor.Web.Services.BackgroundServices;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Admin.Reports;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ===== DEĞİŞİKLİK BURADA BAŞLIYOR =====
-// Azure App Ayarlarını ve appsettings.json'ı okumak için standart .NET yapılandırması.
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
-// ===== DEĞİŞİKLİK BURADA BİTİYOR =====
+
 
 
 // Identity configuration for .NET 9
@@ -177,6 +177,12 @@ builder.Services.AddScoped<IFinancialAnalyticsService, FinancialAnalyticsService
 builder.Services.AddScoped<IMarketingService, MarketingService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddHostedService<AppointmentReminderService>();
+
+// SMS Service
+builder.Services.AddScoped<ISmsService, SmsService>();
+
+// Reporting Service
+builder.Services.AddScoped<IReportingService, ReportingService>();
 
 // Authorization policies
 builder.Services.AddAuthorization(options =>

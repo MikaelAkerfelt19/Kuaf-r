@@ -15,6 +15,9 @@ public interface ICouponService
     Task<Coupon?> GetByCodeAsync(string code);
     Task<IEnumerable<Coupon>> GetActiveAsync();
     Task<CouponValidationResult> ValidateAsync(string code, decimal basketTotal, int? customerId = null);
+    Task<CouponUsage> ApplyCouponAsync(int couponId, int customerId, int appointmentId, decimal discountAmount, string? notes = null);
+    Task<IEnumerable<CouponUsage>> GetCustomerCouponUsagesAsync(int customerId);
+    Task<bool> HasCustomerUsedCouponAsync(int couponId, int customerId);
 }
 
 public class CouponValidationResult

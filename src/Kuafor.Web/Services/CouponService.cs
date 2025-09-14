@@ -142,6 +142,22 @@ public class CouponService : ICouponService
             };
         }
         
+        // Müşteri daha önce bu kuponu kullanmış mı?
+        if (customerId.HasValue)
+        {
+            var hasUsedBefore = await _context.CouponUsages
+                .AnyAsync(cu => cu.CouponId == coupon.Id && cu.CustomerId == customerId.Value);
+                
+            if (hasUsedBefore)
+            {
+                return new CouponValidationResult
+                {
+                    IsValid = false,
+                    Reason = "Bu kuponu daha önce kullandınız"
+                };
+            }
+        }
+        
         // İndirim hesaplama
         decimal discountAmount = 0;
         if (coupon.DiscountType == "Percent")
@@ -162,6 +178,48 @@ public class CouponService : ICouponService
                 Amount = discountAmount
             }
         };
+    }
+    
+    public async Task<CouponUsage> ApplyCouponAsync(int couponId, int customerId, int appointmentId, decimal discountAmount, string? notes = null)
+    {
+        var coupon = await _context.Coupons.FindAsync(couponId);
+        if (coupon == null)
+            throw new InvalidOperationException("Kupon bulunamadı");
+            
+        var usage = new CouponUsage
+        {
+            CouponId = couponId,
+            CustomerId = customerId,
+            AppointmentId = appointmentId,
+            DiscountAmount = discountAmount,
+            Notes = notes,
+            UsedAt = DateTime.UtcNow
+        };
+        
+        _context.CouponUsages.Add(usage);
+        
+        // Kupon kullanım sayısını artır
+        coupon.CurrentUsageCount++;
+        
+        await _context.SaveChangesAsync();
+        
+        return usage;
+    }
+    
+    public async Task<IEnumerable<CouponUsage>> GetCustomerCouponUsagesAsync(int customerId)
+    {
+        return await _context.CouponUsages
+            .Include(cu => cu.Coupon)
+            .Include(cu => cu.Appointment)
+            .Where(cu => cu.CustomerId == customerId)
+            .OrderByDescending(cu => cu.UsedAt)
+            .ToListAsync();
+    }
+    
+    public async Task<bool> HasCustomerUsedCouponAsync(int couponId, int customerId)
+    {
+        return await _context.CouponUsages
+            .AnyAsync(cu => cu.CouponId == couponId && cu.CustomerId == customerId);
     }
 
     public async Task<bool> ExistsByCodeAsync(string code, int? excludeId = null)

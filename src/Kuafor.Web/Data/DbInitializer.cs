@@ -78,7 +78,7 @@ public static class DbInitializer
             await context.SaveChangesAsync();
         }
 
-        // Hizmetler
+        // Hizmetler - Sadece ilk kurulumda ekle, sonradan silinen hizmetleri tekrar ekleme
         if (!await context.Services.AnyAsync())
         {
             var services = new[]
@@ -170,6 +170,77 @@ public static class DbInitializer
             };
             
             await context.Stylists.AddRangeAsync(stylists);
+            await context.SaveChangesAsync();
+        }
+        
+        // Kuponlar - Sadece ilk kurulumda ekle
+        if (!await context.Coupons.AnyAsync())
+        {
+            var coupons = new[]
+            {
+                new Coupon
+                {
+                    Code = "WELCOME10",
+                    Title = "Hoş Geldin İndirimi",
+                    DiscountType = "Percent",
+                    Amount = 10,
+                    MinSpend = 100,
+                    ExpiresAt = DateTime.UtcNow.AddMonths(3),
+                    MaxUsageCount = 1000,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Coupon
+                {
+                    Code = "SAVE50",
+                    Title = "50 TL İndirim",
+                    DiscountType = "Amount",
+                    Amount = 50,
+                    MinSpend = 200,
+                    ExpiresAt = DateTime.UtcNow.AddMonths(6),
+                    MaxUsageCount = 500,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Coupon
+                {
+                    Code = "FIRST20",
+                    Title = "İlk Randevu İndirimi",
+                    DiscountType = "Percent",
+                    Amount = 20,
+                    MinSpend = 50,
+                    ExpiresAt = DateTime.UtcNow.AddMonths(1),
+                    MaxUsageCount = 200,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Coupon
+                {
+                    Code = "VIP15",
+                    Title = "VIP Müşteri İndirimi",
+                    DiscountType = "Percent",
+                    Amount = 15,
+                    MinSpend = 150,
+                    ExpiresAt = DateTime.UtcNow.AddMonths(12),
+                    MaxUsageCount = 100,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                },
+                new Coupon
+                {
+                    Code = "WEEKEND25",
+                    Title = "Hafta Sonu Özel",
+                    DiscountType = "Percent",
+                    Amount = 25,
+                    MinSpend = 100,
+                    ExpiresAt = DateTime.UtcNow.AddDays(30),
+                    MaxUsageCount = 300,
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                }
+            };
+            
+            await context.Coupons.AddRangeAsync(coupons);
             await context.SaveChangesAsync();
         }
     }

@@ -121,28 +121,28 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
         return true;
     }
 
-    public async Task<CustomerAnalytics?> GetCustomerAnalyticsAsync(int customerId)
+    public Task<CustomerAnalytics?> GetCustomerAnalyticsAsync(int customerId)
     {
         // Geçici olarak null döndür - CustomerAnalytics tablosu yok
-        return null;
+        return Task.FromResult<CustomerAnalytics?>(null);
     }
 
-    public async Task<List<CustomerAnalytics>> GetCustomersBySegmentAsync(string segment)
+    public Task<List<CustomerAnalytics>> GetCustomersBySegmentAsync(string segment)
     {
         // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
-        return new List<CustomerAnalytics>();
+        return Task.FromResult(new List<CustomerAnalytics>());
     }
 
-    public async Task<List<CustomerAnalytics>> GetHighValueCustomersAsync(int count = 10)
+    public Task<List<CustomerAnalytics>> GetHighValueCustomersAsync(int count = 10)
     {
         // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
-        return new List<CustomerAnalytics>();
+        return Task.FromResult(new List<CustomerAnalytics>());
     }
 
-    public async Task<List<CustomerAnalytics>> GetAtRiskCustomersAsync(int count = 10)
+    public Task<List<CustomerAnalytics>> GetAtRiskCustomersAsync(int count = 10)
     {
         // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
-        return new List<CustomerAnalytics>();
+        return Task.FromResult(new List<CustomerAnalytics>());
     }
 
     public async Task RecordCustomerBehaviorAsync(int customerId, string action, string? details = null, string? pageUrl = null)
@@ -232,16 +232,16 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
         await _context.SaveChangesAsync();
     }
 
-    public async Task<List<CustomerAnalytics>> GetChurnRiskCustomersAsync(double riskThreshold = 70)
+    public Task<List<CustomerAnalytics>> GetChurnRiskCustomersAsync(double riskThreshold = 70)
     {
         // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
-        return new List<CustomerAnalytics>();
+        return Task.FromResult(new List<CustomerAnalytics>());
     }
 
-    public async Task<double> CalculateChurnRiskAsync(int customerId)
+    public Task<double> CalculateChurnRiskAsync(int customerId)
     {
         // Geçici olarak 0 döndür - CustomerAnalytics tablosu yok
-        return 0;
+        return Task.FromResult(0.0);
     }
 
     public async Task<CustomerAnalyticsReport> GetAnalyticsReportAsync()
@@ -269,10 +269,10 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
         };
     }
 
-    public async Task<List<SegmentPerformance>> GetSegmentPerformanceAsync()
+    public Task<List<SegmentPerformance>> GetSegmentPerformanceAsync()
     {
         // Geçici olarak boş liste döndür - CustomerAnalytics tablosu yok
-        return new List<SegmentPerformance>();
+        return Task.FromResult(new List<SegmentPerformance>());
     }
 
     public async Task<List<CustomerJourney>> GetCustomerJourneyAsync(int customerId)
@@ -340,9 +340,9 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
             return "Uyuyan";
     }
 
-    private async Task AnalyzePreferencesAsync(CustomerAnalytics analytics, IEnumerable<Models.Entities.Appointment> appointments)
+    private Task AnalyzePreferencesAsync(CustomerAnalytics analytics, IEnumerable<Models.Entities.Appointment> appointments)
     {
-        if (!appointments.Any()) return;
+        if (!appointments.Any()) return Task.CompletedTask;
 
         // En çok tercih edilen hizmet
         var preferredService = appointments
@@ -392,6 +392,8 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
             analytics.AverageRating = ratings.Average();
             analytics.TotalRatings = ratings.Count;
         }
+        
+        return Task.CompletedTask;
     }
 
     private string GetTimeSlot(int hour)

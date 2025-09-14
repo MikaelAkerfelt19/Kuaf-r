@@ -36,5 +36,14 @@ namespace Kuafor.Web.Models.Appointments
         // Selected service details (for duration calculation)
         public string? SelectedServiceName { get; set; }
         public decimal SelectedServicePrice { get; set; }
+        
+        // Coupon fields
+        [Display(Name = "Kupon Kodu")]
+        public string? CouponCode { get; set; }
+        
+        public decimal DiscountAmount { get; set; } = 0;
+        public decimal FinalPrice { get; set; }
+        public bool IsCouponApplied { get; set; } = false;
+        public string? CouponMessage { get; set; }
     }
 }

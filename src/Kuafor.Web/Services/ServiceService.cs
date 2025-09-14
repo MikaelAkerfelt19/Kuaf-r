@@ -17,6 +17,9 @@ public class ServiceService : IServiceService
     
     public async Task<IEnumerable<Service>> GetAllAsync()
     {
+        // Context'i temizle ve fresh data getir
+        _context.ChangeTracker.Clear();
+        
         return await _context.Services
             .OrderBy(s => s.DisplayOrder)
             .ThenBy(s => s.Name)
@@ -62,11 +65,21 @@ public class ServiceService : IServiceService
             
             _context.Services.Remove(service);
             await _context.SaveChangesAsync();
+            
+            // Değişikliği doğrula
+            var deletedService = await _context.Services.FindAsync(id);
+            if (deletedService != null)
+            {
+                throw new InvalidOperationException("Hizmet silinemedi. Lütfen tekrar deneyin.");
+            }
         }
     }
     
     public async Task<IEnumerable<Service>> GetActiveAsync()
     {
+        // Context'i temizle ve fresh data getir
+        _context.ChangeTracker.Clear();
+        
         return await _context.Services
             .Where(s => s.IsActive)
             .OrderBy(s => s.DisplayOrder)

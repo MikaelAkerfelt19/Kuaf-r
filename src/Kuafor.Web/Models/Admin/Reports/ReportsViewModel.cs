@@ -20,9 +20,9 @@ namespace Kuafor.Web.Models.Admin.Reports
 
         // Tablolar / özetler
         public List<DayBucket> Next7Days { get; set; } = new();         // Önümüzdeki 7 gün adet
-        public List<TopStylist> TopStylistsByWeek { get; set; } = new(); // Bu hafta en çok randevu
-        public List<TopStylist> TopStylistsByMonth { get; set; } = new(); // Bu ay en çok randevu
-        public List<BranchPerformance> BranchPerformance { get; set; } = new(); // Şube performansı
+        public List<TopStylistSummary> TopStylistsByWeek { get; set; } = new(); // Bu hafta en çok randevu
+        public List<TopStylistSummary> TopStylistsByMonth { get; set; } = new(); // Bu ay en çok randevu
+        public List<BranchPerformanceSummary> BranchPerformance { get; set; } = new(); // Şube performansı
         public FinancialAnalytics FinancialAnalytics { get; internal set; } = null!;
         public CustomerAnalytics CustomerAnalytics { get; internal set; } = null!;
         public InventoryAnalytics InventoryAnalytics { get; internal set; } = null!;
@@ -36,13 +36,13 @@ namespace Kuafor.Web.Models.Admin.Reports
         public int Count { get; set; }
     }
 
-    public class TopStylist
+    public class TopStylistSummary
     {
         public string Name { get; set; } = string.Empty;
         public int Count { get; set; }
     }
 
-    public class BranchPerformance
+    public class BranchPerformanceSummary
     {
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;

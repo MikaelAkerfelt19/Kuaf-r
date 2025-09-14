@@ -28,6 +28,7 @@ public class CustomerService : ICustomerService
     public async Task<Customer?> GetByIdAsync(int id)
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .Include(c => c.Appointments)
             .FirstOrDefaultAsync(c => c.Id == id);
     }
@@ -61,24 +62,28 @@ public class CustomerService : ICustomerService
     public async Task<Customer?> GetByUserIdAsync(string userId)
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .FirstOrDefaultAsync(c => c.UserId == userId);
     }
     
     public async Task<Customer?> GetByEmailAsync(string email)
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .FirstOrDefaultAsync(c => c.Email == email);
     }
     
     public async Task<Customer?> GetByPhoneAsync(string phone)
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .FirstOrDefaultAsync(c => c.Phone == phone);
     }
     
     public async Task<IEnumerable<Customer>> GetActiveAsync()
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .Where(c => c.IsActive)
             .OrderBy(c => c.FirstName)
             .ThenBy(c => c.LastName)
@@ -88,6 +93,7 @@ public class CustomerService : ICustomerService
     public async Task<IEnumerable<Customer>> GetByBranchAsync(int branchId)
     {
         return await _context.Customers
+            .AsNoTracking() // Read-only için performans artışı
             .Where(c => c.IsActive && c.Appointments.Any(a => a.BranchId == branchId))
             .OrderBy(c => c.FirstName)
             .ThenBy(c => c.LastName)

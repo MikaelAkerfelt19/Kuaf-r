@@ -6,13 +6,15 @@ namespace Kuafor.Web.Models.Appointments
 {
     public enum WizardStep { Branch = 0, Service = 1, Stylist = 2, Time = 3, Confirm = 4 }
 
-    public record ServiceVm(int Id, string Name, string DurationText, string Description);
+    public record ServiceVm(int Id, string Name, string DurationText, string Description, decimal Price);
     public record StylistVm(int Id, string Name, double Rating, string Bio, int BranchId);
     public record TimeSlotVm(DateTime Start, bool IsAvailable)
     {
         public DateTime StartUtc => Start.ToUniversalTime();
         public DateTime StartLocal => Start;
     }
+    
+    public record CouponVm(int Id, string Code, string Title, string DiscountType, decimal Amount, decimal? MinSpend, DateTime? ExpiresAt);
 
     public class AppointmentWizardViewModel
     {
@@ -34,6 +36,7 @@ namespace Kuafor.Web.Models.Appointments
         public StylistVm? SelectedStylist => Stylists.Find(s => s.Id == SelectedStylistId);
 
         // Kupon özellikleri
+        public string? CouponCode { get; set; }
         public string? SelectedCouponCode { get; set; }
         public decimal OriginalPrice { get; set; }
         public decimal DiscountAmount { get; set; }
