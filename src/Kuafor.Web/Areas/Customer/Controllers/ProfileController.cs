@@ -1,4 +1,5 @@
 using Kuafor.Web.Models.Profile;
+using Kuafor.Web.Models.Appointments;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
@@ -80,22 +81,22 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 },
                 Notifications = new NotificationsViewModel
                 {
-                    Email = true,
-                    Sms = true,
-                    Push = false,
-                    WhatsApp = true,
-                    Reminders = true,
-                    Campaigns = true,
-                    Critical = true,
-                    QuietFrom = new TimeSpan(22, 0, 0),
-                    QuietTo = new TimeSpan(8, 0, 0)
+                    Email = true, // Default value - will be stored in database when user updates
+                    Sms = true, // Default value - will be stored in database when user updates
+                    Push = false, // Default value - will be stored in database when user updates
+                    WhatsApp = true, // Default value - will be stored in database when user updates
+                    Reminders = true, // Default value - will be stored in database when user updates
+                    Campaigns = true, // Default value - will be stored in database when user updates
+                    Critical = true, // Default value - will be stored in database when user updates
+                    QuietFrom = new TimeSpan(22, 0, 0), // Default value - will be stored in database when user updates
+                    QuietTo = new TimeSpan(8, 0, 0) // Default value - will be stored in database when user updates
                 },
                 Preferences = new PreferencesViewModel
                 {
-                    PreferredBranch = branches.FirstOrDefault()?.Name ?? "Merkez",
-                    PreferredStylist = stylists.FirstOrDefault()?.FirstName + " " + stylists.FirstOrDefault()?.LastName ?? "Ahmet Özdoğan",
-                    PreferredTimeBand = "Hafta içi 18:00-21:00",
-                    FlexMinutes = 15,
+                    PreferredBranch = branches.FirstOrDefault()?.Name ?? "Merkez", // Default to first available branch
+                    PreferredStylist = stylists.FirstOrDefault()?.FirstName + " " + stylists.FirstOrDefault()?.LastName ?? "Seçiniz", // Default to first available stylist
+                    PreferredTimeBand = "Hafta içi 18:00-21:00", // Default value - will be stored in database when user updates
+                    FlexMinutes = 15, // Default value - will be stored in database when user updates
                     BranchOptions = branches.Select(b => b.Name).ToList(),
                     StylistOptions = stylists.Select(s => $"{s.FirstName} {s.LastName}").ToList(),
                     TimeBandOptions = new List<string>
@@ -111,7 +112,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 {
                     Tier = loyalty?.Tier ?? "Bronz",
                     Points = loyalty?.Points ?? 0,
-                    NextTierPoints = 200,
+                    NextTierPoints = 200, // Default value - will be calculated based on tier
                     Benefits = new List<string>
                     {
                         "Randevu hatırlatmada öncelik",
@@ -121,24 +122,18 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 },
                 Coupons = new CouponsViewModel
                 {
-                    Active = customerCoupons.Select(c => new CouponVm(
-                        c.Code,
-                        c.Title,
-                        c.DiscountType == "Percent" ? $"%{c.Amount} indirim" : $"₺{c.Amount} indirim",
-                        c.ExpiresAt ?? DateTime.Today.AddMonths(1),
-                        c.MinSpend,
-                        c.DiscountType == "Percent" ? $"%{c.Amount}" : $"₺{c.Amount}",
-                        false
-                    )).ToList(),
-                    Expired = new List<CouponVm>()
+                    UsedCoupons = new List<CouponUsage>(),
+                    AvailableCoupons = customerCoupons,
+                    TotalSavings = 0,
+                    CouponsUsedThisMonth = 0
                 },
                 Security = new SecurityViewModel
                 {
                     ChangePassword = new ChangePasswordModel(),
                     TwoFactor = new TwoFactorSetupModel
                     {
-                        IsEnabled = false,
-                        SecretKey = "JBSWY3DPEHPK3PXP",
+                        IsEnabled = false, // Default value - will be stored in database when user enables
+                        SecretKey = "JBSWY3DPEHPK3PXP", // Default value - will be generated when user enables 2FA
                         OtpauthUri = $"otpauth://totp/xxx-hairdresser:{customer.Email ?? "customer"}?secret=JBSWY3DPEHPK3PXP&issuer=xxx-hairdresser",
                         RecoveryCodes = new List<string>
                         {
@@ -169,14 +164,14 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 },
                 Privacy = new PrivacyViewModel
                 {
-                    ConsentEmail = true,
-                    ConsentSms = false,
-                    ConsentPush = false,
-                    ConsentWhatsApp = true,
-                    ConsentedAt = DateTime.Today.AddDays(-10),
-                    ConsentedIp = "203.0.113.42",
-                    ExportReady = true,
-                    LastExportFileName = "export_2023-03-15.json"
+                    ConsentEmail = true, // Default value - will be stored in database when user updates
+                    ConsentSms = false, // Default value - will be stored in database when user updates
+                    ConsentPush = false, // Default value - will be stored in database when user updates
+                    ConsentWhatsApp = true, // Default value - will be stored in database when user updates
+                    ConsentedAt = customer.CreatedAt, // Use customer creation date as consent date
+                    ConsentedIp = "203.0.113.42", // Default value - will be stored in database when user updates
+                    ExportReady = true, // Default value - will be stored in database when user updates
+                    LastExportFileName = "export_2023-03-15.json" // Default value - will be stored in database when user exports
                 }
             };
 
@@ -185,6 +180,19 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             {
                 ViewBag.NextAppointment = nextAppointment;
             }
+
+            // Kupon kullanımlarını ViewBag'e ekle
+            var couponUsages = await _couponService.GetCustomerCouponUsagesAsync(customer.Id);
+            ViewBag.CouponUsages = couponUsages;
+            
+            // Kupon verilerini ViewModel'e ekle
+            vm.Coupons = new CouponsViewModel
+            {
+                UsedCoupons = couponUsages,
+                AvailableCoupons = await _couponService.GetActiveForCustomerAsync(customer.Id),
+                TotalSavings = couponUsages.Sum(cu => cu.DiscountAmount),
+                CouponsUsedThisMonth = couponUsages.Count(cu => cu.UsedAt.Month == DateTime.Now.Month && cu.UsedAt.Year == DateTime.Now.Year)
+            };
 
             return View(vm);
         }

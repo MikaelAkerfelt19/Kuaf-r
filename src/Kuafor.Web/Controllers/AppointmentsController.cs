@@ -156,6 +156,56 @@ public class AppointmentsController : Controller
         }
     }
 
+    // API endpoint for calendar events
+    [HttpGet]
+    [AllowAnonymous]
+    public async Task<IActionResult> GetCalendarEvents(DateTime? start, DateTime? end)
+    {
+        try
+        {
+            var startDate = start ?? DateTime.Today.AddDays(-30);
+            var endDate = end ?? DateTime.Today.AddDays(30);
+            
+            var appointments = await _appointmentService.GetByDateRangeAsync(startDate, endDate);
+            
+            var events = appointments.Select(a => new
+            {
+                id = a.Id,
+                title = $"{a.Customer?.FirstName} {a.Customer?.LastName} - {a.Service?.Name}",
+                start = a.StartAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                end = a.EndAt.ToString("yyyy-MM-ddTHH:mm:ss"),
+                backgroundColor = GetStatusColor(a.Status),
+                borderColor = GetStatusColor(a.Status),
+                textColor = "#ffffff",
+                extendedProps = new
+                {
+                    stylist = $"{a.Stylist?.FirstName} {a.Stylist?.LastName}",
+                    branch = a.Branch?.Name,
+                    status = a.Status.ToString(),
+                    price = a.FinalPrice
+                }
+            });
+
+            return Json(events);
+        }
+        catch (Exception)
+        {
+            return Json(new List<object>());
+        }
+    }
+
+    private string GetStatusColor(AppointmentStatus status)
+    {
+        return status switch
+        {
+            AppointmentStatus.Confirmed => "#28a745",
+            AppointmentStatus.Completed => "#17a2b8",
+            AppointmentStatus.Cancelled => "#dc3545",
+            AppointmentStatus.NoShow => "#ffc107",
+            _ => "#6c757d"
+        };
+    }
+
     private async Task<int?> GetCurrentCustomerId()
     {
         if (User.Identity?.IsAuthenticated != true)

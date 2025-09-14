@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Profile;
+using Kuafor.Web.Models.Customer;
+using Kuafor.Web.Models.Appointments;
 using Microsoft.AspNetCore.Authorization;
 using System.Security.Claims;
 
@@ -33,30 +35,30 @@ public class CouponsController : Controller
 
         var coupons = await _couponService.GetActiveForCustomerAsync(customerId);
 
-        var vm = new CouponsViewModel
+        var vm = new Kuafor.Web.Models.Customer.CouponsViewModel
         {
             Active = coupons
                 .Where(c => c.ExpiresAt == null || c.ExpiresAt > DateTime.UtcNow)
                 .Select(c => new CouponVm(
+                    c.Id,
                     c.Code,
                     c.Title,
-                    GetCouponDescription(c),
-                    c.ExpiresAt,
+                    c.DiscountType,
+                    c.Amount,
                     c.MinSpend,
-                    GetDiscountText(c),
-                    false // TODO: Kullanım durumunu kontrol et
+                    c.ExpiresAt
                 ))
                 .ToList(),
             Expired = coupons
                 .Where(c => c.ExpiresAt.HasValue && c.ExpiresAt <= DateTime.UtcNow)
                 .Select(c => new CouponVm(
+                    c.Id,
                     c.Code,
                     c.Title,
-                    GetCouponDescription(c),
-                    c.ExpiresAt,
+                    c.DiscountType,
+                    c.Amount,
                     c.MinSpend,
-                    GetDiscountText(c),
-                    true
+                    c.ExpiresAt
                 ))
                 .ToList()
         };

@@ -33,6 +33,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         // GET: /Admin/Appointments
         [HttpGet]
         [Route("")]
+        [Route("Index")]
         public async Task<IActionResult> Index()
         {
             var appointments = await _appointmentService.GetAllAsync();
@@ -70,7 +71,8 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // POST: /Admin/Appointments/Reschedule
-        [HttpPost]
+        [HttpGet]
+        [Route("Reschedule")]   
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Reschedule(RescheduleForm form)
         {
@@ -95,6 +97,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         // POST: /Admin/Appointments/Cancel
         [HttpPost]
+        [Route("Cancel")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Cancel(int id, string? reason = null)
         {
@@ -159,10 +162,22 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 var appointment = await _appointmentService.GetByIdAsync(id);
                 if (appointment != null)
                 {
-                    appointment.Status = Enum.Parse<AppointmentStatus>(status);
-                    appointment.UpdatedAt = DateTime.UtcNow;
-                    await _appointmentService.UpdateAsync(appointment);
-                    TempData["Success"] = "Randevu durumu güncellendi.";
+                    // String status'u enum'a çevir
+                    if (Enum.TryParse<AppointmentStatus>(status, out var statusEnum))
+                    {
+                        appointment.Status = statusEnum;
+                        appointment.UpdatedAt = DateTime.UtcNow;
+                        await _appointmentService.UpdateAsync(appointment);
+                        TempData["Success"] = $"Randevu durumu '{status}' olarak güncellendi.";
+                    }
+                    else
+                    {
+                        TempData["Error"] = "Geçersiz durum değeri.";
+                    }
+                }
+                else
+                {
+                    TempData["Error"] = "Randevu bulunamadı.";
                 }
             }
             catch (Exception ex)
@@ -170,7 +185,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 TempData["Error"] = $"Hata: {ex.Message}";
             }
 
-            return Redirect("/Admin/Appointments");
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: /Admin/Appointments/Details/5
@@ -241,6 +256,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         // GET: /Admin/Appointments/Delete/5 - Confirmation sayfası
         [HttpGet]
         [Route("Delete/{id:int}")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
             var appointment = await _appointmentService.GetByIdAsync(id);
@@ -257,15 +273,31 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             return View(appointment);
         }
 
-        // POST: /Admin/Appointments/Delete/5
+        // POST: /Admin/Appointments/DeleteConfirmed
         [HttpPost]
+        [Route("DeleteConfirmed")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id, string? reason = null)
         {
             try
             {
-                await _appointmentService.DeleteAsync(id);
-                TempData["Success"] = "Randevu başarıyla silindi.";
+                var appointment = await _appointmentService.GetByIdAsync(id);
+                if (appointment == null)
+                {
+                    TempData["Error"] = "Randevu bulunamadı.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // İptal edilmiş randevuları silmeye izin ver
+                if (appointment.Status == AppointmentStatus.Cancelled || appointment.Status == AppointmentStatus.Completed)
+                {
+                    await _appointmentService.DeleteAsync(id);
+                    TempData["Success"] = "Randevu başarıyla silindi.";
+                }
+                else
+                {
+                    TempData["Error"] = "Sadece iptal edilmiş veya tamamlanmış randevular silinebilir.";
+                }
             }
             catch (InvalidOperationException ex)
             {
@@ -277,6 +309,15 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             }
 
             return RedirectToAction(nameof(Index));
+        }
+
+        // POST: /Admin/Appointments/Delete/5 (eski endpoint - geriye uyumluluk için)
+        [HttpPost]
+        [Route("Delete/{id:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id, string? reason = null)
+        {
+            return await DeleteConfirmed(id, reason);
         }
     }
 }

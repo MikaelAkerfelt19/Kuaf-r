@@ -20,6 +20,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
         private readonly ICustomerService _customerService;
         private readonly IStylistWorkingHoursService _stylistWorkingHoursService;
         private readonly ITimeZoneService _timeZoneService;
+        private readonly ICouponService _couponService;
         public AppointmentsController(
             IAppointmentService appointmentService,
             IServiceService serviceService,
@@ -27,7 +28,8 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             IBranchService branchService,
             ICustomerService customerService,
             IStylistWorkingHoursService stylistWorkingHoursService,
-            ITimeZoneService timeZoneService) 
+            ITimeZoneService timeZoneService,
+            ICouponService couponService) 
         {
             _appointmentService = appointmentService;
             _serviceService = serviceService;
@@ -35,7 +37,8 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             _branchService = branchService;
             _customerService = customerService;
             _stylistWorkingHoursService = stylistWorkingHoursService;
-            _timeZoneService = timeZoneService; 
+            _timeZoneService = timeZoneService;
+            _couponService = couponService; 
         }
 
         public async Task<IActionResult> New(int? branchId, int? serviceId, int? stylistId, string? start)
@@ -43,7 +46,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             var vm = new AppointmentWizardViewModel
             {
                 Branches = (await _branchService.GetAllAsync()).Select(b => new BranchVm(b.Id, b.Name, b.Address ?? "")).ToList(),
-                Services = (await _serviceService.GetAllAsync()).Select(s => new ServiceVm(s.Id, s.Name, $"{s.DurationMin} dakika", "")).ToList(),
+                Services = (await _serviceService.GetAllAsync()).Select(s => new ServiceVm(s.Id, s.Name, $"{s.DurationMin} dakika", s.Description ?? "", s.Price)).ToList(),
                 Stylists = (await _stylistService.GetAllAsync()).Select(s => new StylistVm(s.Id, $"{s.FirstName} {s.LastName}", (double)s.Rating, s.Bio ?? "", s.BranchId)).ToList(),
                 TimeSlots = await BuildAvailableSlotsAsync(stylistId, serviceId)
             };
@@ -73,7 +76,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Confirm(int branchId, int serviceId, int stylistId, DateTime start, string? notes)
+        public async Task<IActionResult> Confirm(int branchId, int serviceId, int stylistId, DateTime start, string? notes, string? couponCode, decimal discountAmount = 0)
         {
             try
             {
@@ -98,6 +101,10 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                 var startUtc = _timeZoneService.ConvertToUtc(start);
                 var endUtc = _timeZoneService.ConvertToUtc(start.AddMinutes(service.DurationMin));
 
+                // Fiyat hesaplama
+                var totalPrice = service.Price;
+                var finalPrice = totalPrice - discountAmount;
+
                 var appointment = new Appointment
                 {
                     ServiceId = serviceId,
@@ -107,14 +114,48 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     StartAt = startUtc,
                     EndAt = endUtc,
                     Notes = notes,
-                    Status = AppointmentStatus.Confirmed
+                    Status = AppointmentStatus.Confirmed,
+                    TotalPrice = totalPrice,
+                    DiscountAmount = discountAmount,
+                    FinalPrice = finalPrice
                 };
 
                 var created = await _appointmentService.CreateAsync(appointment);
                 
+                // Kupon uygulandıysa kupon kullanımını kaydet
+                if (!string.IsNullOrEmpty(couponCode) && discountAmount > 0)
+                {
+                    try
+                    {
+                        var coupon = await _couponService.GetByCodeAsync(couponCode);
+                        if (coupon != null)
+                        {
+                            await _couponService.ApplyCouponAsync(
+                                coupon.Id,
+                                customerId,
+                                created.Id,
+                                discountAmount,
+                                "Randevu oluşturma sırasında uygulandı"
+                            );
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Kupon uygulama hatası randevu oluşturmayı engellemez
+                        Console.WriteLine($"Kupon uygulama hatası: {ex.Message}");
+                    }
+                }
+                
                 // Başarı mesajında local time kullan
                 var localStart = _timeZoneService.ConvertToLocalTime(created.StartAt);
-                TempData["Success"] = $"Randevu oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName} · {branch.Name}";
+                var successMessage = $"Randevu oluşturuldu: {localStart:dd MMM dddd, HH:mm} · {service.Name} · {stylist.FirstName} {stylist.LastName} · {branch.Name}";
+                
+                if (discountAmount > 0)
+                {
+                    successMessage += $" · İndirim: {discountAmount:C}";
+                }
+                
+                TempData["Success"] = successMessage;
                 return RedirectToAction("Index");
             }
             catch (InvalidOperationException ex)
@@ -424,5 +465,101 @@ namespace Kuafor.Web.Areas.Customer.Controllers
 
             return customer?.Id ?? 0;
         }
+
+        [HttpPost("validate-coupon")]
+        public async Task<IActionResult> ValidateCoupon([FromBody] CouponValidationRequest request)
+        {
+            try
+            {
+                var customerId = await GetCurrentCustomerId();
+                var result = await _couponService.ValidateAsync(request.Code, request.BasketTotal, customerId);
+
+                return Json(new
+                {
+                    success = result.IsValid,
+                    message = result.IsValid ? "Kupon geçerli" : result.Reason,
+                    discount = result.Discount,
+                    discountAmount = result.Discount?.Amount ?? 0
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Kupon doğrulama sırasında hata oluştu: " + ex.Message
+                });
+            }
+        }
+
+        [HttpPost("apply-coupon")]
+        public async Task<IActionResult> ApplyCoupon([FromBody] CouponApplyRequest request)
+        {
+            try
+            {
+                var customerId = await GetCurrentCustomerId();
+                
+                // Önce kuponu doğrula
+                var validation = await _couponService.ValidateAsync(request.Code, request.BasketTotal, customerId);
+
+                if (!validation.IsValid)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = validation.Reason
+                    });
+                }
+
+                // Kuponu uygula
+                var coupon = await _couponService.GetByCodeAsync(request.Code);
+                if (coupon == null)
+                {
+                    return Json(new
+                    {
+                        success = false,
+                        message = "Kupon bulunamadı"
+                    });
+                }
+
+                var usage = await _couponService.ApplyCouponAsync(
+                    coupon.Id,
+                    customerId,
+                    request.AppointmentId,
+                    validation.Discount!.Amount,
+                    request.Notes
+                );
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Kupon başarıyla uygulandı",
+                    discount = validation.Discount,
+                    usageId = usage.Id
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new
+                {
+                    success = false,
+                    message = "Kupon uygulanırken hata oluştu: " + ex.Message
+                });
+            }
+        }
+    }
+
+    public class CouponValidationRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public decimal BasketTotal { get; set; }
+    }
+
+    public class CouponApplyRequest
+    {
+        public string Code { get; set; } = string.Empty;
+        public decimal BasketTotal { get; set; }
+        public int AppointmentId { get; set; }
+        public string? Notes { get; set; }
     }
 }
