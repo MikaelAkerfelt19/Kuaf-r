@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Kuafor.Web.Migrations
 {
     /// <inheritdoc />
-    public partial class Clear : Migration
+    public partial class Neww : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -151,7 +151,6 @@ namespace Kuafor.Web.Migrations
                     Phone = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: true),
                     DateOfBirth = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    BirthDate = table.Column<DateTime>(type: "datetime2", nullable: true),
                     Gender = table.Column<string>(type: "nvarchar(10)", maxLength: 10, nullable: true),
                     Segment = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
                     LastVisitDate = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -401,9 +400,9 @@ namespace Kuafor.Web.Migrations
                     Price = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     PriceFrom = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: true),
                     Category = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: true),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    ShowOnHomePage = table.Column<bool>(type: "bit", nullable: false),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    ShowOnHomePage = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
@@ -421,13 +420,13 @@ namespace Kuafor.Web.Migrations
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Message = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: false),
                     Rating = table.Column<int>(type: "int", nullable: false),
-                    IsActive = table.Column<bool>(type: "bit", nullable: false),
-                    IsApproved = table.Column<bool>(type: "bit", nullable: false),
-                    ShowOnHomePage = table.Column<bool>(type: "bit", nullable: false),
-                    DisplayOrder = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    IsApproved = table.Column<bool>(type: "bit", nullable: false, defaultValue: false),
+                    ShowOnHomePage = table.Column<bool>(type: "bit", nullable: false, defaultValue: true),
+                    DisplayOrder = table.Column<int>(type: "int", nullable: false, defaultValue: 0),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
-                    AdminNotes = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                    AdminNotes = table.Column<string>(type: "nvarchar(1000)", maxLength: 1000, nullable: true)
                 },
                 constraints: table =>
                 {
@@ -534,6 +533,32 @@ namespace Kuafor.Web.Migrations
                     table.PrimaryKey("PK_AspNetUserTokens", x => new { x.UserId, x.LoginProvider, x.Name });
                     table.ForeignKey(
                         name: "FK_AspNetUserTokens_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "RefreshTokens",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Token = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    ExpiresAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    IsRevoked = table.Column<bool>(type: "bit", nullable: false),
+                    RevokedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RevokedByIp = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    ReplacedByToken = table.Column<string>(type: "nvarchar(max)", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_RefreshTokens", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_RefreshTokens_AspNetUsers_UserId",
                         column: x => x.UserId,
                         principalTable: "AspNetUsers",
                         principalColumn: "Id",
@@ -943,14 +968,12 @@ namespace Kuafor.Web.Migrations
                         name: "FK_Referrals_Customers_RefereeCustomerId",
                         column: x => x.RefereeCustomerId,
                         principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Referrals_Customers_ReferrerCustomerId",
                         column: x => x.ReferrerCustomerId,
                         principalTable: "Customers",
-                        principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_Referrals_ReferralPrograms_ReferralProgramId",
                         column: x => x.ReferralProgramId,
@@ -1207,9 +1230,9 @@ namespace Kuafor.Web.Migrations
                     Segment = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     LifecycleStage = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
                     AverageAppointmentInterval = table.Column<double>(type: "float", nullable: false),
-                    PreferredServiceId = table.Column<int>(type: "int", nullable: false),
-                    PreferredStylistId = table.Column<int>(type: "int", nullable: false),
-                    PreferredBranchId = table.Column<int>(type: "int", nullable: false),
+                    PreferredServiceId = table.Column<int>(type: "int", nullable: true),
+                    PreferredStylistId = table.Column<int>(type: "int", nullable: true),
+                    PreferredBranchId = table.Column<int>(type: "int", nullable: true),
                     PreferredDayOfWeek = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     PreferredTimeSlot = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     AverageRating = table.Column<double>(type: "float", nullable: false),
@@ -1641,6 +1664,42 @@ namespace Kuafor.Web.Migrations
                 });
 
             migrationBuilder.CreateTable(
+                name: "CouponUsages",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    CouponId = table.Column<int>(type: "int", nullable: false),
+                    CustomerId = table.Column<int>(type: "int", nullable: false),
+                    AppointmentId = table.Column<int>(type: "int", nullable: false),
+                    DiscountAmount = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
+                    UsedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    Notes = table.Column<string>(type: "nvarchar(500)", maxLength: 500, nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_CouponUsages", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Appointments_AppointmentId",
+                        column: x => x.AppointmentId,
+                        principalTable: "Appointments",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Coupons_CouponId",
+                        column: x => x.CouponId,
+                        principalTable: "Coupons",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_CouponUsages_Customers_CustomerId",
+                        column: x => x.CustomerId,
+                        principalTable: "Customers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "Payments",
                 columns: table => new
                 {
@@ -1811,6 +1870,21 @@ namespace Kuafor.Web.Migrations
                 column: "ServiceId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Appointments_StartAt",
+                table: "Appointments",
+                column: "StartAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_Status",
+                table: "Appointments",
+                column: "Status");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Appointments_StylistId",
+                table: "Appointments",
+                column: "StylistId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Appointments_StylistId_StartAt_EndAt",
                 table: "Appointments",
                 columns: new[] { "StylistId", "StartAt", "EndAt" });
@@ -1863,6 +1937,11 @@ namespace Kuafor.Web.Migrations
                 name: "IX_BirthdayMessages_CustomerId",
                 table: "BirthdayMessages",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Branches_IsActive",
+                table: "Branches",
+                column: "IsActive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_BudgetItems_BudgetId",
@@ -1936,6 +2015,21 @@ namespace Kuafor.Web.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_CouponUsages_AppointmentId",
+                table: "CouponUsages",
+                column: "AppointmentId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CouponUsages_CouponId",
+                table: "CouponUsages",
+                column: "CouponId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_CouponUsages_CustomerId",
+                table: "CouponUsages",
+                column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_CustomerAnalytics_CustomerId",
                 table: "CustomerAnalytics",
                 column: "CustomerId");
@@ -1969,6 +2063,16 @@ namespace Kuafor.Web.Migrations
                 name: "IX_CustomerPreferences_CustomerId",
                 table: "CustomerPreferences",
                 column: "CustomerId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_Email",
+                table: "Customers",
+                column: "Email");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Customers_Phone",
+                table: "Customers",
+                column: "Phone");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Customers_UserId",
@@ -2035,6 +2139,16 @@ namespace Kuafor.Web.Migrations
                 name: "IX_MessageRecipients_MessageCampaignId",
                 table: "MessageRecipients",
                 column: "MessageCampaignId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_CreatedAt",
+                table: "Notifications",
+                column: "CreatedAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Notifications_UserId",
+                table: "Notifications",
+                column: "UserId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_Notifications_UserId_IsRead_CreatedAt",
@@ -2107,9 +2221,30 @@ namespace Kuafor.Web.Migrations
                 column: "ReferrerCustomerId");
 
             migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_ExpiresAt",
+                table: "RefreshTokens",
+                column: "ExpiresAt");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_Token",
+                table: "RefreshTokens",
+                column: "Token",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_RefreshTokens_UserId",
+                table: "RefreshTokens",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Reports_Type_CreatedAt",
                 table: "Reports",
                 columns: new[] { "Type", "CreatedAt" });
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Services_IsActive",
+                table: "Services",
+                column: "IsActive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StaffAttendances_StylistId",
@@ -2155,6 +2290,11 @@ namespace Kuafor.Web.Migrations
                 name: "IX_Stylists_BranchId",
                 table: "Stylists",
                 column: "BranchId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Stylists_IsActive",
+                table: "Stylists",
+                column: "IsActive");
 
             migrationBuilder.CreateIndex(
                 name: "IX_StylistWorkingHours_StylistId",
@@ -2213,6 +2353,9 @@ namespace Kuafor.Web.Migrations
                 name: "CostAnalyses");
 
             migrationBuilder.DropTable(
+                name: "CouponUsages");
+
+            migrationBuilder.DropTable(
                 name: "CustomerAnalytics");
 
             migrationBuilder.DropTable(
@@ -2258,6 +2401,9 @@ namespace Kuafor.Web.Migrations
                 name: "Referrals");
 
             migrationBuilder.DropTable(
+                name: "RefreshTokens");
+
+            migrationBuilder.DropTable(
                 name: "Reports");
 
             migrationBuilder.DropTable(
@@ -2294,9 +2440,6 @@ namespace Kuafor.Web.Migrations
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
-                name: "AspNetUsers");
-
-            migrationBuilder.DropTable(
                 name: "BirthdayCampaigns");
 
             migrationBuilder.DropTable(
@@ -2331,6 +2474,9 @@ namespace Kuafor.Web.Migrations
 
             migrationBuilder.DropTable(
                 name: "ReferralPrograms");
+
+            migrationBuilder.DropTable(
+                name: "AspNetUsers");
 
             migrationBuilder.DropTable(
                 name: "Products");

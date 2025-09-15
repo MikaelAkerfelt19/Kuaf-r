@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Kuafor.Web.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250913101914_Jwt2")]
-    partial class Jwt2
+    [Migration("20250914225456_Neww")]
+    partial class Neww
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -962,6 +962,45 @@ namespace Kuafor.Web.Migrations
                     b.ToTable("Coupons");
                 });
 
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.CouponUsage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("AppointmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CouponId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("CustomerId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("DiscountAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<DateTime>("UsedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AppointmentId");
+
+                    b.HasIndex("CouponId");
+
+                    b.HasIndex("CustomerId");
+
+                    b.ToTable("CouponUsages");
+                });
+
             modelBuilder.Entity("Kuafor.Web.Models.Entities.Customer", b =>
                 {
                     b.Property<int>("Id")
@@ -1082,7 +1121,7 @@ namespace Kuafor.Web.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("PreferredBranchId")
+                    b.Property<int?>("PreferredBranchId")
                         .HasColumnType("int");
 
                     b.Property<string>("PreferredDayOfWeek")
@@ -1090,10 +1129,10 @@ namespace Kuafor.Web.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("PreferredServiceId")
+                    b.Property<int?>("PreferredServiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PreferredStylistId")
+                    b.Property<int?>("PreferredStylistId")
                         .HasColumnType("int");
 
                     b.Property<string>("PreferredTimeSlot")
@@ -2394,7 +2433,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("DurationMin")
                         .HasColumnType("int");
@@ -2405,7 +2446,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2421,7 +2464,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("ShowOnHomePage")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -3059,19 +3104,26 @@ namespace Kuafor.Web.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AdminNotes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsApproved")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Message")
                         .IsRequired()
@@ -3087,7 +3139,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("ShowOnHomePage")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -3529,6 +3583,33 @@ namespace Kuafor.Web.Migrations
                     b.Navigation("Service");
                 });
 
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.CouponUsage", b =>
+                {
+                    b.HasOne("Kuafor.Web.Models.Entities.Appointment", "Appointment")
+                        .WithMany()
+                        .HasForeignKey("AppointmentId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kuafor.Web.Models.Entities.Coupon", "Coupon")
+                        .WithMany()
+                        .HasForeignKey("CouponId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Kuafor.Web.Models.Entities.Customer", "Customer")
+                        .WithMany()
+                        .HasForeignKey("CustomerId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Appointment");
+
+                    b.Navigation("Coupon");
+
+                    b.Navigation("Customer");
+                });
+
             modelBuilder.Entity("Kuafor.Web.Models.Entities.CustomerAnalytics", b =>
                 {
                     b.HasOne("Kuafor.Web.Models.Entities.Customer", "Customer")
@@ -3544,20 +3625,17 @@ namespace Kuafor.Web.Migrations
                     b.HasOne("Kuafor.Web.Models.Entities.Branch", "PreferredBranch")
                         .WithMany()
                         .HasForeignKey("PreferredBranchId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Kuafor.Web.Models.Entities.Service", "PreferredService")
                         .WithMany()
                         .HasForeignKey("PreferredServiceId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Kuafor.Web.Models.Entities.Stylist", "PreferredStylist")
                         .WithMany()
                         .HasForeignKey("PreferredStylistId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Customer");
 
@@ -3795,7 +3873,7 @@ namespace Kuafor.Web.Migrations
                     b.HasOne("Kuafor.Web.Models.Entities.Customer", "RefereeCustomer")
                         .WithMany()
                         .HasForeignKey("RefereeCustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Kuafor.Web.Models.Entities.ReferralProgram", "ReferralProgram")
@@ -3807,7 +3885,7 @@ namespace Kuafor.Web.Migrations
                     b.HasOne("Kuafor.Web.Models.Entities.Customer", "ReferrerCustomer")
                         .WithMany()
                         .HasForeignKey("ReferrerCustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("RefereeCustomer");

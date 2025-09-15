@@ -24,9 +24,9 @@ public class CustomerAnalytics
     
     // Davranış analizi
     public double AverageAppointmentInterval { get; set; } // Ortalama randevu aralığı (gün)
-    public int PreferredServiceId { get; set; } // En çok tercih edilen hizmet
-    public int PreferredStylistId { get; set; } // En çok tercih edilen kuaför
-    public int PreferredBranchId { get; set; } // En çok tercih edilen şube
+    public int? PreferredServiceId { get; set; } // En çok tercih edilen hizmet
+    public int? PreferredStylistId { get; set; } // En çok tercih edilen kuaför
+    public int? PreferredBranchId { get; set; } // En çok tercih edilen şube
     
     // Zaman analizi
     public string PreferredDayOfWeek { get; set; } = "Pazartesi"; // En çok tercih edilen gün

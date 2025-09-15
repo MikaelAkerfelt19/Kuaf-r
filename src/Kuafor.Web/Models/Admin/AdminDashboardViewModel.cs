@@ -12,6 +12,22 @@ namespace Kuafor.Web.Models.Admin
 
     public class AdminDashboardViewModel
     {
+        // Temel istatistikler
+        public int TotalAppointments { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public int ActiveStylists { get; set; }
+        public int ActiveBranches { get; set; }
+        public int TodayAppointments { get; set; }
+        public decimal TodayRevenue { get; set; }
+        public int WeekAppointments { get; set; }
+        public decimal WeekRevenue { get; set; }
+        
+        // Liste verileri
+        public List<object> RecentAppointments { get; set; } = new();
+        public List<StylistPerformance> TopStylists { get; set; } = new();
+        public List<BranchPerformance> BranchPerformance { get; set; } = new();
+        
+        // Mevcut özellikler
         public List<KpiVm> Kpis { get; set; } = new();
         public List<UpcomingApptRow> Upcoming { get; set; } = new();
         public List<TopServiceRow> TopServices { get; set; } = new();
@@ -19,7 +35,6 @@ namespace Kuafor.Web.Models.Admin
         // Yeni gelişmiş özellikler
         public List<ChartDataPoint> RevenueChart { get; set; } = new();
         public List<ChartDataPoint> AppointmentChart { get; set; } = new();
-        public List<StylistPerformance> TopStylists { get; set; } = new();
         public List<BranchPerformance> BranchPerformances { get; set; } = new();
         public List<CustomerSegment> CustomerSegments { get; set; } = new();
         public List<RecentActivity> RecentActivities { get; set; } = new();

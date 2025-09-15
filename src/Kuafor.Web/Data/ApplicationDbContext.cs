@@ -185,10 +185,33 @@ public class ApplicationDbContext : IdentityDbContext
             .HasIndex(s => s.IsActive)
             .HasDatabaseName("IX_Services_IsActive");
             
+        // Service configuration - Eksik kolonları ekle
+        builder.Entity<Service>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.ShowOnHomePage).HasDefaultValue(true);
+            entity.Property(e => e.DisplayOrder).HasDefaultValue(0);
+            entity.Property(e => e.Category).HasMaxLength(50);
+            entity.Property(e => e.DetailedDescription).HasMaxLength(1000);
+            entity.Property(e => e.IconClass).HasMaxLength(50);
+        });
+            
         // Branch indexes
         builder.Entity<Branch>()
             .HasIndex(b => b.IsActive)
             .HasDatabaseName("IX_Branches_IsActive");
+            
+        // Testimonial configuration - Eksik kolonları ekle
+        builder.Entity<Testimonial>(entity =>
+        {
+            entity.Property(e => e.IsActive).HasDefaultValue(true);
+            entity.Property(e => e.IsApproved).HasDefaultValue(false);
+            entity.Property(e => e.ShowOnHomePage).HasDefaultValue(true);
+            entity.Property(e => e.DisplayOrder).HasDefaultValue(0);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
+            entity.Property(e => e.AdminNotes).HasMaxLength(1000);
+        });
             
         // Payment indexes
         builder.Entity<Payment>()
@@ -940,6 +963,32 @@ public class ApplicationDbContext : IdentityDbContext
                 .WithMany()
                 .HasForeignKey(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.Cascade);
+        });
+        
+        // Referrals configuration - Foreign key constraint hatasını önlemek için
+        builder.Entity<Referral>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ReferrerRewardAmount).HasPrecision(18, 2);
+            entity.Property(e => e.RefereeRewardAmount).HasPrecision(18, 2);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ReferralCode).HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            
+            entity.HasOne(e => e.ReferralProgram)
+                .WithMany(rp => rp.Referrals)
+                .HasForeignKey(e => e.ReferralProgramId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            entity.HasOne(e => e.ReferrerCustomer)
+                .WithMany()
+                .HasForeignKey(e => e.ReferrerCustomerId)
+                .OnDelete(DeleteBehavior.NoAction); // CASCADE yerine NO ACTION
+                
+            entity.HasOne(e => e.RefereeCustomer)
+                .WithMany()
+                .HasForeignKey(e => e.RefereeCustomerId)
+                .OnDelete(DeleteBehavior.NoAction); // CASCADE yerine NO ACTION
         });
     }
 }

@@ -1118,7 +1118,7 @@ namespace Kuafor.Web.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("PreferredBranchId")
+                    b.Property<int?>("PreferredBranchId")
                         .HasColumnType("int");
 
                     b.Property<string>("PreferredDayOfWeek")
@@ -1126,10 +1126,10 @@ namespace Kuafor.Web.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
-                    b.Property<int>("PreferredServiceId")
+                    b.Property<int?>("PreferredServiceId")
                         .HasColumnType("int");
 
-                    b.Property<int>("PreferredStylistId")
+                    b.Property<int?>("PreferredStylistId")
                         .HasColumnType("int");
 
                     b.Property<string>("PreferredTimeSlot")
@@ -2430,7 +2430,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("nvarchar(1000)");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<int>("DurationMin")
                         .HasColumnType("int");
@@ -2441,7 +2443,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("nvarchar(50)");
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -2457,7 +2461,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("decimal(18,2)");
 
                     b.Property<bool>("ShowOnHomePage")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -3095,19 +3101,26 @@ namespace Kuafor.Web.Migrations
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("AdminNotes")
-                        .HasColumnType("nvarchar(max)");
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
                     b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
 
                     b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<bool>("IsApproved")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
 
                     b.Property<string>("Message")
                         .IsRequired()
@@ -3123,7 +3136,9 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("int");
 
                     b.Property<bool>("ShowOnHomePage")
-                        .HasColumnType("bit");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -3607,20 +3622,17 @@ namespace Kuafor.Web.Migrations
                     b.HasOne("Kuafor.Web.Models.Entities.Branch", "PreferredBranch")
                         .WithMany()
                         .HasForeignKey("PreferredBranchId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Kuafor.Web.Models.Entities.Service", "PreferredService")
                         .WithMany()
                         .HasForeignKey("PreferredServiceId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("Kuafor.Web.Models.Entities.Stylist", "PreferredStylist")
                         .WithMany()
                         .HasForeignKey("PreferredStylistId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.Navigation("Customer");
 
@@ -3858,7 +3870,7 @@ namespace Kuafor.Web.Migrations
                     b.HasOne("Kuafor.Web.Models.Entities.Customer", "RefereeCustomer")
                         .WithMany()
                         .HasForeignKey("RefereeCustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.HasOne("Kuafor.Web.Models.Entities.ReferralProgram", "ReferralProgram")
@@ -3870,7 +3882,7 @@ namespace Kuafor.Web.Migrations
                     b.HasOne("Kuafor.Web.Models.Entities.Customer", "ReferrerCustomer")
                         .WithMany()
                         .HasForeignKey("ReferrerCustomerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
 
                     b.Navigation("RefereeCustomer");
