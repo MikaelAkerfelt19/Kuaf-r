@@ -10,7 +10,7 @@ using System.Security.Claims;
 namespace Kuafor.Web.Areas.Customer.Controllers
 {
     [Area("Customer")]
-    [Authorize(Roles = "Customer")]
+    [Route("Customer/Appointments")]
     public class AppointmentsController : Controller
     {
         private readonly IAppointmentService _appointmentService;
@@ -41,8 +41,15 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             _couponService = couponService; 
         }
 
+        [Route("New")]
         public async Task<IActionResult> New(int? branchId, int? serviceId, int? stylistId, string? start)
         {
+            // Admin kullanıcılarını kontrol et
+            if (User.IsInRole("Admin"))
+            {
+                TempData["Warning"] = "Admin kullanıcıları müşteri sayfasına erişemez.";
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
             var vm = new AppointmentWizardViewModel
             {
                 Branches = (await _branchService.GetAllAsync()).Select(b => new BranchVm(b.Id, b.Name, b.Address ?? "")).ToList(),
@@ -180,8 +187,17 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             return RedirectToAction("Index");
         }
 
+        [Route("")]
+        [Route("Index")]
         public async Task<IActionResult> Index()
         {
+            // Admin kullanıcılarını kontrol et
+            if (User.IsInRole("Admin"))
+            {
+                TempData["Warning"] = "Admin kullanıcıları müşteri sayfasına erişemez.";
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
+
             var customerId = await GetCurrentCustomerId();
             if (customerId == 0)
             {

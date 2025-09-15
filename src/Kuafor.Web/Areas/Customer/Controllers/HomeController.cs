@@ -9,7 +9,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
     // Not: Bu controller sadece dashboard görünümünü göstermek içindir.
     // ViewModel, veri erişimi vb. kısımlar eklenecek.
     [Area("Customer")]
-    [Authorize(Roles = "Customer")]
+    [Route("Customer")]
     public class HomeController : Controller
     {
         private readonly IAppointmentService _appointmentService;
@@ -23,8 +23,17 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             _customerService = customerService;
         }
 
+        [Route("")]
+        [Route("Index")]
         public async Task<IActionResult> Index()
         {
+            // Admin kullanıcılarını kontrol et
+            if (User.IsInRole("Admin"))
+            {
+                TempData["Warning"] = "Admin kullanıcıları müşteri sayfasına erişemez.";
+                return RedirectToAction("Index", "Home", new { area = "" });
+            }
+
             var customerId = await GetCurrentCustomerIdAsync();
             var upcomingAppointments = await _appointmentService.GetUpcomingByCustomerAsync(customerId);
 

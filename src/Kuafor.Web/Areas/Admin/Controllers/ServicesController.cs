@@ -130,5 +130,6 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             await _serviceService.UpdateDisplayOrderAsync(id, newOrder);
             return Json(new { success = true });
         }
+
     }
 }
