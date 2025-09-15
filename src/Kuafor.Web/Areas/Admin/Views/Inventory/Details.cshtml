@@ -1,0 +1,92 @@
+@model Kuafor.Web.Models.Entities.Product
+@{
+    ViewData["Title"] = "Ürün Detayları";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.Admin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Ürün Detayları</h1>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Geri Dön
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ürün Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Ürün Adı:</strong> @Model.Name</p>
+                            <p><strong>Kategori:</strong> @Model.Category</p>
+                            <p><strong>Açıklama:</strong> @Model.Description</p>
+                            <p><strong>Fiyat:</strong> @Model.Price.ToString("C")</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Stok Miktarı:</strong> @Model.StockQuantity</p>
+                            <p><strong>Min. Stok Seviyesi:</strong> @Model.MinimumStock</p>
+                            <p><strong>Oluşturulma Tarihi:</strong> @Model.CreatedAt.ToString("dd.MM.yyyy")</p>
+                            <p><strong>Güncellenme Tarihi:</strong> @(Model.UpdatedAt?.ToString("dd.MM.yyyy") ?? "Güncellenmemiş")</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Stok Durumu</h5>
+                </div>
+                <div class="card-body text-center">
+                    @if (Model.StockQuantity == 0)
+                    {
+                        <div class="alert alert-danger">
+                            <i class="fas fa-times-circle fa-3x mb-3"></i>
+                            <h4>Stokta Yok</h4>
+                        </div>
+                    }
+                    else if (Model.StockQuantity <= Model.MinimumStock)
+                    {
+                        <div class="alert alert-warning">
+                            <i class="fas fa-exclamation-triangle fa-3x mb-3"></i>
+                            <h4>Düşük Stok</h4>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-success">
+                            <i class="fas fa-check-circle fa-3x mb-3"></i>
+                            <h4>Normal Stok</h4>
+                        </div>
+                    }
+                    
+                    <h3>@Model.StockQuantity</h3>
+                    <p>Mevcut Stok</p>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h5>İşlemler</h5>
+                </div>
+                <div class="card-body">
+                    <a href="@Url.Action("Edit", new { id = Model.Id })" class="btn btn-warning btn-block mb-2">
+                        <i class="fas fa-edit"></i> Düzenle
+                    </a>
+                    <a href="@Url.Action("Delete", new { id = Model.Id })" class="btn btn-danger btn-block">
+                        <i class="fas fa-trash"></i> Sil
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

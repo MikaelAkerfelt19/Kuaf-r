@@ -53,7 +53,19 @@
     <div class="row g-4">
         @foreach (var service in Model.Services)
         {
-            <div class="col-md-6 col-lg-4" data-category="@service.Category?.ToLower()">
+            var categoryClass = service.Category?.ToLower() switch
+            {
+                "haircut" => "haircut",
+                "coloring" => "coloring", 
+                "styling" => "styling",
+                "beard" => "beard",
+                "care" => "care",
+                "manicure" => "manicure",
+                "other" => "other",
+                _ => "other"
+            };
+            
+            <div class="col-md-6 col-lg-4 service-item" data-category="@categoryClass">
                 <div class="card h-100 service-card">
                     <div class="card-body text-center">
                         <div class="service-icon mb-3">
@@ -106,20 +118,20 @@
 @section Scripts {
     <script>
         // Kategori filtreleme
-        document.querySelectorAll('[data-category]').forEach(btn => {
+        document.querySelectorAll('button[data-category]').forEach(btn => {
             btn.addEventListener('click', function() {
                 const category = this.dataset.category;
                 
                 // Aktif buton güncelle
-                document.querySelectorAll('[data-category]').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('button[data-category]').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 
                 // Hizmetleri filtrele
-                document.querySelectorAll('.service-card').forEach(card => {
-                    if (category === 'all' || card.dataset.category === category) {
-                        card.style.display = 'block';
+                document.querySelectorAll('.service-item').forEach(item => {
+                    if (category === 'all' || item.dataset.category === category) {
+                        item.style.display = 'block';
                     } else {
-                        card.style.display = 'none';
+                        item.style.display = 'none';
                     }
                 });
             });

@@ -1,0 +1,75 @@
+@model Kuafor.Web.Models.Entities.Customer
+@{
+    ViewData["Title"] = "Müşteri Sil";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.Admin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <h1>Müşteri Sil</h1>
+            <p>Bu müşteriyi silmek istediğinizden emin misiniz?</p>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Müşteri Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row">
+                        <dt class="col-sm-3">ID:</dt>
+                        <dd class="col-sm-9">@Model.Id</dd>
+                        
+                        <dt class="col-sm-3">Ad Soyad:</dt>
+                        <dd class="col-sm-9">@Model.FirstName @Model.LastName</dd>
+                        
+                        <dt class="col-sm-3">E-posta:</dt>
+                        <dd class="col-sm-9">@Model.Email</dd>
+                        
+                        <dt class="col-sm-3">Telefon:</dt>
+                        <dd class="col-sm-9">@Model.Phone</dd>
+                        
+                        <dt class="col-sm-3">Kayıt Tarihi:</dt>
+                        <dd class="col-sm-9">@Model.CreatedAt.ToString("dd.MM.yyyy HH:mm")</dd>
+                        
+                        <dt class="col-sm-3">Durum:</dt>
+                        <dd class="col-sm-9">
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge badge-success">Aktif</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-danger">Pasif</span>
+                            }
+                        </dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="Id" />
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>Uyarı:</strong> Bu işlem geri alınamaz. Müşteri ve tüm ilgili verileri kalıcı olarak silinecektir.
+                </div>
+                
+                <div class="form-group">
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-trash"></i> Evet, Sil
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> İptal
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

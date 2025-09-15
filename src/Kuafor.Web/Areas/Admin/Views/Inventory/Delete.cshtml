@@ -1,0 +1,57 @@
+@model Kuafor.Web.Models.Entities.Product
+@{
+    ViewData["Title"] = "Ürün Sil";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.Admin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Ürün Sil</h1>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Geri Dön
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Ürün Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Dikkat!</strong> Bu ürünü silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong>Ürün Adı:</strong> @Model.Name</p>
+                            <p><strong>Kategori:</strong> @Model.Category</p>
+                            <p><strong>Açıklama:</strong> @Model.Description</p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>Fiyat:</strong> @Model.Price.ToString("C")</p>
+                            <p><strong>Stok Miktarı:</strong> @Model.StockQuantity</p>
+                            <p><strong>Min. Stok Seviyesi:</strong> @Model.MinimumStock</p>
+                        </div>
+                    </div>
+
+                    <form asp-action="DeleteConfirmed" method="post" class="mt-4">
+                        <input asp-for="Id" type="hidden" />
+                        <button type="submit" class="btn btn-danger">
+                            <i class="fas fa-trash"></i> Evet, Sil
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="fas fa-times"></i> İptal
+                        </a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

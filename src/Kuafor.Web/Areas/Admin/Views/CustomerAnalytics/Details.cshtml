@@ -1,0 +1,127 @@
+@model Kuafor.Web.Models.Admin.CustomerDetailsViewModel
+@{
+    ViewData["Title"] = "Müşteri Detayları";
+    Layout = "~/Areas/Admin/Views/Shared/_Layout.Admin.cshtml";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h1>Müşteri Detayları</h1>
+                <a href="@Url.Action("Index")" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left"></i> Geri Dön
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Müşteri Bilgileri -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Müşteri Bilgileri</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Ad Soyad:</strong> @Model.Customer.FirstName @Model.Customer.LastName</p>
+                    <p><strong>E-posta:</strong> @Model.Customer.Email</p>
+                    <p><strong>Telefon:</strong> @Model.Customer.Phone</p>
+                    <p><strong>Kayıt Tarihi:</strong> @Model.Customer.CreatedAt.ToString("dd.MM.yyyy")</p>
+                    <p><strong>Durum:</strong> 
+                        @if (Model.Customer.IsActive)
+                        {
+                            <span class="badge badge-success">Aktif</span>
+                        }
+                        else
+                        {
+                            <span class="badge badge-danger">Pasif</span>
+                        }
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- İstatistikler -->
+        <div class="col-md-8">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="card bg-primary text-white">
+                        <div class="card-body text-center">
+                            <h3>@Model.TotalVisits</h3>
+                            <p>Toplam Ziyaret</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-success text-white">
+                        <div class="card-body text-center">
+                            <h3>@Model.TotalSpent.ToString("C")</h3>
+                            <p>Toplam Harcama</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card bg-info text-white">
+                        <div class="card-body text-center">
+                            <h3>@Model.AverageSpending.ToString("C")</h3>
+                            <p>Ortalama Harcama</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Randevu Geçmişi -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h5>Randevu Geçmişi</h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Appointments.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Hizmet</th>
+                                        <th>Fiyat</th>
+                                        <th>Durum</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var appointment in Model.Appointments)
+                                    {
+                                        <tr>
+                                            <td>@appointment.StartAt.ToString("dd.MM.yyyy HH:mm")</td>
+                                            <td>@appointment.Service?.Name</td>
+                                            <td>@appointment.FinalPrice.ToString("C")</td>
+                                            <td>
+                                                @if (appointment.Status == Kuafor.Web.Models.Enums.AppointmentStatus.Completed)
+                                                {
+                                                    <span class="badge badge-success">Tamamlandı</span>
+                                                }
+                                                else if (appointment.Status == Kuafor.Web.Models.Enums.AppointmentStatus.Cancelled)
+                                                {
+                                                    <span class="badge badge-danger">İptal</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge badge-warning">Beklemede</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <p class="text-muted">Henüz randevu bulunmuyor.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
