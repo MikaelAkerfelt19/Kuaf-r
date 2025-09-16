@@ -21,6 +21,9 @@ public class CampaignMessage
     [Required]
     public string Body { get; set; } = string.Empty;
     
+    [Required]
+    public string Content { get; set; } = string.Empty;
+    
     [StringLength(100)]
     public string? CreatedBy { get; set; }
     

@@ -17,7 +17,7 @@ namespace Kuafor.Web.Migrations
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.4")
+                .HasAnnotation("ProductVersion", "8.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -339,7 +339,8 @@ namespace Kuafor.Web.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("bit");
 
-                    b.Property<int>("Month")
+                    b.Property<int?>("Month")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<string>("Name")
@@ -355,7 +356,8 @@ namespace Kuafor.Web.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("decimal(18,2)");
 
-                    b.Property<int>("Quarter")
+                    b.Property<int?>("Quarter")
+                        .IsRequired()
                         .HasColumnType("int");
 
                     b.Property<decimal>("RevenueBudget")
@@ -515,6 +517,10 @@ namespace Kuafor.Web.Migrations
 
                     b.Property<int>("CampaignId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
@@ -1037,6 +1043,10 @@ namespace Kuafor.Web.Migrations
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Phone")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PhoneNumber")
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
@@ -1663,6 +1673,52 @@ namespace Kuafor.Web.Migrations
                     b.ToTable("MarketingCampaigns");
                 });
 
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageBlacklist", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.ToTable("MessageBlacklists");
+                });
+
             modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageCampaign", b =>
                 {
                     b.Property<int>("Id")
@@ -1708,6 +1764,42 @@ namespace Kuafor.Web.Migrations
                     b.HasIndex("MessageGroupId");
 
                     b.ToTable("MessageCampaigns");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageCredit", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("CostPerCredit")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CreditAmount")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("LastUpdated")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("LastUpdated");
+
+                    b.HasIndex("Type")
+                        .IsUnique();
+
+                    b.ToTable("MessageCredits");
                 });
 
             modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageGroup", b =>
@@ -1797,6 +1889,118 @@ namespace Kuafor.Web.Migrations
                     b.HasIndex("MessageCampaignId");
 
                     b.ToTable("MessageRecipients");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageReport", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<decimal?>("Cost")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeliveryStatus")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("MessageCampaignId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("MessageContent")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<string>("MessageType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DeliveryStatus");
+
+                    b.HasIndex("MessageCampaignId");
+
+                    b.HasIndex("MessageType");
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.HasIndex("SentAt");
+
+                    b.ToTable("MessageReports");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name");
+
+                    b.HasIndex("Type");
+
+                    b.ToTable("MessageTemplates");
                 });
 
             modelBuilder.Entity("Kuafor.Web.Models.Entities.Notification", b =>
@@ -2487,10 +2691,12 @@ namespace Kuafor.Web.Migrations
                     b.Property<int>("BreakHours")
                         .HasColumnType("int");
 
-                    b.Property<DateTime>("CheckInTime")
+                    b.Property<DateTime?>("CheckInTime")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime>("CheckOutTime")
+                    b.Property<DateTime?>("CheckOutTime")
+                        .IsRequired()
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("CreatedAt")
@@ -3148,6 +3354,152 @@ namespace Kuafor.Web.Migrations
                     b.ToTable("Testimonials");
                 });
 
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.WhatsAppTemplate", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("ApprovedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Category")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Language")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Category");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("WhatsAppTemplates");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.WhatsAppTemplateParameter", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Example")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("IsRequired")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Order")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ParameterName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ParameterType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("WhatsAppTemplateParameters");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.WhatsAppTemplateUsage", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime?>("DeliveredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("PhoneNumber")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime?>("ReadAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PhoneNumber");
+
+                    b.HasIndex("SentAt");
+
+                    b.HasIndex("TemplateId");
+
+                    b.ToTable("WhatsAppTemplateUsages");
+                });
+
             modelBuilder.Entity("Kuafor.Web.Models.Entities.WorkingHours", b =>
                 {
                     b.Property<int>("Id")
@@ -3776,6 +4128,17 @@ namespace Kuafor.Web.Migrations
                     b.Navigation("MessageCampaign");
                 });
 
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.MessageReport", b =>
+                {
+                    b.HasOne("Kuafor.Web.Models.Entities.MessageCampaign", "MessageCampaign")
+                        .WithMany()
+                        .HasForeignKey("MessageCampaignId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MessageCampaign");
+                });
+
             modelBuilder.Entity("Kuafor.Web.Models.Entities.PackageSale", b =>
                 {
                     b.HasOne("Kuafor.Web.Models.Entities.Customer", "Customer")
@@ -4010,6 +4373,28 @@ namespace Kuafor.Web.Migrations
                     b.Navigation("Stylist");
                 });
 
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.WhatsAppTemplateParameter", b =>
+                {
+                    b.HasOne("Kuafor.Web.Models.Entities.WhatsAppTemplate", "Template")
+                        .WithMany("Parameters")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.WhatsAppTemplateUsage", b =>
+                {
+                    b.HasOne("Kuafor.Web.Models.Entities.WhatsAppTemplate", "Template")
+                        .WithMany("Usages")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("Kuafor.Web.Models.Entities.WorkingHours", b =>
                 {
                     b.HasOne("Kuafor.Web.Models.Entities.Branch", "Branch")
@@ -4169,6 +4554,13 @@ namespace Kuafor.Web.Migrations
                     b.Navigation("Appointments");
 
                     b.Navigation("WorkingHours");
+                });
+
+            modelBuilder.Entity("Kuafor.Web.Models.Entities.WhatsAppTemplate", b =>
+                {
+                    b.Navigation("Parameters");
+
+                    b.Navigation("Usages");
                 });
 #pragma warning restore 612, 618
         }
