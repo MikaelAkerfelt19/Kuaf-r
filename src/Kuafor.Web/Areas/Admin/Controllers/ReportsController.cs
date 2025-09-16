@@ -2,6 +2,10 @@ using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Models.Admin.Reports;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Admin;
+using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Enums;
+using CustomerEntity = Kuafor.Web.Models.Entities.Customer;
+using AppointmentEntity = Kuafor.Web.Models.Entities.Appointment;
 
 namespace Kuafor.Web.Areas.Admin.Controllers;
 
@@ -266,14 +270,14 @@ public class ReportsController : Controller
         }
     }
 
-    private async Task<List<Models.Admin.Reports.BranchPerformance>> GetBranchPerformanceDataAsync()
+    private async Task<List<BranchPerformanceReport>> GetBranchPerformanceDataAsync()
     {
         var branches = await _branchService.GetAllAsync();
         var monthStart = new DateTime(DateTime.Today.Year, DateTime.Today.Month, 1);
         var appointments = await _appointmentService.GetByDateRangeAsync(monthStart, DateTime.Today.AddDays(1));
         var stylists = await _stylistService.GetAllAsync();
 
-        return branches.Select(b => new Models.Admin.Reports.BranchPerformance
+        return branches.Select(b => new BranchPerformanceReport
         {
             Id = b.Id,
             Name = b.Name,
@@ -344,8 +348,8 @@ public class ReportsController : Controller
         var stylists = await _stylistService.GetAllAsync();
         
         // Gerçek verilerden hesaplama
-        var completedAppointments = appointments.Where(a => a.Status == Models.Enums.AppointmentStatus.Completed).ToList();
-        var noShowAppointments = appointments.Where(a => a.Status == Models.Enums.AppointmentStatus.NoShow).ToList();
+        var completedAppointments = appointments.Where(a => a.Status == AppointmentStatus.Completed).ToList();
+        var noShowAppointments = appointments.Where(a => a.Status == AppointmentStatus.NoShow).ToList();
         
         var averageServiceTime = completedAppointments.Any() ? 
             completedAppointments.Average(a => a.Service.DurationMin) : 0;
@@ -397,19 +401,19 @@ public class ReportsController : Controller
             .OrderBy(x => x.date);
     }
 
-    private List<Models.Admin.CustomerSegment> GetCustomerSegments(IEnumerable<Models.Entities.Customer> customers, IEnumerable<Models.Entities.Appointment> appointments)
+    private List<CustomerSegment> GetCustomerSegments(IEnumerable<CustomerEntity> customers, IEnumerable<AppointmentEntity> appointments)
     {
         // Müşteri segmentasyonu logic'i
-        return new List<Models.Admin.CustomerSegment>
+        return new List<CustomerSegment>
         {
-            new Models.Admin.CustomerSegment { Segment = "VIP", Count = customers.Count() / 10, Revenue = 0, Percentage = "10%" },
-            new Models.Admin.CustomerSegment { Segment = "Sadık", Count = customers.Count() / 3, Revenue = 0, Percentage = "30%" },
-            new Models.Admin.CustomerSegment { Segment = "Yeni", Count = customers.Count() / 5, Revenue = 0, Percentage = "20%" },
-            new Models.Admin.CustomerSegment { Segment = "Risk", Count = customers.Count() / 2, Revenue = 0, Percentage = "40%" }
+            new CustomerSegment { Segment = "VIP", Count = customers.Count() / 10, Revenue = 0, Percentage = "10%" },
+            new CustomerSegment { Segment = "Sadık", Count = customers.Count() / 3, Revenue = 0, Percentage = "30%" },
+            new CustomerSegment { Segment = "Yeni", Count = customers.Count() / 5, Revenue = 0, Percentage = "20%" },
+            new CustomerSegment { Segment = "Risk", Count = customers.Count() / 2, Revenue = 0, Percentage = "40%" }
         };
     }
 
-    private List<TopCustomer> GetTopCustomers(IEnumerable<Models.Entities.Customer> customers, IEnumerable<Models.Entities.Appointment> appointments)
+    private List<TopCustomer> GetTopCustomers(IEnumerable<CustomerEntity> customers, IEnumerable<AppointmentEntity> appointments)
     {
         return customers
             .Select(c => new TopCustomer
@@ -441,7 +445,7 @@ public class CustomerReportViewModel
     public int TotalCustomers { get; set; }
     public int NewCustomersThisMonth { get; set; }
     public int ActiveCustomers { get; set; }
-    public List<Models.Admin.CustomerSegment> CustomerSegments { get; set; } = new();
+    public List<CustomerSegment> CustomerSegments { get; set; } = new();
     public List<TopCustomer> TopCustomers { get; set; } = new();
 }
 
@@ -517,4 +521,29 @@ public class PerformanceMetrics
     public double CustomerSatisfaction { get; set; }
     public double UtilizationRate { get; set; }
     public double NoShowRate { get; set; }
+}
+
+public class BranchPerformanceReport
+{
+    public int Id { get; set; }
+    public string Name { get; set; } = "";
+    public int AppointmentCount { get; set; }
+    public decimal TotalRevenue { get; set; }
+    public double AverageRating { get; set; }
+}
+
+public class CustomerSegment
+{
+    public string Segment { get; set; } = "";
+    public int Count { get; set; }
+    public decimal Revenue { get; set; }
+    public string Percentage { get; set; } = "";
+}
+
+public class StockMovement
+{
+    public string ProductName { get; set; } = "";
+    public string MovementType { get; set; } = "";
+    public int Quantity { get; set; }
+    public DateTime Date { get; set; }
 }

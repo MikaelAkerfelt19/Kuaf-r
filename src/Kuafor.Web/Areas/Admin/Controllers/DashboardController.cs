@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Admin;
+using BranchPerformanceAdmin = Kuafor.Web.Models.Admin.BranchPerformance;
 
 namespace Kuafor.Web.Areas.Admin.Controllers;
 
@@ -52,7 +53,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers;
                 WeekRevenue = 0,
                 RecentAppointments = new List<object>(),
                 TopStylists = new List<StylistPerformance>(),
-                BranchPerformance = new List<BranchPerformance>()
+                BranchPerformance = new List<BranchPerformanceAdmin>()
             };
 
             // Bugün ve bu hafta için ayrı hesaplamalar
@@ -85,7 +86,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers;
                 WeekRevenue = 0,
                 RecentAppointments = new List<object>(),
                 TopStylists = new List<StylistPerformance>(),
-                BranchPerformance = new List<BranchPerformance>()
+                BranchPerformance = new List<BranchPerformanceAdmin>()
             };
 
             return View(viewModel);
