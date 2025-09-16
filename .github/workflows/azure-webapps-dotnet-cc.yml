@@ -76,6 +76,6 @@ jobs:
         run: dotnet tool install --global dotnet-ef
 
       - name: Run EF Core migrations
-        run: dotnet ef database update --project ./src/Kuafor.Web
+        run: dotnet ef database update --project ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.AZURE_SQL_CONNECTION }}
