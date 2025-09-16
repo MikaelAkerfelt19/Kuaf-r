@@ -34,6 +34,10 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<MessageGroupMember> MessageGroupMembers { get; set; }
     public DbSet<MessageCampaign> MessageCampaigns { get; set; }
     public DbSet<MessageRecipient> MessageRecipients { get; set; }
+    public DbSet<MessageBlacklist> MessageBlacklists { get; set; }
+    public DbSet<MessageReport> MessageReports { get; set; }
+    public DbSet<MessageCredit> MessageCredits { get; set; }
+    public DbSet<MessageTemplate> MessageTemplates { get; set; }
     public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
     
     // Yeni eklenen DbSets
@@ -85,106 +89,111 @@ public class ApplicationDbContext : IdentityDbContext
     // JWT Refresh Tokens
     public DbSet<RefreshToken> RefreshTokens { get; set; } = null!;
     
+    // WhatsApp Templates
+    public DbSet<WhatsAppTemplate> WhatsAppTemplates { get; set; }
+public DbSet<WhatsAppTemplateParameter> WhatsAppTemplateParameters { get; set; }
+public DbSet<WhatsAppTemplateUsage> WhatsAppTemplateUsages { get; set; }
+    
     protected override void OnModelCreating(ModelBuilder builder)
     {
         base.OnModelCreating(builder);
-        
+
         // Configure decimal precision for all decimal properties
         builder.Entity<Appointment>()
             .Property(a => a.TotalPrice)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Appointment>()
             .Property(a => a.DiscountAmount)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Appointment>()
             .Property(a => a.FinalPrice)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Coupon>()
             .Property(c => c.Amount)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Coupon>()
             .Property(c => c.MinSpend)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Payment>()
             .Property(p => p.Amount)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Service>()
             .Property(s => s.Price)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Service>()
             .Property(s => s.PriceFrom)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Stylist>()
             .Property(s => s.Rating)
             .HasPrecision(3, 1);
-        
+
         // Coupon Code unique constraint
         builder.Entity<Coupon>()
             .HasIndex(c => c.Code)
             .IsUnique();
-            
+
         // Appointment time conflict prevention
         builder.Entity<Appointment>()
             .HasIndex(a => new { a.StylistId, a.StartAt, a.EndAt })
             .HasDatabaseName("IX_Appointments_StylistId_StartAt_EndAt");
-            
+
         // Performance indexes
         builder.Entity<Appointment>()
             .HasIndex(a => a.StartAt)
             .HasDatabaseName("IX_Appointments_StartAt");
-            
+
         builder.Entity<Appointment>()
             .HasIndex(a => a.CustomerId)
             .HasDatabaseName("IX_Appointments_CustomerId");
-            
+
         builder.Entity<Appointment>()
             .HasIndex(a => a.StylistId)
             .HasDatabaseName("IX_Appointments_StylistId");
-            
+
         builder.Entity<Appointment>()
             .HasIndex(a => a.BranchId)
             .HasDatabaseName("IX_Appointments_BranchId");
-            
+
         builder.Entity<Appointment>()
             .HasIndex(a => a.Status)
             .HasDatabaseName("IX_Appointments_Status");
-            
+
         // Customer indexes
         builder.Entity<Customer>()
             .HasIndex(c => c.UserId)
             .IsUnique()
             .HasDatabaseName("IX_Customers_UserId");
-            
+
         builder.Entity<Customer>()
             .HasIndex(c => c.Email)
             .HasDatabaseName("IX_Customers_Email");
-            
+
         builder.Entity<Customer>()
             .HasIndex(c => c.Phone)
             .HasDatabaseName("IX_Customers_Phone");
-            
+
         // Stylist indexes
         builder.Entity<Stylist>()
             .HasIndex(s => s.BranchId)
             .HasDatabaseName("IX_Stylists_BranchId");
-            
+
         builder.Entity<Stylist>()
             .HasIndex(s => s.IsActive)
             .HasDatabaseName("IX_Stylists_IsActive");
-            
+
         // Service indexes
         builder.Entity<Service>()
             .HasIndex(s => s.IsActive)
             .HasDatabaseName("IX_Services_IsActive");
-            
+
         // Service configuration - Eksik kolonları ekle
         builder.Entity<Service>(entity =>
         {
@@ -195,12 +204,12 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.DetailedDescription).HasMaxLength(1000);
             entity.Property(e => e.IconClass).HasMaxLength(50);
         });
-            
+
         // Branch indexes
         builder.Entity<Branch>()
             .HasIndex(b => b.IsActive)
             .HasDatabaseName("IX_Branches_IsActive");
-            
+
         // Testimonial configuration - Eksik kolonları ekle
         builder.Entity<Testimonial>(entity =>
         {
@@ -212,82 +221,82 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Message).IsRequired().HasMaxLength(500);
             entity.Property(e => e.AdminNotes).HasMaxLength(1000);
         });
-            
+
         // Payment indexes
         builder.Entity<Payment>()
             .HasIndex(p => p.AppointmentId)
             .HasDatabaseName("IX_Payments_AppointmentId");
-            
+
         // Notification indexes
         builder.Entity<Notification>()
             .HasIndex(n => n.UserId)
             .HasDatabaseName("IX_Notifications_UserId");
-            
+
         builder.Entity<Notification>()
             .HasIndex(n => n.CreatedAt)
             .HasDatabaseName("IX_Notifications_CreatedAt");
-            
+
         // RefreshToken indexes
         builder.Entity<RefreshToken>()
             .HasIndex(rt => rt.Token)
             .IsUnique()
             .HasDatabaseName("IX_RefreshTokens_Token");
-            
+
         builder.Entity<RefreshToken>()
             .HasIndex(rt => rt.UserId)
             .HasDatabaseName("IX_RefreshTokens_UserId");
-            
+
         builder.Entity<RefreshToken>()
             .HasIndex(rt => rt.ExpiresAt)
             .HasDatabaseName("IX_RefreshTokens_ExpiresAt");
-            
+
         // Stylist BranchId foreign key
         builder.Entity<Stylist>()
             .HasOne(s => s.Branch)
             .WithMany(b => b.Stylists)
             .HasForeignKey(s => s.BranchId)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         // Appointment foreign keys
         builder.Entity<Appointment>()
             .HasOne(a => a.Service)
             .WithMany(s => s.Appointments)
             .HasForeignKey(a => a.ServiceId)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         builder.Entity<Appointment>()
             .HasOne(a => a.Stylist)
             .WithMany(s => s.Appointments)
             .HasForeignKey(a => a.StylistId)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         builder.Entity<Appointment>()
             .HasOne(a => a.Branch)
             .WithMany(b => b.Appointments)
             .HasForeignKey(a => a.BranchId)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         builder.Entity<Appointment>()
             .HasOne(a => a.Customer)
             .WithMany(c => c.Appointments)
             .HasForeignKey(a => a.CustomerId)
             .OnDelete(DeleteBehavior.Restrict);
-            
+
         // WorkingHours tablosu zaten veritabanında mevcut
-            
+
         // : Payment foreign key
         builder.Entity<Payment>()
             .HasOne(p => p.Appointment)
             .WithMany(a => a.Payments)
             .HasForeignKey(p => p.AppointmentId)
             .OnDelete(DeleteBehavior.Cascade);
-            
+
         // WorkingHours tablosu zaten veritabanında mevcut
-            
+
         //  Notification index (performans için)
         builder.Entity<Notification>()
             .HasIndex(n => new { n.UserId, n.IsRead, n.CreatedAt });
-            
+
         //  Report index (performans için)
         builder.Entity<Report>()
             .HasIndex(r => new { r.Type, r.CreatedAt });
@@ -298,14 +307,14 @@ public class ApplicationDbContext : IdentityDbContext
             .WithMany()
             .HasForeignKey(w => w.BranchId)
             .OnDelete(DeleteBehavior.Cascade);
-            
+
         // Loyalty configuration
         builder.Entity<Loyalty>()
             .HasOne(l => l.Customer)
             .WithMany()
             .HasForeignKey(l => l.CustomerId)
             .OnDelete(DeleteBehavior.Cascade);
-            
+
         // LoyaltyTransaction configuration
         builder.Entity<LoyaltyTransaction>()
             .HasOne(lt => lt.Customer)
@@ -317,7 +326,7 @@ public class ApplicationDbContext : IdentityDbContext
         builder.Entity<Product>()
             .Property(p => p.Price)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Product>()
             .Property(p => p.CommissionPercentage)
             .HasPrecision(5, 2);
@@ -326,11 +335,11 @@ public class ApplicationDbContext : IdentityDbContext
         builder.Entity<Receipt>()
             .Property(r => r.TotalAmount)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Receipt>()
             .Property(r => r.PaidAmount)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Receipt>()
             .Property(r => r.RemainingAmount)
             .HasPrecision(18, 2);
@@ -339,7 +348,7 @@ public class ApplicationDbContext : IdentityDbContext
         builder.Entity<ReceiptItem>()
             .Property(ri => ri.UnitPrice)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<ReceiptItem>()
             .Property(ri => ri.TotalPrice)
             .HasPrecision(18, 2);
@@ -348,7 +357,7 @@ public class ApplicationDbContext : IdentityDbContext
         builder.Entity<Package>()
             .Property(p => p.TotalPrice)
             .HasPrecision(18, 2);
-            
+
         builder.Entity<Package>()
             .Property(p => p.SessionUnitPrice)
             .HasPrecision(18, 2);
@@ -455,19 +464,19 @@ public class ApplicationDbContext : IdentityDbContext
             .HasConversion(
                 v => v.Ticks,
                 v => new TimeSpan(v));
-                
+
         builder.Entity<StylistWorkingHours>()
             .Property(swh => swh.CloseTime)
             .HasConversion(
                 v => v.Ticks,
                 v => new TimeSpan(v));
-                
+
         builder.Entity<StylistWorkingHours>()
             .Property(swh => swh.BreakStart)
             .HasConversion(
                 v => v.HasValue ? v.Value.Ticks : (long?)null,
                 v => v.HasValue ? new TimeSpan(v.Value) : null);
-                
+
         builder.Entity<StylistWorkingHours>()
             .Property(swh => swh.BreakEnd)
             .HasConversion(
@@ -489,13 +498,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Reason).HasMaxLength(200);
             entity.Property(e => e.Reference).HasMaxLength(100);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Product)
                 .WithMany(p => p.StockTransactions)
                 .HasForeignKey(e => e.ProductId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         // Product entity güncellemeleri
         builder.Entity<Product>(entity =>
         {
@@ -506,7 +515,7 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.SupplierCode).HasMaxLength(50);
             entity.Property(e => e.CostPrice).HasPrecision(18, 2);
         });
-        
+
         // Müşteri analitikleri konfigürasyonları
         builder.Entity<CustomerAnalytics>(entity =>
         {
@@ -515,28 +524,28 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.LifecycleStage).HasMaxLength(50);
             entity.Property(e => e.PreferredDayOfWeek).HasMaxLength(20);
             entity.Property(e => e.PreferredTimeSlot).HasMaxLength(20);
-            
+
             entity.HasOne(e => e.Customer)
                 .WithMany()
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             entity.HasOne(e => e.PreferredService)
                 .WithMany()
                 .HasForeignKey(e => e.PreferredServiceId)
                 .OnDelete(DeleteBehavior.SetNull);
-                
+
             entity.HasOne(e => e.PreferredStylist)
                 .WithMany()
                 .HasForeignKey(e => e.PreferredStylistId)
                 .OnDelete(DeleteBehavior.SetNull);
-                
+
             entity.HasOne(e => e.PreferredBranch)
                 .WithMany()
                 .HasForeignKey(e => e.PreferredBranchId)
                 .OnDelete(DeleteBehavior.SetNull);
         });
-        
+
         builder.Entity<CustomerSegment>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -544,7 +553,7 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Description).HasMaxLength(200);
             entity.Property(e => e.Color).HasMaxLength(20);
         });
-        
+
         builder.Entity<CustomerBehavior>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -553,25 +562,25 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.PageUrl).HasMaxLength(100);
             entity.Property(e => e.DeviceType).HasMaxLength(50);
             entity.Property(e => e.UserAgent).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Customer)
                 .WithMany()
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<CustomerPreference>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.PreferenceType).IsRequired().HasMaxLength(50);
             entity.Property(e => e.PreferenceValue).IsRequired().HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Customer)
                 .WithMany()
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         // Personel yönetimi konfigürasyonları
         builder.Entity<StaffPerformance>(entity =>
         {
@@ -582,13 +591,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.AverageRating).HasPrecision(3, 1);
             entity.Property(e => e.AverageServiceTime).HasPrecision(8, 2);
             entity.Property(e => e.UtilizationRate).HasPrecision(5, 2);
-            
+
             entity.HasOne(e => e.Stylist)
                 .WithMany()
                 .HasForeignKey(e => e.StylistId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<StaffSalary>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -603,13 +612,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.OtherDeductions).HasPrecision(18, 2);
             entity.Property(e => e.NetSalary).HasPrecision(18, 2);
             entity.Property(e => e.PaymentMethod).HasMaxLength(50);
-            
+
             entity.HasOne(e => e.Stylist)
                 .WithMany()
                 .HasForeignKey(e => e.StylistId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<StaffTraining>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -619,13 +628,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Duration).IsRequired();
             entity.Property(e => e.Location).HasMaxLength(200);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Stylist)
                 .WithMany()
                 .HasForeignKey(e => e.StylistId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<StaffAttendance>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -634,14 +643,14 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.CheckOutTime).IsRequired();
             entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Stylist)
                 .WithMany()
                 .HasForeignKey(e => e.StylistId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
-        
+
+
         builder.Entity<StaffEvaluation>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -656,19 +665,19 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Adaptability).HasPrecision(3, 1);
             entity.Property(e => e.OverallScore).HasPrecision(3, 1);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Stylist)
                 .WithMany()
                 .HasForeignKey(e => e.StylistId)
                 .OnDelete(DeleteBehavior.Restrict);
-                
+
             entity.HasOne(e => e.Evaluator)
                 .WithMany()
                 .HasForeignKey(e => e.EvaluatorId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-       
-        
+
+
         builder.Entity<StaffGoal>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -679,13 +688,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.EndDate).IsRequired();
             entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Stylist)
                 .WithMany()
                 .HasForeignKey(e => e.StylistId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         // Finansal analitikler konfigürasyonları
         builder.Entity<FinancialCategory>(entity =>
         {
@@ -695,13 +704,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.IsActive).IsRequired();
             entity.Property(e => e.DisplayOrder).IsRequired();
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.ParentCategory)
                 .WithMany()
                 .HasForeignKey(e => e.ParentCategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         builder.Entity<CostAnalysis>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -712,18 +721,18 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.ProductCost).HasPrecision(18, 2);
             entity.Property(e => e.OtherCost).HasPrecision(18, 2);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Service)
                 .WithMany()
                 .HasForeignKey(e => e.ServiceId)
                 .OnDelete(DeleteBehavior.Restrict);
-                
+
             entity.HasOne(e => e.Product)
                 .WithMany()
                 .HasForeignKey(e => e.ProductId)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         builder.Entity<Budget>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -740,13 +749,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.ExpenseVariance).HasPrecision(18, 2);
             entity.Property(e => e.ProfitVariance).HasPrecision(18, 2);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         builder.Entity<BudgetItem>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -757,18 +766,18 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Variance).HasPrecision(18, 2);
             entity.Property(e => e.VariancePercentage).HasPrecision(5, 2);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Category)
                 .WithMany()
                 .HasForeignKey(e => e.CategoryId)
                 .OnDelete(DeleteBehavior.Restrict);
-                
+
             entity.HasOne(e => e.Budget)
                 .WithMany(b => b.BudgetItems)
                 .HasForeignKey(e => e.BudgetId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<CashFlow>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -783,13 +792,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.OtherOut).HasPrecision(18, 2);
             entity.Property(e => e.NetCashFlow).HasPrecision(18, 2);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         builder.Entity<FinancialReport>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -802,13 +811,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Data).IsRequired();
             entity.Property(e => e.Format).IsRequired().HasMaxLength(50);
             entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(100);
-            
+
             entity.HasOne(e => e.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         // Pazarlama konfigürasyonları
         builder.Entity<Campaign>(entity =>
         {
@@ -820,46 +829,46 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.EndDate).IsRequired();
             entity.Property(e => e.Status).IsRequired().HasMaxLength(50);
             entity.Property(e => e.CreatedBy).IsRequired().HasMaxLength(100);
-            
+
             entity.HasOne(e => e.CreatedByUser)
                 .WithMany()
                 .HasForeignKey(e => e.CreatedById)
                 .OnDelete(DeleteBehavior.Restrict);
         });
-        
+
         // Marketing entities decimal precision
         builder.Entity<MarketingCampaign>(entity =>
         {
             entity.Property(e => e.Budget).HasPrecision(18, 2);
             entity.Property(e => e.CostPerMessage).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<BirthdayCampaign>(entity =>
         {
             entity.Property(e => e.DiscountPercentage).HasPrecision(5, 2);
             entity.Property(e => e.DiscountAmount).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<ReferralProgram>(entity =>
         {
             entity.Property(e => e.ReferrerReward).HasPrecision(18, 2);
             entity.Property(e => e.RefereeReward).HasPrecision(18, 2);
             entity.Property(e => e.MinSpentAmount).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<Referral>(entity =>
         {
             entity.Property(e => e.ReferrerRewardAmount).HasPrecision(18, 2);
             entity.Property(e => e.RefereeRewardAmount).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<CustomerSegment>(entity =>
         {
             entity.Property(e => e.MinMonetaryScore).HasPrecision(18, 2);
             entity.Property(e => e.MaxMonetaryScore).HasPrecision(18, 2);
             entity.Property(e => e.DiscountPercentage).HasPrecision(5, 2);
         });
-        
+
         builder.Entity<CustomerAnalytics>(entity =>
         {
             entity.Property(e => e.TotalSpent).HasPrecision(18, 2);
@@ -867,7 +876,7 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.LifetimeValue).HasPrecision(18, 2);
             entity.Property(e => e.MonetaryScore).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<CostAnalysis>(entity =>
         {
             entity.Property(e => e.LaborCost).HasPrecision(18, 2);
@@ -881,35 +890,35 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.SellingPrice).HasPrecision(18, 2);
             entity.Property(e => e.ProfitMargin).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<CashFlow>(entity =>
         {
             entity.Property(e => e.CashBalance).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<StaffSalary>(entity =>
         {
             entity.Property(e => e.QualityBonus).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<StockTransaction>(entity =>
         {
             entity.Property(e => e.UnitCost).HasPrecision(18, 2);
         });
-        
+
         builder.Entity<CampaignTarget>(entity =>
         {
             entity.HasKey(e => e.Id);
             entity.Property(e => e.TargetType).IsRequired().HasMaxLength(50);
             entity.Property(e => e.TargetValue).HasMaxLength(200);
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Campaign)
                 .WithMany(c => c.Targets)
                 .HasForeignKey(e => e.CampaignId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<CampaignMessage>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -918,13 +927,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Subject).IsRequired().HasMaxLength(200);
             entity.Property(e => e.Body).IsRequired();
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Campaign)
                 .WithMany(c => c.Messages)
                 .HasForeignKey(e => e.CampaignId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         builder.Entity<CampaignPerformance>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -934,13 +943,13 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.ClickedCount).IsRequired();
             entity.Property(e => e.ConvertedCount).IsRequired();
             entity.Property(e => e.CreatedBy).HasMaxLength(100);
-            
+
             entity.HasOne(e => e.Campaign)
                 .WithMany(c => c.Performance)
                 .HasForeignKey(e => e.CampaignId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         // CouponUsage configuration
         builder.Entity<CouponUsage>(entity =>
         {
@@ -948,23 +957,23 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.DiscountAmount).HasPrecision(18, 2);
             entity.Property(e => e.UsedAt).IsRequired();
             entity.Property(e => e.Notes).HasMaxLength(500);
-            
+
             entity.HasOne(e => e.Coupon)
                 .WithMany()
                 .HasForeignKey(e => e.CouponId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             entity.HasOne(e => e.Customer)
                 .WithMany()
                 .HasForeignKey(e => e.CustomerId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             entity.HasOne(e => e.Appointment)
                 .WithMany()
                 .HasForeignKey(e => e.AppointmentId)
                 .OnDelete(DeleteBehavior.Cascade);
         });
-        
+
         // Referrals configuration - Foreign key constraint hatasını önlemek için
         builder.Entity<Referral>(entity =>
         {
@@ -974,21 +983,156 @@ public class ApplicationDbContext : IdentityDbContext
             entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
             entity.Property(e => e.ReferralCode).HasMaxLength(50);
             entity.Property(e => e.Notes).HasMaxLength(500);
-            
+
             entity.HasOne(e => e.ReferralProgram)
                 .WithMany(rp => rp.Referrals)
                 .HasForeignKey(e => e.ReferralProgramId)
                 .OnDelete(DeleteBehavior.Cascade);
-                
+
             entity.HasOne(e => e.ReferrerCustomer)
                 .WithMany()
                 .HasForeignKey(e => e.ReferrerCustomerId)
                 .OnDelete(DeleteBehavior.NoAction); // CASCADE yerine NO ACTION
-                
+
             entity.HasOne(e => e.RefereeCustomer)
                 .WithMany()
                 .HasForeignKey(e => e.RefereeCustomerId)
                 .OnDelete(DeleteBehavior.NoAction); // CASCADE yerine NO ACTION
+        });
+
+        // WhatsApp Template Messages Configuration
+        builder.Entity<WhatsAppTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Category).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Content).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.Language).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            
+            // Indexes
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.HasIndex(e => e.Category);
+            entity.HasIndex(e => e.Status);
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        builder.Entity<WhatsAppTemplateParameter>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TemplateId).IsRequired();
+            entity.Property(e => e.ParameterName).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.ParameterType).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Example).HasMaxLength(100);
+            entity.Property(e => e.IsRequired).IsRequired();
+            entity.Property(e => e.Order).IsRequired();
+            
+            // Foreign key
+            entity.HasOne(e => e.Template)
+                .WithMany(t => t.Parameters)
+                .HasForeignKey(e => e.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+        });
+
+        builder.Entity<WhatsAppTemplateUsage>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.TemplateId).IsRequired();
+            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Status).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.SentAt).IsRequired();
+            
+            // Foreign key
+            entity.HasOne(e => e.Template)
+                .WithMany(t => t.Usages)
+                .HasForeignKey(e => e.TemplateId)
+                .OnDelete(DeleteBehavior.Cascade);
+                
+            // Indexes
+            entity.HasIndex(e => e.TemplateId);
+            entity.HasIndex(e => e.PhoneNumber);
+            entity.HasIndex(e => e.SentAt);
+        });
+
+        // MessageBlacklist configuration
+        builder.Entity<MessageBlacklist>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CustomerName).HasMaxLength(100);
+            entity.Property(e => e.Reason).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            
+            // Indexes
+            entity.HasIndex(e => e.PhoneNumber);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.CreatedAt);
+        });
+
+        // MessageReport configuration
+        builder.Entity<MessageReport>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.MessageCampaignId).IsRequired();
+            entity.Property(e => e.PhoneNumber).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.MessageType).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.DeliveryStatus).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.MessageContent).HasMaxLength(1000);
+            entity.Property(e => e.Cost).HasPrecision(18, 2);
+            entity.Property(e => e.ErrorMessage).HasMaxLength(500);
+            entity.Property(e => e.SentAt).IsRequired();
+            
+            // Foreign key
+            entity.HasOne(e => e.MessageCampaign)
+                .WithMany()
+                .HasForeignKey(e => e.MessageCampaignId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            // Indexes
+            entity.HasIndex(e => e.MessageCampaignId);
+            entity.HasIndex(e => e.PhoneNumber);
+            entity.HasIndex(e => e.MessageType);
+            entity.HasIndex(e => e.DeliveryStatus);
+            entity.HasIndex(e => e.SentAt);
+        });
+
+        // MessageCredit configuration
+        builder.Entity<MessageCredit>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.CreditAmount).IsRequired();
+            entity.Property(e => e.CostPerCredit).HasPrecision(18, 2);
+            entity.Property(e => e.LastUpdated).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            
+            // Indexes
+            entity.HasIndex(e => e.Type).IsUnique();
+            entity.HasIndex(e => e.LastUpdated);
+        });
+
+        // MessageTemplate configuration
+        builder.Entity<MessageTemplate>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.Type).IsRequired().HasMaxLength(20);
+            entity.Property(e => e.Content).IsRequired().HasMaxLength(1000);
+            entity.Property(e => e.Description).HasMaxLength(500);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            
+            // Indexes
+            entity.HasIndex(e => e.Name);
+            entity.HasIndex(e => e.Type);
+            entity.HasIndex(e => e.IsActive);
+            entity.HasIndex(e => e.CreatedAt);
         });
     }
 }

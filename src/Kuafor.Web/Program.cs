@@ -54,7 +54,12 @@ builder.Services.AddScoped<IFinancialAnalyticsService, FinancialAnalyticsService
 builder.Services.AddScoped<IMarketingService, MarketingService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
 builder.Services.AddScoped<ISmsService, SmsService>();
+builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
+builder.Services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();
+builder.Services.AddScoped<IWhatsAppMediaService, WhatsAppMediaService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
+builder.Services.AddScoped<IMessagingService, MessagingService>();
+
 
 // ÖNEMLİ: Yarış durumunu engellemek için bu servis şimdilik kapalı kalacak.
 // builder.Services.AddHostedService<AppointmentReminderService>();
