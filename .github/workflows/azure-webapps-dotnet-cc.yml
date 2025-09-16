@@ -1,13 +1,13 @@
 name: Build and deploy ASP.Net Core app to Azure Web App with migrations
 
 env:
-  AZURE_WEBAPP_NAME: SeaSoftKuaforRandevuWeb     # Azure Web App adınız
-  AZURE_WEBAPP_PACKAGE_PATH: './src/Kuafor.Web'   # web projenizin yolu
-  DOTNET_VERSION: '8.0.x'                        # projenizin .NET versiyonu
+  AZURE_WEBAPP_NAME: SeaSoftKuaforRandevuWeb
+  AZURE_WEBAPP_PACKAGE_PATH: './src/Kuafor.Web'
+  DOTNET_VERSION: '8.0.x'
 
 on:
   push:
-    branches: [ "main" ]   # main branch'e push olduğunda tetiklenir
+    branches: [ "main" ]
   workflow_dispatch:
 
 permissions:
@@ -24,6 +24,9 @@ jobs:
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Install EF Core tools
+        run: dotnet tool install --global dotnet-ef
 
       - name: Cache dependencies
         uses: actions/cache@v3
@@ -68,6 +71,9 @@ jobs:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
+
+      - name: Install EF Core tools for migration
+        run: dotnet tool install --global dotnet-ef
 
       - name: Run EF Core migrations
         run: dotnet ef database update --project ./src/Kuafor.Web
