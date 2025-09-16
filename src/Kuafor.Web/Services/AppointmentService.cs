@@ -12,16 +12,19 @@ public class AppointmentService : IAppointmentService
     private readonly IWorkingHoursService _workingHoursService;
     private readonly ISmsService _smsService;
     private readonly ILogger<AppointmentService> _logger;
+    private readonly IWhatsAppService _whatsAppService;
     
     public AppointmentService(
-        ApplicationDbContext context, 
+        ApplicationDbContext context,
         IWorkingHoursService workingHoursService,
         ISmsService smsService,
+        IWhatsAppService whatsAppService,
         ILogger<AppointmentService> logger)
     {
         _context = context;
         _workingHoursService = workingHoursService;
         _smsService = smsService;
+        _whatsAppService = whatsAppService;
         _logger = logger;
     }
     
@@ -57,7 +60,7 @@ public class AppointmentService : IAppointmentService
             _context.Appointments.Add(appointment);
             await _context.SaveChangesAsync();
             
-            // SMS gönder
+            // SMS ve WhatsApp'dan gönder
             try
             {
                 await _smsService.SendAppointmentConfirmationAsync(appointment);
@@ -67,7 +70,16 @@ public class AppointmentService : IAppointmentService
             {
                 _logger.LogError(ex, "SMS gönderilirken hata oluştu - Randevu ID: {AppointmentId}", appointment.Id);
             }
-            
+
+            try
+            {
+                   await _whatsAppService.SendAppointmentConfirmationAsync(appointment);
+                _logger.LogInformation("WhatsApp mesajı gönderildi - Randevu ID: {AppointmentId}", appointment.Id);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp mesajı gönderilirken hata oluştu - Randevu ID: {AppointmentId}", appointment.Id);
+            }
             return appointment;
         }
         catch (Exception ex)

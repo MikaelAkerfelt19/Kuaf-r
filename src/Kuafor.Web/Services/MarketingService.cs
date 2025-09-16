@@ -8,10 +8,23 @@ namespace Kuafor.Web.Services;
 public class MarketingService : IMarketingService
 {
     private readonly ApplicationDbContext _context;
+    private readonly ISmsService _smsService;
+    private readonly IWhatsAppService _whatsAppService;
+    private readonly IEmailService _emailService;
+    private readonly ILogger<MarketingService> _logger;
 
-    public MarketingService(ApplicationDbContext context)
+    public MarketingService(
+        ApplicationDbContext context,
+        ISmsService smsService,
+        IWhatsAppService whatsAppService,
+        IEmailService emailService,
+        ILogger<MarketingService> logger)
     {
         _context = context;
+        _smsService = smsService;
+        _whatsAppService = whatsAppService;
+        _emailService = emailService;
+        _logger = logger;
     }
 
     public async Task<Campaign> CreateCampaignAsync(Campaign campaign)
@@ -224,20 +237,27 @@ public class MarketingService : IMarketingService
         return true;
     }
 
-    private Task SendMessageToCustomerAsync(Customer customer, CampaignMessage message)
+    private async Task SendMessageToCustomerAsync(Customer customer, CampaignMessage message)
     {
-        // Burada gerçek mesaj gönderme işlemi yapılacak
-        // EmailService, SMSService vb. kullanılabilir
-        
-        // Şimdilik sadece log tutuyoruz
-        Console.WriteLine($"Sending {message.MessageType} to {customer.Name} ({customer.Email}): {message.Subject}");
-        
-        // Gerçek implementasyonda:
-        // - Email için EmailService kullanılacak
-        // - SMS için SMSService kullanılacak
-        // - Push notification için NotificationService kullanılacak
-        
-        return Task.CompletedTask;
+        try
+        {
+            switch (message.MessageType.ToLower())
+            {
+                case "whatsapp":
+                    await _whatsAppService.SendPromotionalMessageAsync(customer.PhoneNumber ?? customer.Phone ?? "", message.Content ?? message.Body);
+                    break;
+                case "sms":
+                    await _smsService.SendPromotionalMessageAsync(customer.PhoneNumber ?? customer.Phone ?? "", message.Content ?? message.Body);
+                    break;
+                case "email":
+                    await _emailService.SendEmailAsync(customer.Email ?? "", message.Subject, message.Content ?? message.Body);
+                    break;
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Mesaj gönderilirken hata oluştu: {CustomerId}, {MessageType}", customer.Id, message.MessageType);
+        }
     }
 
     public async Task<List<Campaign>> GetCampaignsByTypeAsync(string campaignType)
