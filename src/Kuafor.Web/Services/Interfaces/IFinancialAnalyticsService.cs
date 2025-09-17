@@ -1,4 +1,5 @@
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 
 namespace Kuafor.Web.Services.Interfaces;
 
@@ -31,13 +32,16 @@ public interface IFinancialAnalyticsService
     // Finansal raporlar
     Task<List<FinancialReport>> GetFinancialReportsAsync(string reportType, DateTime startDate, DateTime endDate);
     Task<FinancialReport> CreateFinancialReportAsync(FinancialReport report);
-    Task<FinancialReport> GenerateProfitLossReportAsync(DateTime startDate, DateTime endDate);
-    Task<FinancialReport> GenerateCashFlowReportAsync(DateTime startDate, DateTime endDate);
-    Task<FinancialReport> GenerateBudgetReportAsync(int budgetId);
+    Task<AnalyticsFinancialReport> GenerateProfitLossReportAsync(DateTime startDate, DateTime endDate);
+    Task<AnalyticsFinancialReport> GenerateCashFlowReportAsync(DateTime startDate, DateTime endDate);
+    Task<AnalyticsFinancialReport> GenerateBudgetReportAsync(int budgetId);
     
     // Finansal kategoriler
     Task<List<FinancialCategory>> GetFinancialCategoriesAsync(string type);
     Task<FinancialCategory> CreateFinancialCategoryAsync(FinancialCategory category);
     Task<FinancialCategory> UpdateFinancialCategoryAsync(FinancialCategory category);
     Task<bool> DeleteFinancialCategoryAsync(int categoryId);
+    
+    // Export için genel finansal rapor
+    Task<FinancialReport> GenerateFinancialReportAsync(DateTime startDate, DateTime endDate);
 }

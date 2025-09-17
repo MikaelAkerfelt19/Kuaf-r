@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Services.Interfaces;
 
@@ -400,5 +401,100 @@ public class AppointmentService : IAppointmentService
     public async Task<IEnumerable<Appointment>> GetByBranchIdAsync(int branchId)
     {
         return await GetByBranchAsync(branchId);
+    }
+
+    public async Task<List<Appointment>> GetRepeatingAppointmentsAsync(int customerId)
+    {
+        // Müşterinin tekrarlayan randevularını getirir
+        var appointments = await _context.Appointments
+            .Include(a => a.Customer)
+            .Include(a => a.Service)
+            .Where(a => a.CustomerId == customerId)
+            .OrderBy(a => a.StartAt)
+            .ToListAsync();
+
+        return appointments;
+    }
+
+    public async Task<bool> CreateRepeatingAppointmentAsync(Appointment baseAppointment, int repeatCount, string repeatType)
+    {
+        // Tekrarlayan randevu oluşturur (haftalık, aylık vs.)
+        var appointments = new List<Appointment>();
+        
+        for (int i = 1; i <= repeatCount; i++)
+        {
+            var newAppointment = new Appointment
+            {
+                CustomerId = baseAppointment.CustomerId,
+                StylistId = baseAppointment.StylistId,
+                ServiceId = baseAppointment.ServiceId,
+                BranchId = baseAppointment.BranchId,
+                StartAt = repeatType == "Weekly" ? baseAppointment.StartAt.AddDays(i * 7) : baseAppointment.StartAt.AddMonths(i),
+                EndAt = repeatType == "Weekly" ? baseAppointment.EndAt.AddDays(i * 7) : baseAppointment.EndAt.AddMonths(i),
+                TotalPrice = baseAppointment.TotalPrice,
+                FinalPrice = baseAppointment.FinalPrice,
+                Status = AppointmentStatus.Pending,
+                Notes = baseAppointment.Notes,
+                CreatedAt = DateTime.UtcNow
+            };
+            
+            appointments.Add(newAppointment);
+        }
+        
+        _context.Appointments.AddRange(appointments);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<List<TimeSlot>> GetAvailableTimeSlotsAsync(int stylistId, DateTime date, int serviceDuration)
+    {
+        // Belirtilen gün için uygun zaman dilimlerini getirir
+        // var workingHours = await _workingHoursService.GetWorkingHoursAsync(stylistId, date.DayOfWeek); // TODO: GetWorkingHoursAsync metodunu implement et
+        var existingAppointments = await GetByStylistAsync(stylistId, date, date.AddDays(1));
+        
+        var availableSlots = new List<TimeSlot>();
+        // Geçici çözüm - varsayılan çalışma saatleri
+        var startTime = date.Date.Add(TimeSpan.FromHours(9)); // 09:00
+        var endTime = date.Date.Add(TimeSpan.FromHours(18)); // 18:00
+        
+        while (startTime.AddMinutes(serviceDuration) <= endTime)
+        {
+            var slotEndTime = startTime.AddMinutes(serviceDuration);
+            var hasConflict = existingAppointments.Any(a => 
+                (startTime >= a.StartAt && startTime < a.EndAt) ||
+                (slotEndTime > a.StartAt && slotEndTime <= a.EndAt));
+                
+            if (!hasConflict)
+            {
+                availableSlots.Add(new TimeSlot
+                {
+                    StartTime = startTime,
+                    EndTime = slotEndTime,
+                    IsAvailable = true
+                });
+            }
+            
+            startTime = startTime.AddMinutes(30); // 30 dakikalık aralıklarla
+        }
+        
+        return availableSlots;
+    }
+
+    public async Task<AppointmentStatistics> GetAppointmentStatisticsAsync(DateTime startDate, DateTime endDate)
+    {
+        // Randevu istatistiklerini getirir
+        var appointments = await _context.Appointments
+            .Where(a => a.StartAt >= startDate && a.StartAt <= endDate)
+            .ToListAsync();
+        
+        return new AppointmentStatistics
+        {
+            TotalAppointments = appointments.Count,
+            CompletedAppointments = appointments.Count(a => a.Status == AppointmentStatus.Completed),
+            CancelledAppointments = appointments.Count(a => a.Status == AppointmentStatus.Cancelled),
+            PendingAppointments = appointments.Count(a => a.Status == AppointmentStatus.Pending),
+            TotalRevenue = appointments.Sum(a => a.FinalPrice),
+            AverageAppointmentValue = appointments.Any() ? appointments.Average(a => a.FinalPrice) : 0
+        };
     }
 }

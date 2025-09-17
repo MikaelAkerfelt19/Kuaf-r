@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Services.Interfaces;
 using System.Text.Json;
@@ -174,7 +175,7 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
         return report;
     }
 
-    public async Task<FinancialReport> GenerateProfitLossReportAsync(DateTime startDate, DateTime endDate)
+    public async Task<AnalyticsFinancialReport> GenerateProfitLossReportAsync(DateTime startDate, DateTime endDate)
     {
         // Gelir hesaplama
         var revenue = await _context.Appointments
@@ -212,10 +213,13 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
             CreatedBy = "System"
         };
 
-        return await CreateFinancialReportAsync(report);
+        await CreateFinancialReportAsync(report);
+        
+        // AnalyticsFinancialReport'a dönüştür ve döndür
+        return JsonSerializer.Deserialize<AnalyticsFinancialReport>(report.Data) ?? new AnalyticsFinancialReport();
     }
 
-    public async Task<FinancialReport> GenerateCashFlowReportAsync(DateTime startDate, DateTime endDate)
+    public async Task<AnalyticsFinancialReport> GenerateCashFlowReportAsync(DateTime startDate, DateTime endDate)
     {
         var cashFlows = await GetCashFlowRangeAsync(startDate, endDate);
         
@@ -254,10 +258,13 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
             CreatedBy = "System"
         };
 
-        return await CreateFinancialReportAsync(report);
+        await CreateFinancialReportAsync(report);
+        
+        // AnalyticsFinancialReport'a dönüştür ve döndür
+        return JsonSerializer.Deserialize<AnalyticsFinancialReport>(report.Data) ?? new AnalyticsFinancialReport();
     }
 
-    public async Task<FinancialReport> GenerateBudgetReportAsync(int budgetId)
+    public async Task<AnalyticsFinancialReport> GenerateBudgetReportAsync(int budgetId)
     {
         var budget = await _context.Budgets
             .Include(b => b.BudgetItems)
@@ -318,7 +325,10 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
             CreatedBy = "System"
         };
 
-        return await CreateFinancialReportAsync(report);
+        await CreateFinancialReportAsync(report);
+        
+        // AnalyticsFinancialReport'a dönüştür ve döndür  
+        return JsonSerializer.Deserialize<AnalyticsFinancialReport>(report.Data) ?? new AnalyticsFinancialReport();
     }
 
     public async Task<List<FinancialCategory>> GetFinancialCategoriesAsync(string type)
@@ -356,5 +366,101 @@ public class FinancialAnalyticsService : IFinancialAnalyticsService
         category.UpdatedAt = DateTime.UtcNow;
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<FinancialReport> GenerateFinancialReportAsync(DateTime startDate, DateTime endDate)
+    {
+        // Belirtilen tarih aralığında finansal rapor oluşturur
+        var appointments = await _context.Appointments
+            .Where(a => a.StartAt >= startDate && a.StartAt <= endDate)
+            .ToListAsync();
+
+        var transactions = await _context.FinancialTransactions
+            .Where(t => t.TransactionDate >= startDate && t.TransactionDate <= endDate)
+            .ToListAsync();
+
+        var analyticsReport = new AnalyticsFinancialReport
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            TotalRevenue = appointments.Sum(a => a.FinalPrice),
+            TotalExpenses = transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount),
+            NetProfit = appointments.Sum(a => a.FinalPrice) - transactions.Where(t => t.Type == "Expense").Sum(t => t.Amount),
+            TotalAppointments = appointments.Count,
+            AverageTicketValue = appointments.Any() ? appointments.Average(a => a.FinalPrice) : 0
+        };
+        
+        // FinancialReport entity'sine dönüştür
+        return new FinancialReport
+        {
+            Name = "Genel Finansal Rapor",
+            Description = $"{startDate:yyyy-MM-dd} - {endDate:yyyy-MM-dd} arası finansal rapor",
+            ReportType = "General",
+            ReportDate = DateTime.UtcNow,
+            PeriodStart = startDate,
+            PeriodEnd = endDate,
+            Data = JsonSerializer.Serialize(analyticsReport),
+            Format = "JSON",
+            CreatedBy = "System"
+        };
+    }
+
+    public async Task<List<DailySales>> GetDailySalesAsync(DateTime startDate, DateTime endDate)
+    {
+        // Günlük satış verilerini getirir
+        var dailySales = await _context.Appointments
+            .Where(a => a.StartAt >= startDate && a.StartAt <= endDate)
+            .GroupBy(a => a.StartAt.Date)
+            .Select(g => new DailySales
+            {
+                Date = g.Key,
+                TotalSales = g.Sum(a => a.FinalPrice),
+                AppointmentCount = g.Count()
+            })
+            .OrderBy(d => d.Date)
+            .ToListAsync();
+
+        return dailySales;
+    }
+
+    public async Task<List<ServicePerformance>> GetServicePerformanceAsync(DateTime startDate, DateTime endDate)
+    {
+        // Hizmet performans verilerini getirir
+        var servicePerformance = await _context.Appointments
+            .Include(a => a.Service)
+            .Where(a => a.StartAt >= startDate && a.StartAt <= endDate)
+            .GroupBy(a => a.Service)
+            .Select(g => new ServicePerformance
+            {
+                ServiceName = g.Key.Name,
+                TotalRevenue = g.Sum(a => a.FinalPrice),
+                AppointmentCount = g.Count(),
+                AveragePrice = g.Average(a => a.FinalPrice)
+            })
+            .OrderByDescending(s => s.TotalRevenue)
+            .ToListAsync();
+
+        return servicePerformance;
+    }
+
+    public async Task<CashFlowReport> GetCashFlowAsync(DateTime startDate, DateTime endDate)
+    {
+        // Nakit akış raporunu getirir
+        var income = await _context.FinancialTransactions
+            .Where(t => t.Type == "Income" && t.TransactionDate >= startDate && t.TransactionDate <= endDate)
+            .SumAsync(t => t.Amount);
+
+        var expenses = await _context.FinancialTransactions
+            .Where(t => t.Type == "Expense" && t.TransactionDate >= startDate && t.TransactionDate <= endDate)
+            .SumAsync(t => t.Amount);
+
+        return new CashFlowReport
+        {
+            StartDate = startDate,
+            EndDate = endDate,
+            TotalIncome = income,
+            TotalExpenses = expenses,
+            NetCashFlow = income - expenses
+        };
     }
 }

@@ -1,4 +1,5 @@
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 
 namespace Kuafor.Web.Services.Interfaces;
 
@@ -13,6 +14,7 @@ public interface ICustomerAnalyticsService
     Task<List<CustomerSegment>> GetCustomerSegmentsAsync();
     Task<CustomerSegment> CreateSegmentAsync(CustomerSegment segment);
     Task<CustomerSegment> UpdateSegmentAsync(CustomerSegment segment);
+    Task<List<AnalyticsCustomerSegment>> GetCustomerSegmentationAsync();
     Task<bool> DeleteSegmentAsync(int segmentId);
     
     // Müşteri analizi

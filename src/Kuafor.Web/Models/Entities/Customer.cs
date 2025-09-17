@@ -39,8 +39,12 @@ public class Customer
     [Required]
     public string UserId { get; set; } = string.Empty;
     
-    // Computed property for full name
+    // Computed properties
     public string Name => $"{FirstName} {LastName}";
+    public string FullName => $"{FirstName} {LastName}";
+    
+    [StringLength(20)]
+    public string Status { get; set; } = "Active"; // Active, Inactive, Suspended
     
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 }

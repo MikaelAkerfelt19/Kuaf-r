@@ -40,6 +40,11 @@ public class MessageCampaign
     public DateTime? SentAt { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     
+    // İstatistik alanları
+    public int SentCount { get; set; } = 0;
+    public int DeliveredCount { get; set; } = 0;
+    public int FailedCount { get; set; } = 0;
+    
     public virtual MessageGroup? MessageGroup { get; set; }
     public virtual ICollection<MessageRecipient> Recipients { get; set; } = new List<MessageRecipient>();
 }

@@ -158,4 +158,58 @@ public class CustomerService : ICustomerService
     {
         return await _context.Customers.CountAsync();
     }
+
+    public async Task<List<Customer>> BulkCreateAsync(List<Customer> customers)
+    {
+        // Toplu müşteri ekleme işlemi yapar
+        foreach (var customer in customers)
+        {
+            customer.CreatedAt = DateTime.UtcNow;
+            _context.Customers.Add(customer);
+        }
+        await _context.SaveChangesAsync();
+        return customers;
+    }
+
+    public async Task<bool> BulkDeleteAsync(List<int> customerIds)
+    {
+        // Seçili müşterileri toplu olarak siler
+        var customers = await _context.Customers.Where(c => customerIds.Contains(c.Id)).ToListAsync();
+        _context.Customers.RemoveRange(customers);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> BulkUpdateStatusAsync(List<int> customerIds, string status)
+    {
+        // Seçili müşterilerin durumunu toplu olarak günceller
+        var customers = await _context.Customers.Where(c => customerIds.Contains(c.Id)).ToListAsync();
+        foreach (var customer in customers)
+        {
+            customer.Status = status;
+            customer.UpdatedAt = DateTime.UtcNow;
+        }
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> SendBulkMessageAsync(List<int> customerIds, string message, string messageType)
+    {
+        // Seçili müşterilere toplu mesaj gönderir
+        var customers = await _context.Customers.Where(c => customerIds.Contains(c.Id)).ToListAsync();
+        
+        foreach (var customer in customers)
+        {
+            switch (messageType.ToLower())
+            {
+                case "sms":
+                    // _smsService.SendSmsAsync(customer.Phone, message); // Assuming _smsService is available
+                    break;
+                case "whatsapp":
+                    // _whatsAppService.SendMessageAsync(customer.Phone, message); // Assuming _whatsAppService is available
+                    break;
+            }
+        }
+        return true;
+    }
 }

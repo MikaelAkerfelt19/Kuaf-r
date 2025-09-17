@@ -1,4 +1,5 @@
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 
 namespace Kuafor.Web.Services.Interfaces
 {
@@ -32,9 +33,10 @@ namespace Kuafor.Web.Services.Interfaces
         Task<bool> IsBlacklistedAsync(string phoneNumber);
 
         // Raporlama
-        Task<List<MessageReport>> GetMessageReportsAsync(DateTime? from = null, DateTime? to = null, string? messageType = null);
-        Task<MessageReport> CreateMessageReportAsync(int campaignId, string phoneNumber, string messageType, string deliveryStatus, string messageContent, decimal? cost = null);
+        Task<List<Kuafor.Web.Models.Entities.MessageReport>> GetMessageReportsAsync(DateTime? from = null, DateTime? to = null, string? messageType = null);
+        Task<Kuafor.Web.Models.Entities.MessageReport> CreateMessageReportAsync(int campaignId, string phoneNumber, string messageType, string deliveryStatus, string messageContent, decimal? cost = null);
         Task<bool> UpdateMessageReportAsync(int reportId, string deliveryStatus, DateTime? deliveredAt = null, DateTime? readAt = null, string? errorMessage = null);
+        Task<Kuafor.Web.Models.Entities.Analytics.MessageReport> GetMessageStatisticsAsync(DateTime startDate, DateTime endDate);
 
         // Kredi yönetimi
         Task<MessageCredit> GetCreditAsync(string type);

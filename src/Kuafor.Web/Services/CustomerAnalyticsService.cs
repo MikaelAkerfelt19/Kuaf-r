@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 using Kuafor.Web.Services.Interfaces;
 
 namespace Kuafor.Web.Services;
@@ -440,6 +441,177 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
                 LastVisit = ca.LastActivityDate ?? DateTime.MinValue
             })
             .ToList();
+    }
+
+    public async Task<List<AnalyticsCustomerSegment>> GetCustomerSegmentationAsync()
+    {
+        // Müşteri segmentlerini getirir (VIP, Sadık, Risk, Yeni vs.)
+        var customers = await _context.Customers.Include(c => c.Appointments).ToListAsync();
+        var segments = new List<AnalyticsCustomerSegment>();
+        
+        foreach (var customer in customers)
+        {
+            var analytics = await CalculateRFMAsync(customer.Id);
+            segments.Add(new AnalyticsCustomerSegment
+            {
+                CustomerId = customer.Id,
+                CustomerName = customer.FullName,
+                Segment = analytics.Segment,
+                LifecycleStage = analytics.LifecycleStage,
+                TotalSpent = analytics.TotalSpent,
+                LastVisitDate = analytics.LastActivityDate,
+                RiskScore = analytics.ChurnRisk
+            });
+        }
+        
+        return segments.OrderByDescending(s => s.TotalSpent).ToList();
+    }
+
+    public async Task<List<Customer>> GetCustomersAtRiskAsync()
+    {
+        // Risk altındaki müşterileri getirir
+        var riskCustomers = await _context.CustomerAnalytics
+            .Include(ca => ca.Customer)
+            .Where(ca => ca.ChurnRisk > 70 || ca.DaysSinceLastVisit > 60)
+            .Select(ca => ca.Customer)
+            .ToListAsync();
+        
+        return riskCustomers;
+    }
+
+    public async Task<CustomerLifetimeValue> CalculateCustomerLTVAsync(int customerId)
+    {
+        // Müşteri yaşam boyu değerini hesaplar
+        var appointments = await _context.Appointments
+            .Where(a => a.CustomerId == customerId)
+            .ToListAsync();
+        
+        if (!appointments.Any()) return new CustomerLifetimeValue { CustomerId = customerId, LTV = 0 };
+        
+        var totalSpent = appointments.Sum(a => a.FinalPrice);
+        var avgOrderValue = appointments.Average(a => a.FinalPrice);
+        var appointmentFrequency = CalculateAppointmentFrequency(appointments);
+        var customerLifespan = CalculateCustomerLifespan(appointments);
+        
+        var ltv = (double)avgOrderValue * appointmentFrequency * customerLifespan;
+        
+        return new CustomerLifetimeValue
+        {
+            CustomerId = customerId,
+            LTV = (decimal)ltv,
+            AverageOrderValue = avgOrderValue,
+            AppointmentFrequency = appointmentFrequency,
+            CustomerLifespan = customerLifespan
+        };
+    }
+
+    public async Task<List<CustomerBehaviorPattern>> AnalyzeCustomerBehaviorAsync()
+    {
+        // Müşteri davranış kalıplarını analiz eder
+        var patterns = new List<CustomerBehaviorPattern>();
+        var customers = await _context.Customers.Include(c => c.Appointments).ToListAsync();
+        
+        foreach (var customer in customers)
+        {
+            if (!customer.Appointments.Any()) continue;
+            
+            var pattern = new CustomerBehaviorPattern
+            {
+                CustomerId = customer.Id,
+                PreferredDayOfWeek = GetPreferredDayOfWeek(customer.Appointments.ToList()),
+                PreferredTimeSlot = GetPreferredTimeSlot(customer.Appointments.ToList()),
+                AverageAppointmentInterval = CalculateAverageInterval(customer.Appointments.ToList()),
+                SeasonalTrends = AnalyzeSeasonalTrends(customer.Appointments.ToList())
+            };
+            
+            patterns.Add(pattern);
+        }
+        
+        return patterns;
+    }
+
+    // Yardımcı metodlar
+    private double CalculateAppointmentFrequency(List<Appointment> appointments)
+    {
+        // Randevu sıklığını hesaplar (yıllık)
+        if (appointments.Count < 2) return 1;
+        
+        var firstAppointment = appointments.OrderBy(a => a.StartAt).First();
+        var lastAppointment = appointments.OrderByDescending(a => a.StartAt).First();
+        var daysDiff = (lastAppointment.StartAt - firstAppointment.StartAt).TotalDays;
+        
+        if (daysDiff == 0) return appointments.Count;
+        
+        return (appointments.Count / daysDiff) * 365;
+    }
+
+    private double CalculateCustomerLifespan(List<Appointment> appointments)
+    {
+        // Müşteri yaşam süresini hesaplar (yıl)
+        if (appointments.Count < 2) return 1;
+        
+        var firstAppointment = appointments.OrderBy(a => a.StartAt).First();
+        var lastAppointment = appointments.OrderByDescending(a => a.StartAt).First();
+        var daysDiff = (lastAppointment.StartAt - firstAppointment.StartAt).TotalDays;
+        
+        return Math.Max(daysDiff / 365.0, 0.1); // Minimum 0.1 yıl
+    }
+
+    private double CalculateAverageInterval(List<Appointment> appointments)
+    {
+        // Ortalama randevu aralığını hesaplar
+        if (appointments.Count < 2) return 0;
+        
+        var sortedAppointments = appointments.OrderBy(a => a.StartAt).ToList();
+        var intervals = new List<double>();
+        
+        for (int i = 1; i < sortedAppointments.Count; i++)
+        {
+            var interval = (sortedAppointments[i].StartAt - sortedAppointments[i - 1].StartAt).TotalDays;
+            intervals.Add(interval);
+        }
+        
+        return intervals.Average();
+    }
+
+    private string GetPreferredDayOfWeek(List<Appointment> appointments)
+    {
+        // En çok tercih edilen günü bulur
+        var dayGroups = appointments.GroupBy(a => a.StartAt.DayOfWeek);
+        var preferredDay = dayGroups.OrderByDescending(g => g.Count()).FirstOrDefault();
+        
+        return preferredDay?.Key.ToString() ?? "Bilinmiyor";
+    }
+
+    private string GetPreferredTimeSlot(List<Appointment> appointments)
+    {
+        // En çok tercih edilen zaman dilimini bulur
+        var timeSlots = appointments.Select(a => 
+        {
+            var hour = a.StartAt.Hour;
+            if (hour < 12) return "Sabah";
+            if (hour < 17) return "Öğle";
+            return "Akşam";
+        }).GroupBy(x => x);
+        
+        var preferredSlot = timeSlots.OrderByDescending(g => g.Count()).FirstOrDefault();
+        return preferredSlot?.Key ?? "Bilinmiyor";
+    }
+
+    private string AnalyzeSeasonalTrends(List<Appointment> appointments)
+    {
+        // Mevsimsel trendleri analiz eder
+        var seasonGroups = appointments.GroupBy(a => 
+        {
+            var month = a.StartAt.Month;
+            if (month >= 3 && month <= 5) return "İlkbahar";
+            if (month >= 6 && month <= 8) return "Yaz";
+            if (month >= 9 && month <= 11) return "Sonbahar";
+            return "Kış";
+        });
+        
+        var preferredSeason = seasonGroups.OrderByDescending(g => g.Count()).FirstOrDefault();
+        return preferredSeason?.Key ?? "Bilinmiyor";
     }
 }
 
