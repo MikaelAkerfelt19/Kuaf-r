@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Mesajlaşma Yönetimi";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Mesajlaşma Yönetimi</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5>Grup Mesajlaşma</h5>
+                                    <p>Müşteri gruplarına mesaj gönderin</p>
+                                    <a href="@Url.Action("GroupMessaging")" class="btn btn-light">Grup Mesajı Gönder</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5>Toplu Mesajlaşma</h5>
+                                    <p>Seçili müşterilere toplu mesaj</p>
+                                    <a href="@Url.Action("BulkMessaging")" class="btn btn-light">Toplu Mesaj Gönder</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h5>Filtreli Mesajlaşma</h5>
+                                    <p>Kriterlere göre mesaj gönderin</p>
+                                    <a href="@Url.Action("FilteredMessaging")" class="btn btn-light">Filtreli Mesaj</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h5>Mesaj Raporları</h5>
+                                    <p>Gönderilen mesajların raporları</p>
+                                    <a href="@Url.Action("MessageReports")" class="btn btn-light">Raporları Görüntüle</a>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h5>Kara Liste</h5>
+                                    <p>Mesaj gönderilmeyecek numaralar</p>
+                                    <a href="@Url.Action("MessageBlacklist")" class="btn btn-light">Kara Liste Yönet</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

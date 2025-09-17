@@ -1,0 +1,288 @@
+@model Kuafor.Web.Areas.Admin.Models.CashFlowViewModel
+@{
+    ViewData["Title"] = "Nakit Akış Raporu";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Nakit Akış Raporu</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" onclick="exportCashFlow()">
+                            <i class="fas fa-download"></i> Excel'e Aktar
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Date Filter -->
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label>Başlangıç Tarihi</label>
+                                <input name="startDate" type="date" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Bitiş Tarihi</label>
+                                <input name="endDate" type="date" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-3">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-primary d-block">Filtrele</button>
+                            </div>
+                            <div class="col-md-3">
+                                <label>&nbsp;</label>
+                                <button type="button" class="btn btn-success d-block" data-toggle="modal" data-target="#addTransactionModal">
+                                    <i class="fas fa-plus"></i> İşlem Ekle
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h4>₺@Model.TotalIncome.ToString("N2")</h4>
+                                    <p class="mb-0">Toplam Gelir</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h4>₺@Model.TotalExpenses.ToString("N2")</h4>
+                                    <p class="mb-0">Toplam Gider</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-@(Model.NetCashFlow >= 0 ? "primary" : "warning") text-white">
+                                <div class="card-body">
+                                    <h4>₺@Model.NetCashFlow.ToString("N2")</h4>
+                                    <p class="mb-0">Net Nakit Akışı</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h4 id="cashBalance">₺0.00</h4>
+                                    <p class="mb-0">Kasa Bakiyesi</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Cash Flow Chart -->
+                    <div class="row mb-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Günlük Nakit Akışı</h4>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="cashFlowChart" width="400" height="100"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Transaction Details -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h4>Gelirler</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>Açıklama</th>
+                                                    <th>Tutar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="incomeTable">
+                                                <tr>
+                                                    <td>15/12/2024</td>
+                                                    <td>Randevu - Saç Kesimi</td>
+                                                    <td>₺150.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>15/12/2024</td>
+                                                    <td>Randevu - Saç Boyama</td>
+                                                    <td>₺300.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-danger text-white">
+                                    <h4>Giderler</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>Açıklama</th>
+                                                    <th>Tutar</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="expenseTable">
+                                                <tr>
+                                                    <td>15/12/2024</td>
+                                                    <td>Malzeme Alımı</td>
+                                                    <td>₺200.00</td>
+                                                </tr>
+                                                <tr>
+                                                    <td>14/12/2024</td>
+                                                    <td>Elektrik Faturası</td>
+                                                    <td>₺180.00</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Transaction Modal -->
+<div class="modal fade" id="addTransactionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Yeni İşlem Ekle</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form id="transactionForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>İşlem Türü</label>
+                        <select name="type" class="form-control" required>
+                            <option value="Income">Gelir</option>
+                            <option value="Expense">Gider</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <input type="text" name="description" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tutar</label>
+                        <input type="number" name="amount" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ödeme Yöntemi</label>
+                        <select name="paymentMethod" class="form-control" required>
+                            <option value="Cash">Nakit</option>
+                            <option value="CreditCard">Kredi Kartı</option>
+                            <option value="Transfer">Havale/EFT</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tarih</label>
+                        <input type="date" name="transactionDate" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    loadCashFlowChart();
+});
+
+function loadCashFlowChart() {
+    const ctx = document.getElementById('cashFlowChart').getContext('2d');
+    
+    // Sample data - replace with actual API call
+    new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['1 Ara', '2 Ara', '3 Ara', '4 Ara', '5 Ara', '6 Ara', '7 Ara'],
+            datasets: [{
+                label: 'Gelir',
+                data: [1200, 1500, 1800, 1100, 2000, 1700, 1600],
+                borderColor: 'rgb(40, 167, 69)',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                tension: 0.3
+            }, {
+                label: 'Gider',
+                data: [800, 900, 700, 1000, 850, 950, 750],
+                borderColor: 'rgb(220, 53, 69)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₺' + value.toLocaleString('tr-TR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+$('#transactionForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    // API call to save transaction
+    fetch('/api/financial/transaction', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#addTransactionModal').modal('hide');
+            location.reload();
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    });
+});
+
+function exportCashFlow() {
+    const startDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+    const endDate = '@Model.EndDate.ToString("yyyy-MM-dd")';
+    window.open(`/api/v1/export/financial/excel?startDate=${startDate}&endDate=${endDate}`, '_blank');
+}
+</script>

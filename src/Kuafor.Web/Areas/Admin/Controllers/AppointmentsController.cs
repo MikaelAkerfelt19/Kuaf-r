@@ -3,6 +3,7 @@ using Kuafor.Web.Models.Admin.Appointments;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Enums;
+using OfficeOpenXml;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
@@ -318,6 +319,127 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         public async Task<IActionResult> Delete(int id, string? reason = null)
         {
             return await DeleteConfirmed(id, reason);
+        }
+
+        [HttpPost("create-recurring")]
+        public async Task<IActionResult> CreateRecurringAppointment([FromBody] RecurringAppointmentRequest request)
+        {
+            // Tekrarlayan randevu oluşturur
+            try
+            {
+                var baseAppointment = await _appointmentService.GetByIdAsync(request.BaseAppointmentId);
+                if (baseAppointment != null)
+                {
+                    await _appointmentService.CreateRepeatingAppointmentAsync(baseAppointment, request.RepeatCount, request.RepeatType);
+                    return Json(new { success = true, message = "Tekrarlayan randevular oluşturuldu" });
+                }
+                return Json(new { success = false, message = "Temel randevu bulunamadı" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("available-slots")]
+        public async Task<IActionResult> GetAvailableSlots(int stylistId, DateTime date, int serviceDuration = 60)
+        {
+            // Uygun zaman dilimlerini getirir
+            try
+            {
+                var slots = await _appointmentService.GetAvailableTimeSlotsAsync(stylistId, date, serviceDuration);
+                return Json(new { success = true, slots = slots });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("statistics")]
+        public async Task<IActionResult> GetStatistics(DateTime startDate, DateTime endDate)
+        {
+            // Randevu istatistiklerini getirir
+            try
+            {
+                var stats = await _appointmentService.GetAppointmentStatisticsAsync(startDate, endDate);
+                return Json(new { success = true, data = stats });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpGet("export-excel")]
+        public async Task<IActionResult> ExportToExcel(DateTime? startDate, DateTime? endDate)
+        {
+            // Randevuları Excel olarak export eder
+            try
+            {
+                var start = startDate ?? DateTime.Now.AddMonths(-1);
+                var end = endDate ?? DateTime.Now;
+                
+                var appointments = await _appointmentService.GetByDateRangeAsync(start, end);
+                var stream = await GenerateAppointmentsExcel(appointments);
+                
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                           $"randevular_{start:yyyyMMdd}_{end:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Excel export hatası: {ex.Message}";
+                return RedirectToAction("Index");
+            }
+        }
+
+        // Yardımcı metodlar
+        private async Task<MemoryStream> GenerateAppointmentsExcel(IEnumerable<Appointment> appointments)
+        {
+            // Excel dosyası oluşturur ve randevu verilerini yazar
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+            using var package = new OfficeOpenXml.ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Randevular");
+            
+            // Header yazma
+            worksheet.Cells[1, 1].Value = "Tarih";
+            worksheet.Cells[1, 2].Value = "Saat";
+            worksheet.Cells[1, 3].Value = "Müşteri";
+            worksheet.Cells[1, 4].Value = "Hizmet";
+            worksheet.Cells[1, 5].Value = "Kuaför";
+            worksheet.Cells[1, 6].Value = "Durum";
+            worksheet.Cells[1, 7].Value = "Fiyat";
+            worksheet.Cells[1, 8].Value = "Notlar";
+            
+            int row = 2;
+            foreach (var appointment in appointments)
+            {
+                worksheet.Cells[row, 1].Value = appointment.StartAt.ToString("dd/MM/yyyy");
+                worksheet.Cells[row, 2].Value = appointment.StartAt.ToString("HH:mm");
+                worksheet.Cells[row, 3].Value = appointment.Customer?.FullName ?? "";
+                worksheet.Cells[row, 4].Value = appointment.Service?.Name ?? "";
+                worksheet.Cells[row, 5].Value = appointment.Stylist?.Name ?? "";
+                worksheet.Cells[row, 6].Value = appointment.Status.ToString();
+                worksheet.Cells[row, 7].Value = appointment.FinalPrice;
+                worksheet.Cells[row, 8].Value = appointment.Notes ?? "";
+                row++;
+            }
+            
+            // Auto-fit columns
+            worksheet.Cells.AutoFitColumns();
+            
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream);
+            stream.Position = 0;
+            return stream;
+        }
+
+        // Yardımcı model sınıfları
+        public class RecurringAppointmentRequest
+        {
+            public int BaseAppointmentId { get; set; }
+            public int RepeatCount { get; set; }
+            public string RepeatType { get; set; } = "Weekly"; // Weekly, Monthly
         }
     }
 }

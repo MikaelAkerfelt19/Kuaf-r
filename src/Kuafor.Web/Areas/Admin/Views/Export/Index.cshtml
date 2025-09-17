@@ -1,0 +1,331 @@
+@{
+    ViewData["Title"] = "Veri İçe/Dışa Aktarma";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Veri İçe/Dışa Aktarma</h3>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Export Section -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-primary text-white">
+                                    <h4><i class="fas fa-download"></i> Dışa Aktarma</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="export-option mb-3">
+                                        <h5>Müşteri Verileri</h5>
+                                        <p>Tüm müşteri bilgilerini Excel formatında indirin</p>
+                                        <button class="btn btn-success" onclick="exportCustomers()">
+                                            <i class="fas fa-users"></i> Müşterileri İndir
+                                        </button>
+                                    </div>
+
+                                    <div class="export-option mb-3">
+                                        <h5>Randevu Verileri</h5>
+                                        <div class="form-inline mb-2">
+                                            <input type="date" id="appointmentStartDate" class="form-control mr-2" value="@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")">
+                                            <input type="date" id="appointmentEndDate" class="form-control mr-2" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                                        </div>
+                                        <button class="btn btn-info" onclick="exportAppointments()">
+                                            <i class="fas fa-calendar"></i> Randevuları İndir
+                                        </button>
+                                    </div>
+
+                                    <div class="export-option mb-3">
+                                        <h5>Finansal Rapor</h5>
+                                        <div class="form-inline mb-2">
+                                            <input type="date" id="financialStartDate" class="form-control mr-2" value="@DateTime.Now.AddMonths(-1).ToString("yyyy-MM-dd")">
+                                            <input type="date" id="financialEndDate" class="form-control mr-2" value="@DateTime.Now.ToString("yyyy-MM-dd")">
+                                        </div>
+                                        <button class="btn btn-warning" onclick="exportFinancial()">
+                                            <i class="fas fa-chart-line"></i> Finansal Rapor İndir
+                                        </button>
+                                    </div>
+
+                                    <div class="export-option mb-3">
+                                        <h5>Tüm Veriler</h5>
+                                        <p>Sistemdeki tüm verileri tek seferde indirin</p>
+                                        <button class="btn btn-danger" onclick="exportAll()">
+                                            <i class="fas fa-database"></i> Tüm Verileri İndir
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Import Section -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header bg-success text-white">
+                                    <h4><i class="fas fa-upload"></i> İçe Aktarma</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="import-option mb-4">
+                                        <h5>Müşteri Verileri</h5>
+                                        <p>Excel dosyasından müşteri verilerini sisteme aktarın</p>
+                                        <div class="mb-2">
+                                            <button class="btn btn-outline-primary btn-sm" onclick="downloadCustomerTemplate()">
+                                                <i class="fas fa-download"></i> Şablon İndir
+                                            </button>
+                                        </div>
+                                        <form id="customerImportForm" enctype="multipart/form-data">
+                                            <div class="input-group mb-2">
+                                                <input type="file" class="form-control" id="customerFile" accept=".xlsx,.xls" required>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-success" type="submit">
+                                                        <i class="fas fa-upload"></i> Yükle
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="import-option mb-4">
+                                        <h5>Hizmet Verileri</h5>
+                                        <p>Hizmet listesini Excel'den aktarın</p>
+                                        <div class="mb-2">
+                                            <button class="btn btn-outline-primary btn-sm" onclick="downloadServiceTemplate()">
+                                                <i class="fas fa-download"></i> Şablon İndir
+                                            </button>
+                                        </div>
+                                        <form id="serviceImportForm" enctype="multipart/form-data">
+                                            <div class="input-group mb-2">
+                                                <input type="file" class="form-control" id="serviceFile" accept=".xlsx,.xls" required>
+                                                <div class="input-group-append">
+                                                    <button class="btn btn-success" type="submit">
+                                                        <i class="fas fa-upload"></i> Yükle
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+
+                                    <div class="alert alert-warning">
+                                        <h6><i class="fas fa-exclamation-triangle"></i> Önemli Notlar:</h6>
+                                        <ul class="mb-0">
+                                            <li>İçe aktarma işlemi mevcut verilerin üzerine yazabilir</li>
+                                            <li>İşlem öncesi mutlaka yedek alın</li>
+                                            <li>Sadece .xlsx ve .xls formatları desteklenir</li>
+                                            <li>Maksimum dosya boyutu: 10MB</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Import History -->
+                    <div class="row mt-4">
+                        <div class="col-12">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>İşlem Geçmişi</h4>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-striped">
+                                            <thead>
+                                                <tr>
+                                                    <th>Tarih</th>
+                                                    <th>İşlem Türü</th>
+                                                    <th>Veri Türü</th>
+                                                    <th>Kayıt Sayısı</th>
+                                                    <th>Durum</th>
+                                                    <th>İşlemler</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                <tr>
+                                                    <td>15/12/2024 14:30</td>
+                                                    <td><span class="badge badge-success">İçe Aktarma</span></td>
+                                                    <td>Müşteriler</td>
+                                                    <td>125</td>
+                                                    <td><span class="badge badge-success">Başarılı</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-info" onclick="viewImportLog(1)">Log</button>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>14/12/2024 09:15</td>
+                                                    <td><span class="badge badge-primary">Dışa Aktarma</span></td>
+                                                    <td>Randevular</td>
+                                                    <td>89</td>
+                                                    <td><span class="badge badge-success">Başarılı</span></td>
+                                                    <td>
+                                                        <button class="btn btn-sm btn-success" onclick="downloadFile('appointments_14122024.xlsx')">İndir</button>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Progress Modal -->
+<div class="modal fade" id="progressModal" tabindex="-1" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">İşlem Devam Ediyor...</h4>
+            </div>
+            <div class="modal-body text-center">
+                <div class="progress mb-3">
+                    <div class="progress-bar progress-bar-striped progress-bar-animated" 
+                         role="progressbar" style="width: 0%" id="progressBar">
+                    </div>
+                </div>
+                <p id="progressText">İşlem başlatılıyor...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Export Functions
+function exportCustomers() {
+    showProgress('Müşteri verileri hazırlanıyor...');
+    window.location.href = '/api/v1/export/customers/excel';
+    hideProgress();
+}
+
+function exportAppointments() {
+    const startDate = document.getElementById('appointmentStartDate').value;
+    const endDate = document.getElementById('appointmentEndDate').value;
+    
+    showProgress('Randevu verileri hazırlanıyor...');
+    window.location.href = `/api/v1/export/appointments/excel?startDate=${startDate}&endDate=${endDate}`;
+    hideProgress();
+}
+
+function exportFinancial() {
+    const startDate = document.getElementById('financialStartDate').value;
+    const endDate = document.getElementById('financialEndDate').value;
+    
+    showProgress('Finansal rapor hazırlanıyor...');
+    window.location.href = `/api/v1/export/financial/excel?startDate=${startDate}&endDate=${endDate}`;
+    hideProgress();
+}
+
+function exportAll() {
+    if (confirm('Tüm verileri dışa aktarmak uzun sürebilir. Devam etmek istediğinizden emin misiniz?')) {
+        showProgress('Tüm veriler hazırlanıyor...');
+        window.location.href = '/api/v1/export/all/excel';
+        setTimeout(hideProgress, 5000);
+    }
+}
+
+// Import Functions
+$('#customerImportForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('file', document.getElementById('customerFile').files[0]);
+    
+    showProgress('Müşteri verileri içe aktarılıyor...');
+    
+    fetch('/api/v1/export/customers/import', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideProgress();
+        if (data.success || data.message) {
+            alert(`Başarılı! ${data.count || 0} müşteri eklendi.`);
+            location.reload();
+        } else {
+            alert('Hata: ' + (data.message || 'Bilinmeyen hata'));
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Hata: ' + error.message);
+    });
+});
+
+$('#serviceImportForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData();
+    formData.append('file', document.getElementById('serviceFile').files[0]);
+    
+    showProgress('Hizmet verileri içe aktarılıyor...');
+    
+    fetch('/api/v1/export/services/import', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        hideProgress();
+        if (data.success) {
+            alert(`Başarılı! ${data.count} hizmet eklendi.`);
+            location.reload();
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    })
+    .catch(error => {
+        hideProgress();
+        alert('Hata: ' + error.message);
+    });
+});
+
+// Template Downloads
+function downloadCustomerTemplate() {
+    window.location.href = '/api/v1/export/templates/customers';
+}
+
+function downloadServiceTemplate() {
+    window.location.href = '/api/v1/export/templates/services';
+}
+
+// Utility Functions
+function showProgress(text) {
+    document.getElementById('progressText').textContent = text;
+    $('#progressModal').modal('show');
+    
+    // Simulate progress
+    let progress = 0;
+    const interval = setInterval(() => {
+        progress += Math.random() * 30;
+        if (progress > 90) progress = 90;
+        document.getElementById('progressBar').style.width = progress + '%';
+    }, 500);
+    
+    // Store interval for cleanup
+    $('#progressModal').data('interval', interval);
+}
+
+function hideProgress() {
+    const interval = $('#progressModal').data('interval');
+    if (interval) clearInterval(interval);
+    
+    document.getElementById('progressBar').style.width = '100%';
+    setTimeout(() => {
+        $('#progressModal').modal('hide');
+    }, 1000);
+}
+
+function viewImportLog(logId) {
+    alert('İçe aktarma log detayları - ID: ' + logId);
+}
+
+function downloadFile(filename) {
+    window.location.href = '/api/v1/export/download/' + filename;
+}
+</script>

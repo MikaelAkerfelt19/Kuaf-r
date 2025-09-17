@@ -1,0 +1,233 @@
+@model Kuafor.Web.Areas.Admin.Models.FinancialDashboardViewModel
+@{
+    ViewData["Title"] = "Finansal Yönetim";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="row mb-3">
+        <div class="col-12">
+            <h1 class="h3 mb-0 text-gray-800">Finansal Yönetim Dashboard</h1>
+            <p class="mb-0">İşletmenizin finansal durumunu takip edin ve analiz edin</p>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-primary shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                Toplam Gelir (Son 30 Gün)
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ₺@Model.TotalRevenue.ToString("N2")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-lira-sign fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-success shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                Toplam Randevu
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                @Model.TotalAppointments
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-calendar-check fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-info shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                Ortalama Bilet Değeri
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">
+                                ₺@Model.AverageTicketValue.ToString("N2")
+                            </div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-chart-line fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card border-left-warning shadow h-100 py-2">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                Bu Ay Büyüme
+                            </div>
+                            <div class="h5 mb-0 font-weight-bold text-gray-800">+15%</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="fas fa-arrow-up fa-2x text-gray-300"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Hızlı İşlemler</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <a href="@Url.Action("CashFlow")" class="btn btn-primary btn-block">
+                                <i class="fas fa-money-bill-wave"></i> Nakit Akışı
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="@Url.Action("BudgetManagement")" class="btn btn-success btn-block">
+                                <i class="fas fa-chart-pie"></i> Bütçe Yönetimi
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <a href="@Url.Action("ExpenseTracking")" class="btn btn-warning btn-block">
+                                <i class="fas fa-receipt"></i> Gider Takibi
+                            </a>
+                        </div>
+                        <div class="col-md-3">
+                            <button type="button" class="btn btn-info btn-block" onclick="exportFinancialReport()">
+                                <i class="fas fa-download"></i> Rapor İndir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="row">
+        <div class="col-xl-8 col-lg-7">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Gelir Trendi</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="revenueChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-4 col-lg-5">
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Hizmet Dağılımı</h6>
+                </div>
+                <div class="card-body">
+                    <canvas id="serviceChart" width="400" height="400"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    loadRevenueChart();
+    loadServiceChart();
+});
+
+function loadRevenueChart() {
+    const ctx = document.getElementById('revenueChart').getContext('2d');
+    
+    fetch(`@Url.Action("GetRevenueTrend")?startDate=@Model.StartDate.ToString("yyyy-MM-dd")&endDate=@Model.EndDate.ToString("yyyy-MM-dd")`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.data.map(item => new Date(item.date).toLocaleDateString('tr-TR')),
+                        datasets: [{
+                            label: 'Günlük Gelir (₺)',
+                            data: data.data.map(item => item.revenue),
+                            borderColor: 'rgb(78, 115, 223)',
+                            backgroundColor: 'rgba(78, 115, 223, 0.1)',
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return '₺' + value.toLocaleString('tr-TR');
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
+}
+
+function loadServiceChart() {
+    const ctx = document.getElementById('serviceChart').getContext('2d');
+    
+    // Sample data - replace with actual API call
+    new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Saç Kesimi', 'Saç Boyama', 'Manikür', 'Pedikür', 'Diğer'],
+            datasets: [{
+                data: [35, 25, 20, 15, 5],
+                backgroundColor: [
+                    '#4e73df',
+                    '#1cc88a',
+                    '#36b9cc',
+                    '#f6c23e',
+                    '#e74a3b'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+function exportFinancialReport() {
+    const startDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+    const endDate = '@Model.EndDate.ToString("yyyy-MM-dd")';
+    window.open(`/api/v1/export/financial/excel?startDate=${startDate}&endDate=${endDate}`, '_blank');
+}
+</script>

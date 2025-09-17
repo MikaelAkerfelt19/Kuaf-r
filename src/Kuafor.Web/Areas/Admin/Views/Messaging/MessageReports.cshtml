@@ -1,0 +1,87 @@
+@model Kuafor.Web.Areas.Admin.Models.MessageReportsViewModel
+@{
+    ViewData["Title"] = "Mesaj Raporları";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Mesaj Raporları</h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Form -->
+                    <form asp-action="FilterReports" method="post" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label>Başlangıç Tarihi</label>
+                                <input asp-for="FromDate" type="date" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Bitiş Tarihi</label>
+                                <input asp-for="ToDate" type="date" class="form-control">
+                            </div>
+                            <div class="col-md-3">
+                                <label>Mesaj Türü</label>
+                                <select asp-for="MessageType" class="form-control">
+                                    <option value="All">Tümü</option>
+                                    <option value="SMS">SMS</option>
+                                    <option value="WhatsApp">WhatsApp</option>
+                                </select>
+                            </div>
+                            <div class="col-md-3">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-primary d-block">Filtrele</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Reports Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>Telefon</th>
+                                    <th>Tür</th>
+                                    <th>Durum</th>
+                                    <th>İçerik</th>
+                                    <th>Maliyet</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model.Reports != null)
+                                {
+                                    @foreach (var report in Model.Reports)
+                                    {
+                                        <tr>
+                                            <td>@report.SentAt.ToString("dd/MM/yyyy HH:mm")</td>
+                                            <td>@report.PhoneNumber</td>
+                                            <td>
+                                                <span class="badge badge-@(report.MessageType == "SMS" ? "primary" : "success")">
+                                                    @report.MessageType
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <span class="badge badge-@(report.DeliveryStatus == "Delivered" ? "success" : report.DeliveryStatus == "Failed" ? "danger" : "warning")">
+                                                    @report.DeliveryStatus
+                                                </span>
+                                            </td>
+                                            <td>@(report.MessageContent.Length > 50 ? report.MessageContent.Substring(0, 50) + "..." : report.MessageContent)</td>
+                                            <td>@(report.Cost?.ToString("C") ?? "-")</td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

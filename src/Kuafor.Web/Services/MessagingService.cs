@@ -224,14 +224,17 @@ namespace Kuafor.Web.Services
             {
                 var campaign = await _context.MessageCampaigns
                     .Include(c => c.MessageGroup)
-                    .ThenInclude(g => g.Members)
+                    .ThenInclude(g => g!.Members)
                     .ThenInclude(m => m.Customer)
                     .FirstOrDefaultAsync(c => c.Id == campaignId);
 
                 if (campaign == null) return false;
 
-                var customers = campaign.MessageGroup?.Members?.Select(m => m.Customer).Where(c => c != null).Cast<Customer>().ToList() ?? 
-                               await _context.Customers.ToListAsync();
+                var customers = campaign.MessageGroup?.Members?
+                    .Select(m => m.Customer)
+                    .Where(c => c != null)
+                    .Cast<Customer>()
+                    .ToList() ?? await _context.Customers.ToListAsync();
 
                 var customerIds = customers.Select(c => c.Id).ToList();
                 var success = await SendBulkMessageAsync(customerIds, campaign.Content, campaign.Type);
@@ -253,7 +256,7 @@ namespace Kuafor.Web.Services
         }
 
         // Filtreli mesajlaşma metodları
-        public async Task<List<Customer>> GetFilteredCustomersAsync(CustomerFilter filter)
+        public async Task<List<Customer>> GetFilteredCustomersAsync(MessagingCustomerFilter filter)
         {
             var query = _context.Customers.AsQueryable();
 
@@ -309,7 +312,7 @@ namespace Kuafor.Web.Services
             return await query.ToListAsync();
         }
 
-        public async Task<bool> SendFilteredMessageAsync(CustomerFilter filter, string message, string messageType = "WhatsApp", List<int>? excludeCustomerIds = null)
+        public async Task<bool> SendFilteredMessageAsync(MessagingCustomerFilter filter, string message, string messageType = "WhatsApp", List<int>? excludeCustomerIds = null)
         {
             var customers = await GetFilteredCustomersAsync(filter);
             
@@ -599,8 +602,11 @@ namespace Kuafor.Web.Services
             foreach (var customer in birthdayCustomers)
             {
                 var message = $"Merhaba {customer.FirstName}, doğum gününüz kutlu olsun! 🎉";
-                await _smsService.SendSmsAsync(customer.Phone, message);
-                await _whatsAppService.SendMessageAsync(customer.Phone, message);
+                if (!string.IsNullOrEmpty(customer.Phone))
+                {
+                    await _smsService.SendSmsAsync(customer.Phone, message);
+                    await _whatsAppService.SendMessageAsync(customer.Phone, message);
+                }
             }
             
             return true;

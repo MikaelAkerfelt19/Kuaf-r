@@ -37,7 +37,7 @@ namespace Kuafor.Web.Areas.Admin.Models
     public class FilteredMessagingViewModel
     {
         public List<CustomerEntity> Customers { get; set; } = new();
-        public CustomerFilter Filter { get; set; } = new();
+        public Kuafor.Web.Services.Interfaces.MessagingCustomerFilter Filter { get; set; } = new();
         public List<int> ExcludeCustomerIds { get; set; } = new();
         
         [Required(ErrorMessage = "Mesaj içeriği gereklidir")]
@@ -71,5 +71,31 @@ namespace Kuafor.Web.Areas.Admin.Models
         
         [StringLength(500, ErrorMessage = "Notlar 500 karakterden uzun olamaz")]
         public string? Notes { get; set; }
+    }
+
+
+    public class MessageCampaignViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Content { get; set; } = string.Empty;
+        public string Type { get; set; } = "SMS";
+        public string Status { get; set; } = "Draft";
+        public DateTime? ScheduledAt { get; set; }
+        public int SentCount { get; set; }
+        public int DeliveredCount { get; set; }
+        public int FailedCount { get; set; }
+        public DateTime CreatedAt { get; set; }
+    }
+
+    public class MessageTemplateViewModel
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Type { get; set; } = "SMS";
+        public string Content { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsActive { get; set; } = true;
+        public DateTime CreatedAt { get; set; }
     }
 }

@@ -1,0 +1,214 @@
+@model Kuafor.Web.Areas.Admin.Models.FilteredMessagingViewModel
+@{
+    ViewData["Title"] = "Filtreli Mesajlaşma";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Filtreli Mesajlaşma</h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Filter Panel -->
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">Filtreler</h4>
+                                </div>
+                                <form asp-action="ApplyFilter" method="post">
+                                    <div class="card-body">
+                                        <div class="form-group">
+                                            <label>Pasif Müşterileri Dahil Et</label>
+                                            <div class="form-check">
+                                                <input asp-for="Filter.IncludePassiveCustomers" type="checkbox" class="form-check-input">
+                                                <label class="form-check-label">Pasif müşterileri dahil et</label>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Borç Durumu</label>
+                                            <select asp-for="Filter.DebtStatus" class="form-control">
+                                                <option value="">Tümü</option>
+                                                <option value="HasDebt">Borçlu</option>
+                                                <option value="NoDebt">Borçsuz</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Risk Durumu</label>
+                                            <select asp-for="Filter.RiskStatus" class="form-control">
+                                                <option value="">Tümü</option>
+                                                <option value="High">Yüksek Risk</option>
+                                                <option value="Medium">Orta Risk</option>
+                                                <option value="Low">Düşük Risk</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Aldığı Hizmet</label>
+                                            <select asp-for="Filter.ServiceReceived" class="form-control">
+                                                <option value="">Tümü</option>
+                                                <option value="HairCut">Saç Kesimi</option>
+                                                <option value="HairColor">Saç Boyama</option>
+                                                <option value="Manicure">Manikür</option>
+                                                <option value="Pedicure">Pedikür</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Cinsiyet</label>
+                                            <select asp-for="Filter.Gender" class="form-control">
+                                                <option value="">Tümü</option>
+                                                <option value="Female">Kadın</option>
+                                                <option value="Male">Erkek</option>
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Yaş Aralığı</label>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <input asp-for="Filter.MinAge" type="number" class="form-control" placeholder="Min">
+                                                </div>
+                                                <div class="col-6">
+                                                    <input asp-for="Filter.MaxAge" type="number" class="form-control" placeholder="Max">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Son Ziyaret Tarihi</label>
+                                            <div class="row">
+                                                <div class="col-6">
+                                                    <input asp-for="Filter.LastVisitFrom" type="date" class="form-control">
+                                                </div>
+                                                <div class="col-6">
+                                                    <input asp-for="Filter.LastVisitTo" type="date" class="form-control">
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="form-group">
+                                            <label>Arama</label>
+                                            <input asp-for="Filter.SearchTerm" type="text" class="form-control" placeholder="Ad, telefon veya email">
+                                        </div>
+                                    </div>
+                                    <div class="card-footer">
+                                        <button type="submit" class="btn btn-primary">Filtrele</button>
+                                        <button type="button" class="btn btn-secondary" onclick="clearFilters()">Temizle</button>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+
+                        <!-- Results Panel -->
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4 class="card-title">
+                                        Filtrelenmiş Müşteriler 
+                                        <span class="badge badge-primary" id="customerCount">
+                                            @(Model.Customers?.Count() ?? 0)
+                                        </span>
+                                    </h4>
+                                </div>
+                                <div class="card-body">
+                                    <!-- Message Form -->
+                                    <form asp-action="SendFilteredMessage" method="post">
+                                        <div class="form-group">
+                                            <label>Mesaj Türü</label>
+                                            <select asp-for="MessageType" class="form-control">
+                                                <option value="SMS">SMS</option>
+                                                <option value="WhatsApp">WhatsApp</option>
+                                            </select>
+                                        </div>
+                                        
+                                        <div class="form-group">
+                                            <label>Mesaj İçeriği</label>
+                                            <textarea asp-for="Message" class="form-control" rows="4" required></textarea>
+                                            <small class="text-muted">Personalizasyon: {{Ad}}, {{Soyad}}, {{Telefon}}</small>
+                                        </div>
+
+                                        <!-- Customer List -->
+                                        <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+                                            <table class="table table-sm">
+                                                <thead>
+                                                    <tr>
+                                                        <th>
+                                                            <input type="checkbox" id="selectAll" onchange="toggleAll()">
+                                                        </th>
+                                                        <th>Ad Soyad</th>
+                                                        <th>Telefon</th>
+                                                        <th>Son Ziyaret</th>
+                                                        <th>Durum</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    @if (Model.Customers != null)
+                                                    {
+                                                        @foreach (var customer in Model.Customers)
+                                                        {
+                                                            <tr>
+                                                                <td>
+                                                                    <input type="checkbox" name="SelectedCustomerIds" value="@customer.Id" class="customer-checkbox">
+                                                                </td>
+                                                                <td>@customer.FullName</td>
+                                                                <td>@customer.Phone</td>
+                                                                <td>@(customer.LastVisitDate?.ToString("dd/MM/yyyy") ?? "Hiç")</td>
+                                                                <td>
+                                                                    <span class="badge badge-@(customer.IsActive ? "success" : "secondary")">
+                                                                        @(customer.IsActive ? "Aktif" : "Pasif")
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                </tbody>
+                                            </table>
+                                        </div>
+
+                                        <div class="mt-3">
+                                            <button type="submit" class="btn btn-success">
+                                                <i class="fas fa-paper-plane"></i> Seçili Müşterilere Mesaj Gönder
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.customer-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+}
+
+function clearFilters() {
+    document.querySelectorAll('select').forEach(select => select.selectedIndex = 0);
+    document.querySelectorAll('input[type="text"], input[type="number"], input[type="date"]').forEach(input => input.value = '');
+    document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => checkbox.checked = false);
+}
+
+// Update customer count when checkboxes change
+document.addEventListener('change', function(e) {
+    if (e.target.classList.contains('customer-checkbox')) {
+        const selected = document.querySelectorAll('.customer-checkbox:checked').length;
+        const total = document.querySelectorAll('.customer-checkbox').length;
+        document.getElementById('customerCount').textContent = `${selected}/${total}`;
+    }
+});
+</script>

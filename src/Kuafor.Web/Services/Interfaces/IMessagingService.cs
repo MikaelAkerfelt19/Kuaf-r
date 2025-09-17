@@ -23,8 +23,8 @@ namespace Kuafor.Web.Services.Interfaces
         Task<bool> SendMessageCampaignAsync(int campaignId);
 
         // Filtreli mesajlaşma
-        Task<List<Customer>> GetFilteredCustomersAsync(CustomerFilter filter);
-        Task<bool> SendFilteredMessageAsync(CustomerFilter filter, string message, string messageType = "WhatsApp", List<int>? excludeCustomerIds = null);
+        Task<List<Customer>> GetFilteredCustomersAsync(MessagingCustomerFilter filter);
+        Task<bool> SendFilteredMessageAsync(MessagingCustomerFilter filter, string message, string messageType = "WhatsApp", List<int>? excludeCustomerIds = null);
 
         // Kara liste yönetimi
         Task<bool> AddToBlacklistAsync(string phoneNumber, string reason, string? customerName = null, string? notes = null);
@@ -50,7 +50,7 @@ namespace Kuafor.Web.Services.Interfaces
         Task<bool> DeleteTemplateAsync(int templateId);
     }
 
-    public class CustomerFilter
+    public class MessagingCustomerFilter
     {
         public bool IncludePassiveCustomers { get; set; } = false;
         public string? DebtStatus { get; set; }

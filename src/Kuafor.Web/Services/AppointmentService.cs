@@ -409,6 +409,7 @@ public class AppointmentService : IAppointmentService
         var appointments = await _context.Appointments
             .Include(a => a.Customer)
             .Include(a => a.Service)
+            .Include(a => a.Stylist)
             .Where(a => a.CustomerId == customerId)
             .OrderBy(a => a.StartAt)
             .ToListAsync();

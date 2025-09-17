@@ -1,0 +1,114 @@
+@model Kuafor.Web.Areas.Admin.Models.GroupMessagingViewModel
+@{
+    ViewData["Title"] = "Grup Mesajlaşma";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Grup Mesajlaşma</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#createGroupModal">
+                            Yeni Grup Oluştur
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <form asp-action="SendGroupMessage" method="post">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Mesaj Türü</label>
+                                    <select asp-for="MessageType" class="form-control">
+                                        <option value="SMS">SMS</option>
+                                        <option value="WhatsApp">WhatsApp</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label>Mesaj İçeriği</label>
+                                    <textarea asp-for="Message" class="form-control" rows="5" required></textarea>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Grup Seçimi</label>
+                                    <div style="max-height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 10px;">
+                                        @if (Model.Groups != null)
+                                        {
+                                            @foreach (var group in Model.Groups)
+                                            {
+                                                <div class="form-check">
+                                                    <input type="checkbox" name="SelectedGroupIds" value="@group.Id" class="form-check-input" id="group_@group.Id">
+                                                    <label class="form-check-label" for="group_@group.Id">
+                                                        @group.Name
+                                                        <small class="text-muted d-block">@group.Description</small>
+                                                    </label>
+                                                </div>
+                                            }
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer">
+                        <button type="submit" class="btn btn-success">Mesaj Gönder</button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">İptal</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Group Modal -->
+<div class="modal fade" id="createGroupModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Yeni Grup Oluştur</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="createGroupForm">
+                    <div class="form-group">
+                        <label>Grup Adı</label>
+                        <input type="text" name="name" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <textarea name="description" class="form-control" rows="3"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" onclick="createGroup()">Oluştur</button>
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function createGroup() {
+    const form = document.getElementById('createGroupForm');
+    const formData = new FormData(form);
+    
+    fetch('@Url.Action("CreateGroup")', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert('Grup oluşturulurken hata oluştu');
+        }
+    });
+}
+</script>

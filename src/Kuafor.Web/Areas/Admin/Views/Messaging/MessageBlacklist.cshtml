@@ -1,0 +1,105 @@
+@model List<Kuafor.Web.Models.Entities.MessageBlacklist>
+@{
+    ViewData["Title"] = "Mesaj Kara Listesi";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Mesaj Kara Listesi</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addBlacklistModal">
+                            Kara Listeye Ekle
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Telefon Numarası</th>
+                                    <th>Müşteri Adı</th>
+                                    <th>Sebep</th>
+                                    <th>Tarih</th>
+                                    <th>Notlar</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null)
+                                {
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>@item.PhoneNumber</td>
+                                            <td>@item.CustomerName</td>
+                                            <td>
+                                                <span class="badge badge-danger">@item.Reason</span>
+                                            </td>
+                                            <td>@item.CreatedAt.ToString("dd/MM/yyyy")</td>
+                                            <td>@item.Notes</td>
+                                            <td>
+                                                <form asp-action="RemoveFromBlacklist" method="post" style="display: inline;">
+                                                    <input type="hidden" name="phoneNumber" value="@item.PhoneNumber">
+                                                    <button type="submit" class="btn btn-sm btn-success" onclick="return confirm('Bu numarayı kara listeden çıkarmak istediğinizden emin misiniz?')">
+                                                        Kaldır
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add to Blacklist Modal -->
+<div class="modal fade" id="addBlacklistModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form asp-action="AddToBlacklist" method="post">
+                <div class="modal-header">
+                    <h4 class="modal-title">Kara Listeye Ekle</h4>
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Telefon Numarası</label>
+                        <input type="text" name="phoneNumber" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Müşteri Adı (Opsiyonel)</label>
+                        <input type="text" name="customerName" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label>Sebep</label>
+                        <select name="reason" class="form-control" required>
+                            <option value="OptOut">Müşteri İsteği</option>
+                            <option value="InvalidNumber">Geçersiz Numara</option>
+                            <option value="Complaint">Şikayet</option>
+                            <option value="Other">Diğer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notlar</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-danger">Kara Listeye Ekle</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

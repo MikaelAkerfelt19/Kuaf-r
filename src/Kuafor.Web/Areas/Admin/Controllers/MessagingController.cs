@@ -108,7 +108,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             var viewModel = new FilteredMessagingViewModel
             {
                 Customers = customers.ToList(),
-                Filter = new CustomerFilter(),
+                Filter = new MessagingCustomerFilter(),
                 ExcludeCustomerIds = new List<int>(),
                 MessageType = "WhatsApp"
             };

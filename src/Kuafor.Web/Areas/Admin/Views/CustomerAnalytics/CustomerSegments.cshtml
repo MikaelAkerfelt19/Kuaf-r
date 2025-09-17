@@ -1,0 +1,88 @@
+@model List<object>
+@{
+    ViewData["Title"] = "Müşteri Segmentasyonu";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Müşteri Segmentasyonu</h3>
+                    <div class="card-tools">
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="info-box bg-success">
+                                <span class="info-box-icon"><i class="fas fa-crown"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">VIP Müşteriler</span>
+                                    <span class="info-box-number" id="vip-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-warning">
+                                <span class="info-box-icon"><i class="fas fa-star"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Sadık Müşteriler</span>
+                                    <span class="info-box-number" id="loyal-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-info">
+                                <span class="info-box-icon"><i class="fas fa-user-plus"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Yeni Müşteriler</span>
+                                    <span class="info-box-number" id="new-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="info-box bg-danger">
+                                <span class="info-box-icon"><i class="fas fa-exclamation-triangle"></i></span>
+                                <div class="info-box-content">
+                                    <span class="info-box-text">Risk Altında</span>
+                                    <span class="info-box-number" id="risk-count">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="segmentsTable">
+                            <thead>
+                                <tr>
+                                    <th>Müşteri Adı</th>
+                                    <th>Segment</th>
+                                    <th>Yaşam Döngüsü</th>
+                                    <th>Toplam Harcama</th>
+                                    <th>Son Ziyaret</th>
+                                    <th>Risk Skoru</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be loaded via JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Load segments data
+$(document).ready(function() {
+    // This would normally load data from the model
+    // For now, showing placeholder structure
+    console.log('Customer segments loaded');
+});
+</script>

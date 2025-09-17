@@ -30,4 +30,27 @@ public interface ICustomerService
     Task<bool> ExistsByUserIdAsync(string userId);
     Task<bool> ExistsByEmailAsync(string email);
     Task<int> GetCountAsync();
+    
+    // Yeni eklenen metodlar
+    // Toplu işlemler
+    Task<List<Customer>> BulkCreateAsync(List<Customer> customers);
+    Task<bool> BulkDeleteAsync(List<int> customerIds);
+    Task<bool> BulkUpdateStatusAsync(List<int> customerIds, string status);
+    Task<bool> SendBulkMessageAsync(List<int> customerIds, string message, string messageType);
+    
+    // Filtreleme ve arama
+    Task<List<Customer>> GetFilteredCustomersAsync(CustomerFilter filter);
+}
+
+// Yardımcı model sınıfları
+public class CustomerFilter
+{
+    public string? Name { get; set; }
+    public string? Phone { get; set; }
+    public string? Email { get; set; }
+    public bool? IsActive { get; set; }
+    public DateTime? CreatedAfter { get; set; }
+    public DateTime? CreatedBefore { get; set; }
+    public string? Status { get; set; }
+    public string? Segment { get; set; }
 }

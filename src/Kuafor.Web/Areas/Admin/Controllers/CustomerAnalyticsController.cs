@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Admin;
+using Kuafor.Web.Models.Entities;
+using CustomerEntity = Kuafor.Web.Models.Entities.Customer;
+
 
 namespace Kuafor.Web.Areas.Admin.Controllers;
 
@@ -13,7 +16,7 @@ public class CustomerAnalyticsController : Controller
     private readonly IAppointmentService _appointmentService;
 
     public CustomerAnalyticsController(
-        ICustomerAnalyticsService customerAnalyticsService, 
+        ICustomerAnalyticsService customerAnalyticsService,
         ICustomerService customerService,
         IAppointmentService appointmentService)
     {
@@ -147,5 +150,92 @@ public class CustomerAnalyticsController : Controller
         {
             return Json(new { error = "Export failed" });
         }
+    }
+
+    [HttpGet("customer-segments")]
+    [Route("CustomerSegments")]
+    public async Task<IActionResult> CustomerSegments()
+    {
+        // Müşteri segmentasyonu sayfası
+        try
+        {
+            var segments = await _customerAnalyticsService.GetCustomerSegmentationAsync();
+            return View(segments);
+        }
+        catch (Exception)
+        {
+            return View(new List<object>());
+        }
+    }
+
+    [HttpGet("risk-analysis")]
+    [Route("RiskAnalysis")]
+    public async Task<IActionResult> RiskAnalysis()
+    {
+        // Risk altındaki müşteriler sayfası
+        try
+        {
+            var riskCustomers = await _customerAnalyticsService.GetCustomersAtRiskAsync();
+            return View(riskCustomers);
+        }
+        catch (Exception)
+        {
+            return View(new List<CustomerEntity>());
+        }
+    }
+
+    [HttpGet("behavior-analysis")]
+    [Route("BehaviorAnalysis")]
+    public async Task<IActionResult> BehaviorAnalysis()
+    {
+        // Müşteri davranış analizi sayfası
+        try
+        {
+            var behaviorPatterns = await _customerAnalyticsService.AnalyzeCustomerBehaviorAsync();
+            return View(behaviorPatterns);
+        }
+        catch (Exception)
+        {
+            return View(new List<object>());
+        }
+    }
+
+    [HttpGet("customer-ltv/{customerId:int}")]
+    [Route("CustomerLTV/{customerId:int}")]
+    public async Task<IActionResult> CustomerLTV(int customerId)
+    {
+        // Müşteri yaşam boyu değeri detayı
+        try
+        {
+            var ltv = await _customerAnalyticsService.CalculateCustomerLTVAsync(customerId);
+            return Json(new { success = true, data = ltv });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    [HttpPost("bulk-message")]
+    public async Task<IActionResult> SendBulkMessage([FromBody] BulkMessageRequest request)
+    {
+        // Seçili müşterilere toplu mesaj gönderme
+        try
+        {
+            await _customerService.SendBulkMessageAsync(request.CustomerIds, request.Message, request.MessageType);
+            return Json(new { success = true, message = "Mesajlar başarıyla gönderildi" });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
+    // Yardımcı model sınıfları
+    public class BulkMessageRequest
+    {
+        public List<int> CustomerIds { get; set; } = new();
+        public string Message { get; set; } = string.Empty;
+        public string MessageType { get; set; } = "SMS"; // SMS, WhatsApp
     }
 }

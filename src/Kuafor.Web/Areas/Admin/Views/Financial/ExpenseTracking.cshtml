@@ -1,0 +1,352 @@
+@model Kuafor.Web.Areas.Admin.Models.ExpenseTrackingViewModel
+@{
+    ViewData["Title"] = "Gider Takibi";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Gider Takibi</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#addExpenseModal">
+                            <i class="fas fa-plus"></i> Yeni Gider Ekle
+                        </button>
+                        <button type="button" class="btn btn-success" onclick="exportExpenses()">
+                            <i class="fas fa-download"></i> Excel'e Aktar
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Filter Section -->
+                    <form method="get" class="mb-4">
+                        <div class="row">
+                            <div class="col-md-2">
+                                <label>Başlangıç</label>
+                                <input name="startDate" type="date" class="form-control" value="@Model.StartDate.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-2">
+                                <label>Bitiş</label>
+                                <input name="endDate" type="date" class="form-control" value="@Model.EndDate.ToString("yyyy-MM-dd")">
+                            </div>
+                            <div class="col-md-2">
+                                <label>Kategori</label>
+                                <select name="category" class="form-control">
+                                    <option value="">Tümü</option>
+                                    <option value="Malzeme">Malzeme</option>
+                                    <option value="Personel">Personel</option>
+                                    <option value="Kira">Kira</option>
+                                    <option value="Utilities">Faturalar</option>
+                                    <option value="Pazarlama">Pazarlama</option>
+                                    <option value="Diğer">Diğer</option>
+                                </select>
+                            </div>
+                            <div class="col-md-2">
+                                <label>Min Tutar</label>
+                                <input name="minAmount" type="number" class="form-control" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <label>Max Tutar</label>
+                                <input name="maxAmount" type="number" class="form-control" step="0.01">
+                            </div>
+                            <div class="col-md-2">
+                                <label>&nbsp;</label>
+                                <button type="submit" class="btn btn-primary d-block">Filtrele</button>
+                            </div>
+                        </div>
+                    </form>
+
+                    <!-- Expense Summary -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="card bg-danger text-white">
+                                <div class="card-body">
+                                    <h4 id="totalExpenses">₺15,250.00</h4>
+                                    <p class="mb-0">Toplam Gider</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-white">
+                                <div class="card-body">
+                                    <h4 id="monthlyAverage">₺5,083.33</h4>
+                                    <p class="mb-0">Aylık Ortalama</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white">
+                                <div class="card-body">
+                                    <h4 id="largestExpense">₺2,500.00</h4>
+                                    <p class="mb-0">En Büyük Gider</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h4 id="expenseCount">47</h4>
+                                    <p class="mb-0">Toplam İşlem</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Chart -->
+                    <div class="row mb-4">
+                        <div class="col-md-8">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Aylık Gider Trendi</h4>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="expenseTrendChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h4>Kategori Dağılımı</h4>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="categoryChart" width="400" height="400"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Expense Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="expenseTable">
+                            <thead>
+                                <tr>
+                                    <th>Tarih</th>
+                                    <th>Kategori</th>
+                                    <th>Açıklama</th>
+                                    <th>Tutar</th>
+                                    <th>Ödeme Yöntemi</th>
+                                    <th>Durum</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>15/12/2024</td>
+                                    <td><span class="badge badge-warning">Malzeme</span></td>
+                                    <td>Saç boyası ve şampuan alımı</td>
+                                    <td>₺850.00</td>
+                                    <td>Kredi Kartı</td>
+                                    <td><span class="badge badge-success">Onaylandı</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewExpenseDetail(1)">Detay</button>
+                                        <button class="btn btn-sm btn-warning" onclick="editExpense(1)">Düzenle</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteExpense(1)">Sil</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>14/12/2024</td>
+                                    <td><span class="badge badge-primary">Utilities</span></td>
+                                    <td>Elektrik faturası</td>
+                                    <td>₺320.50</td>
+                                    <td>Havale</td>
+                                    <td><span class="badge badge-success">Onaylandı</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewExpenseDetail(2)">Detay</button>
+                                        <button class="btn btn-sm btn-warning" onclick="editExpense(2)">Düzenle</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteExpense(2)">Sil</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>13/12/2024</td>
+                                    <td><span class="badge badge-info">Personel</span></td>
+                                    <td>Kuaför maaşı - Ayşe Hanım</td>
+                                    <td>₺2,500.00</td>
+                                    <td>Nakit</td>
+                                    <td><span class="badge badge-warning">Beklemede</span></td>
+                                    <td>
+                                        <button class="btn btn-sm btn-info" onclick="viewExpenseDetail(3)">Detay</button>
+                                        <button class="btn btn-sm btn-warning" onclick="editExpense(3)">Düzenle</button>
+                                        <button class="btn btn-sm btn-danger" onclick="deleteExpense(3)">Sil</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Expense Modal -->
+<div class="modal fade" id="addExpenseModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Yeni Gider Ekle</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <form id="expenseForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label>Kategori</label>
+                        <select name="category" class="form-control" required>
+                            <option value="Malzeme">Malzeme</option>
+                            <option value="Personel">Personel</option>
+                            <option value="Kira">Kira</option>
+                            <option value="Utilities">Faturalar</option>
+                            <option value="Pazarlama">Pazarlama</option>
+                            <option value="Diğer">Diğer</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Açıklama</label>
+                        <input type="text" name="description" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Tutar</label>
+                        <input type="number" name="amount" class="form-control" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Ödeme Yöntemi</label>
+                        <select name="paymentMethod" class="form-control" required>
+                            <option value="Cash">Nakit</option>
+                            <option value="CreditCard">Kredi Kartı</option>
+                            <option value="Transfer">Havale/EFT</option>
+                            <option value="Check">Çek</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Tarih</label>
+                        <input type="date" name="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Durum</label>
+                        <select name="status" class="form-control" required>
+                            <option value="Pending">Beklemede</option>
+                            <option value="Approved">Onaylandı</option>
+                            <option value="Paid">Ödendi</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Notlar</label>
+                        <textarea name="notes" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Kaydet</button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">İptal</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    loadExpenseCharts();
+});
+
+function loadExpenseCharts() {
+    // Expense Trend Chart
+    const trendCtx = document.getElementById('expenseTrendChart').getContext('2d');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: ['Oca', 'Şub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Ağu', 'Eyl', 'Eki', 'Kas', 'Ara'],
+            datasets: [{
+                label: 'Aylık Giderler (₺)',
+                data: [12000, 15000, 13000, 18000, 16000, 14000, 17000, 19000, 15000, 16000, 14000, 15250],
+                borderColor: 'rgb(220, 53, 69)',
+                backgroundColor: 'rgba(220, 53, 69, 0.1)',
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return '₺' + value.toLocaleString('tr-TR');
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Category Chart
+    const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+    new Chart(categoryCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Malzeme', 'Personel', 'Kira', 'Utilities', 'Pazarlama', 'Diğer'],
+            datasets: [{
+                data: [4500, 6000, 2000, 1500, 800, 450],
+                backgroundColor: [
+                    '#ffc107',
+                    '#17a2b8',
+                    '#28a745',
+                    '#007bff',
+                    '#dc3545',
+                    '#6c757d'
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false
+        }
+    });
+}
+
+$('#expenseForm').on('submit', function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    const data = Object.fromEntries(formData);
+    
+    // API call to save expense
+    fetch('/api/financial/expense', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            $('#addExpenseModal').modal('hide');
+            location.reload();
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    });
+});
+
+function viewExpenseDetail(expenseId) {
+    alert('Gider detayı - ID: ' + expenseId);
+}
+
+function editExpense(expenseId) {
+    alert('Gider düzenle - ID: ' + expenseId);
+}
+
+function deleteExpense(expenseId) {
+    if (confirm('Bu gideri silmek istediğinizden emin misiniz?')) {
+        alert('Gider silindi - ID: ' + expenseId);
+    }
+}
+
+function exportExpenses() {
+    const startDate = '@Model.StartDate.ToString("yyyy-MM-dd")';
+    const endDate = '@Model.EndDate.ToString("yyyy-MM-dd")';
+    window.open(`/api/v1/export/expenses/excel?startDate=${startDate}&endDate=${endDate}`, '_blank');
+}
+</script>

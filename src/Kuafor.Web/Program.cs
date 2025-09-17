@@ -7,8 +7,16 @@ using System.Text;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Services;
 using Kuafor.Web.Services.BackgroundServices;
+using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
+using Kuafor.Web.Models.Enums;
+using Kuafor.Web.Controllers.Api.V1;
+using Kuafor.Web.Areas.Admin.Controllers;
+using OfficeOpenXml;
 
 var builder = WebApplication.CreateBuilder(args);
+
+ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // 1. Veritabanı ve Identity'yi yapılandır
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
@@ -59,6 +67,13 @@ builder.Services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();
 builder.Services.AddScoped<IWhatsAppMediaService, WhatsAppMediaService>();
 builder.Services.AddScoped<IReportingService, ReportingService>();
 builder.Services.AddScoped<IMessagingService, MessagingService>();
+
+// API Controller'ları için
+builder.Services.AddScoped<Kuafor.Web.Controllers.Api.V1.ExportController>();
+
+// Admin Area Controller'ları için 
+builder.Services.AddScoped<FinancialController>();
+builder.Services.AddScoped<Kuafor.Web.Areas.Admin.Controllers.ExportController>();
 
 
 // ÖNEMLİ: Yarış durumunu engellemek için bu servis şimdilik kapalı kalacak.

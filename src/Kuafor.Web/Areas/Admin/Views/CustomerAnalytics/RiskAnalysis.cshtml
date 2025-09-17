@@ -1,0 +1,138 @@
+@model List<Kuafor.Web.Models.Entities.Customer>
+@{
+    ViewData["Title"] = "Risk Analizi";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Risk Altındaki Müşteriler</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" onclick="sendRetentionCampaign()">
+                            Geri Kazanma Kampanyası Gönder
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h5><i class="icon fas fa-exclamation-triangle"></i> Dikkat!</h5>
+                        Bu müşteriler 60 günden uzun süredir ziyaret etmemiş veya yüksek kayıp riski taşıyor.
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <input type="checkbox" id="selectAll" onchange="toggleAll()">
+                                    </th>
+                                    <th>Müşteri Adı</th>
+                                    <th>Telefon</th>
+                                    <th>Son Ziyaret</th>
+                                    <th>Gün Sayısı</th>
+                                    <th>Risk Seviyesi</th>
+                                    <th>Toplam Harcama</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @if (Model != null)
+                                {
+                                    @foreach (var customer in Model)
+                                    {
+                                        var daysSinceVisit = customer.LastVisitDate.HasValue ? 
+                                            (DateTime.Now - customer.LastVisitDate.Value).Days : 999;
+                                        var riskLevel = daysSinceVisit > 90 ? "Yüksek" : daysSinceVisit > 60 ? "Orta" : "Düşük";
+                                        var riskClass = daysSinceVisit > 90 ? "danger" : daysSinceVisit > 60 ? "warning" : "info";
+                                        
+                                        <tr>
+                                            <td>
+                                                <input type="checkbox" name="selectedCustomers" value="@customer.Id" class="customer-checkbox">
+                                            </td>
+                                            <td>@customer.FullName</td>
+                                            <td>@customer.Phone</td>
+                                            <td>@(customer.LastVisitDate?.ToString("dd/MM/yyyy") ?? "Hiç")</td>
+                                            <td>@daysSinceVisit gün</td>
+                                            <td>
+                                                <span class="badge badge-@riskClass">@riskLevel</span>
+                                            </td>
+                                            <td>₺0</td>
+                                            <td>
+                                                <button type="button" class="btn btn-sm btn-primary" onclick="sendPersonalMessage(@customer.Id)">
+                                                    Mesaj Gönder
+                                                </button>
+                                                <a href="@Url.Action("Details", new { id = customer.Id })" class="btn btn-sm btn-info">
+                                                    Detay
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.customer-checkbox');
+    checkboxes.forEach(cb => cb.checked = selectAll.checked);
+}
+
+function sendRetentionCampaign() {
+    const selected = document.querySelectorAll('.customer-checkbox:checked');
+    if (selected.length === 0) {
+        alert('Lütfen en az bir müşteri seçin');
+        return;
+    }
+    
+    const customerIds = Array.from(selected).map(cb => cb.value);
+    const message = "Sizi özledik! Size özel %20 indirim fırsatımız var. Hemen randevu alın!";
+    
+    fetch('@Url.Action("SendBulkMessage")', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            customerIds: customerIds,
+            message: message,
+            messageType: 'WhatsApp'
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('Geri kazanma kampanyası gönderildi!');
+        } else {
+            alert('Hata: ' + data.message);
+        }
+    });
+}
+
+function sendPersonalMessage(customerId) {
+    const message = prompt('Müşteriye göndermek istediğiniz mesajı yazın:');
+    if (message) {
+        fetch('@Url.Action("SendBulkMessage")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerIds: [customerId],
+                message: message,
+                messageType: 'WhatsApp'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.success ? 'Mesaj gönderildi!' : 'Hata: ' + data.message);
+        });
+    }
+}
+</script>

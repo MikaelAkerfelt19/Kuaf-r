@@ -22,20 +22,43 @@
             </div>
             <nav class="nav nav-pills flex-column gap-1">
                 <a class="nav-link @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" ? "active" : null)"
-                    asp-area="Admin" asp-controller="Dashboard" asp-action="Index">Pano</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Services" asp-action="Index">Hizmetler</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Stylists" asp-action="Index">Kuaförler</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Branches" asp-action="Index">Şubeler</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Coupons" asp-action="Index">Kuponlar</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Appointments" asp-action="Index">Randevular</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Reports" asp-action="Index">Raporlar</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Products" asp-action="Index">Ürünler</a>
+                    asp-area="Admin" asp-controller="Dashboard" asp-action="Index">📊 Pano</a>
+                
+                <!-- Temel Yönetim -->
+                <a class="nav-link" asp-area="Admin" asp-controller="Services" asp-action="Index">✂️ Hizmetler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Stylists" asp-action="Index">👨‍💼 Kuaförler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Branches" asp-action="Index">🏢 Şubeler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Appointments" asp-action="Index">📅 Randevular</a>
+                
+                <!-- Müşteri Yönetimi -->
+                <a class="nav-link" asp-area="Admin" asp-controller="CustomerAnalytics" asp-action="Index">👥 Müşteri Analitikleri</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="CustomerAnalytics" asp-action="CustomerSegments">🎯 Müşteri Segmentleri</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="CustomerAnalytics" asp-action="RiskAnalysis">⚠️ Risk Analizi</a>
+                
+                <!-- Mesajlaşma -->
+                <a class="nav-link" asp-area="Admin" asp-controller="Messaging" asp-action="Index">💬 Mesajlaşma</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Messaging" asp-action="BulkMessaging">📢 Toplu Mesaj</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Messaging" asp-action="MessageReports">📋 Mesaj Raporları</a>
+                
+                <!-- Finansal Yönetim -->
+                <a class="nav-link" asp-area="Admin" asp-controller="Financial" asp-action="Index">💰 Finansal Yönetim</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Financial" asp-action="CashFlow">💸 Nakit Akışı</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Financial" asp-action="BudgetManagement">📊 Bütçe Yönetimi</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Financial" asp-action="ExpenseTracking">🧾 Gider Takibi</a>
+                
+                <!-- Veri Yönetimi -->
+                <a class="nav-link" asp-area="Admin" asp-controller="Export" asp-action="Index">📤 İçe/Dışa Aktarma</a>
+                
+                <!-- Mevcut Özellikler -->
+                <a class="nav-link" asp-area="Admin" asp-controller="Coupons" asp-action="Index">🎫 Kuponlar</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Reports" asp-action="Index">📈 Raporlar</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Products" asp-action="Index">🛍️ Ürünler</a>
                 <a class="nav-link" asp-area="Admin" asp-controller="Inventory" asp-action="Index">📦 Stok Yönetimi</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="CustomerAnalytics" asp-action="Index">📊 Müşteri Analitikleri</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Packages" asp-action="Index">Paketler</a>
-                <a class="nav-link" asp-area="Admin" asp-controller="Adisyon" asp-action="Index">Adisyon</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Packages" asp-action="Index">📋 Paketler</a>
+                <a class="nav-link" asp-area="Admin" asp-controller="Adisyon" asp-action="Index">🧾 Adisyon</a>
+                
                 <hr />
-                <a class="nav-link" asp-area="" asp-controller="Customer" asp-action="Index">↩︎ Müşteri Paneli</a>
+                <a class="nav-link" asp-area="" asp-controller="Customer" asp-action="Index">↩️ Müşteri Paneli</a>
             </nav>
         </aside>
         <main class="admin-main">

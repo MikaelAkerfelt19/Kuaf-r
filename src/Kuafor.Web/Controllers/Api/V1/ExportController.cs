@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using OfficeOpenXml;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 
 namespace Kuafor.Web.Controllers.Api.V1
 {
@@ -34,7 +35,7 @@ namespace Kuafor.Web.Controllers.Api.V1
         {
             // Excel dosyasından müşteri listesi import eder
             var customers = await ParseCustomersFromExcel(file);
-            // await _customerService.BulkCreateAsync(customers); // TODO: BulkCreateAsync metodunu implement et
+            await _customerService.BulkCreateAsync(customers); 
             return Ok(new { Message = "Müşteriler başarıyla içe aktarıldı", Count = customers.Count });
         }
 
@@ -59,6 +60,7 @@ namespace Kuafor.Web.Controllers.Api.V1
         private async Task<MemoryStream> GenerateCustomersExcel(IEnumerable<Customer> customers)
         {
             // Excel dosyası oluşturur ve müşteri verilerini yazar
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Müşteriler");
             
@@ -82,30 +84,40 @@ namespace Kuafor.Web.Controllers.Api.V1
             return stream;
         }
 
-        private async Task<List<Customer>> ParseCustomersFromExcel(IFormFile file)
+        private Task<List<Customer>> ParseCustomersFromExcel(IFormFile file)
         {
-            // Excel dosyasını okur ve müşteri listesi oluşturur
-            var customers = new List<Customer>();
+            return Task.Run(() =>
+            {
+                // Excel dosyasını okur ve müşteri listesi oluşturur
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                var customers = new List<Customer>();
             using var stream = file.OpenReadStream();
             using var package = new ExcelPackage(stream);
             var worksheet = package.Workbook.Worksheets[0];
             
             for (int row = 2; row <= worksheet.Dimension.Rows; row++)
             {
+                var fullName = worksheet.Cells[row, 1].Text;
+                var nameParts = fullName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                
                 customers.Add(new Customer
                 {
-                    // FullName = worksheet.Cells[row, 1].Text, // FullName readonly property
+                    FirstName = nameParts.FirstOrDefault() ?? "",
+                    LastName = nameParts.Skip(1).FirstOrDefault() ?? "",
                     Phone = worksheet.Cells[row, 2].Text,
-                    Email = worksheet.Cells[row, 3].Text
+                    Email = worksheet.Cells[row, 3].Text,
+                    UserId = Guid.NewGuid().ToString() // Required field
                 });
-            }
-            
-            return customers;
+                }
+                
+                return customers;
+            });
         }
 
         private async Task<MemoryStream> GenerateAppointmentsExcel(IEnumerable<Appointment> appointments)
         {
             // Randevu verilerini Excel formatında hazırlar
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Randevular");
             
@@ -133,6 +145,7 @@ namespace Kuafor.Web.Controllers.Api.V1
         private async Task<MemoryStream> GenerateFinancialExcel(object report)
         {
             // Finansal rapor Excel dosyası oluşturur
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using var package = new ExcelPackage();
             var worksheet = package.Workbook.Worksheets.Add("Finansal Rapor");
             

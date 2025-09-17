@@ -102,10 +102,13 @@ namespace Kuafor.Web.Controllers.Api.V1
                 }
 
                 // Varsayılan yanıt
-                await _whatsAppService.SendMessageAsync(phoneNumber, 
-                    "Merhaba! Size nasıl yardımcı olabilirim?\n\n" +
-                    "• Randevu almak için 'RANDEVU' yazın\n" +
-                    "• Kampanya mesajlarını durdurmak için 'DUR' yazın");
+                if (!string.IsNullOrEmpty(phoneNumber))
+                {
+                    await _whatsAppService.SendMessageAsync(phoneNumber, 
+                        "Merhaba! Size nasıl yardımcı olabilirim?\n\n" +
+                        "• Randevu almak için 'RANDEVU' yazın\n" +
+                        "• Kampanya mesajlarını durdurmak için 'DUR' yazın");
+                }
             }
             catch (Exception ex)
             {
@@ -128,10 +131,13 @@ namespace Kuafor.Web.Controllers.Api.V1
 
         private async Task HandleAppointmentRequest(string? phoneNumber)
         {
-            await _whatsAppService.SendMessageAsync(phoneNumber, 
-                "�� Randevu almak için lütfen web sitemizi ziyaret edin:\n\n" +
-                "🌐 " + _configuration["AppSettings:BaseUrl"] + "/Customer/Appointments/Create\n\n" +
-                "Veya telefon ile arayabilirsiniz: 📞 0212 555 0123");
+            if (!string.IsNullOrEmpty(phoneNumber))
+            {
+                await _whatsAppService.SendMessageAsync(phoneNumber, 
+                    "📅 Randevu almak için lütfen web sitemizi ziyaret edin:\n\n" +
+                    "🌐 " + _configuration["AppSettings:BaseUrl"] + "/Customer/Appointments/Create\n\n" +
+                    "Veya telefon ile arayabilirsiniz: 📞 0212 555 0123");
+            }
         }
     }
 

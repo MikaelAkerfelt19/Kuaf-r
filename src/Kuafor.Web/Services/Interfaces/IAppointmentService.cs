@@ -1,4 +1,5 @@
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Entities.Analytics;
 using Kuafor.Web.Models.Enums;
 
 namespace Kuafor.Web.Services.Interfaces;
@@ -39,4 +40,15 @@ public interface IAppointmentService
     Task<IEnumerable<Appointment>> GetByCustomerIdAsync(int customerId);
     Task<IEnumerable<Appointment>> GetByStylistIdAsync(int stylistId);
     Task<IEnumerable<Appointment>> GetByBranchIdAsync(int branchId);
+    
+    
+    // Tekrarlayan randevular
+    Task<List<Appointment>> GetRepeatingAppointmentsAsync(int customerId);
+    Task<bool> CreateRepeatingAppointmentAsync(Appointment baseAppointment, int repeatCount, string repeatType);
+    
+    // Zaman dilimi yönetimi
+    Task<List<TimeSlot>> GetAvailableTimeSlotsAsync(int stylistId, DateTime date, int serviceDuration);
+    
+    // İstatistikler ve analiz
+    Task<AppointmentStatistics> GetAppointmentStatisticsAsync(DateTime startDate, DateTime endDate);
 }

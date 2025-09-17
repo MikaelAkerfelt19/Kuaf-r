@@ -1,0 +1,285 @@
+@model List<object>
+@{
+    ViewData["Title"] = "Müşteri Davranış Analizi";
+    Layout = "_Layout.Admin";
+}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Müşteri Davranış Analizi</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" onclick="exportBehaviorData()">
+                            Excel'e Aktar
+                        </button>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">Geri Dön</a>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <!-- Behavior Summary Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="small-box bg-info">
+                                <div class="inner">
+                                    <h3 id="avg-interval">0</h3>
+                                    <p>Ortalama Randevu Aralığı (Gün)</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-calendar-alt"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small-box bg-success">
+                                <div class="inner">
+                                    <h3 id="preferred-day">Pazartesi</h3>
+                                    <p>En Çok Tercih Edilen Gün</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-calendar-day"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small-box bg-warning">
+                                <div class="inner">
+                                    <h3 id="preferred-time">Sabah</h3>
+                                    <p>En Çok Tercih Edilen Saat</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-clock"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="small-box bg-danger">
+                                <div class="inner">
+                                    <h3 id="seasonal-trend">Yaz</h3>
+                                    <p>En Aktif Mevsim</p>
+                                </div>
+                                <div class="icon">
+                                    <i class="fas fa-sun"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Behavior Charts -->
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Günlük Dağılım</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="dayChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h3 class="card-title">Saatlik Dağılım</h3>
+                                </div>
+                                <div class="card-body">
+                                    <canvas id="timeChart" width="400" height="200"></canvas>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Detailed Behavior Table -->
+                    <div class="table-responsive">
+                        <table class="table table-striped" id="behaviorTable">
+                            <thead>
+                                <tr>
+                                    <th>Müşteri Adı</th>
+                                    <th>Tercih Edilen Gün</th>
+                                    <th>Tercih Edilen Saat</th>
+                                    <th>Ortalama Aralık</th>
+                                    <th>Mevsimsel Trend</th>
+                                    <th>Son Analiz</th>
+                                    <th>İşlemler</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Data will be populated via JavaScript -->
+                                <tr>
+                                    <td colspan="7" class="text-center">
+                                        <div class="spinner-border" role="status">
+                                            <span class="sr-only">Yükleniyor...</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Behavior Detail Modal -->
+<div class="modal fade" id="behaviorDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title">Müşteri Davranış Detayı</h4>
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div id="behaviorDetailContent">
+                    <!-- Content will be loaded dynamically -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+$(document).ready(function() {
+    loadBehaviorData();
+    initializeCharts();
+});
+
+function loadBehaviorData() {
+    // Simulate loading behavior data
+    setTimeout(() => {
+        $('#behaviorTable tbody').html(`
+            <tr>
+                <td>Ahmet Yılmaz</td>
+                <td>Pazartesi</td>
+                <td>Sabah (09:00-12:00)</td>
+                <td>21 gün</td>
+                <td>Yaz</td>
+                <td>15/12/2024</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="showBehaviorDetail(1)">Detay</button>
+                    <button class="btn btn-sm btn-success" onclick="sendPersonalizedOffer(1)">Kişisel Teklif</button>
+                </td>
+            </tr>
+            <tr>
+                <td>Fatma Özkan</td>
+                <td>Cumartesi</td>
+                <td>Öğle (12:00-17:00)</td>
+                <td>45 gün</td>
+                <td>Kış</td>
+                <td>15/12/2024</td>
+                <td>
+                    <button class="btn btn-sm btn-info" onclick="showBehaviorDetail(2)">Detay</button>
+                    <button class="btn btn-sm btn-success" onclick="sendPersonalizedOffer(2)">Kişisel Teklif</button>
+                </td>
+            </tr>
+        `);
+    }, 1000);
+}
+
+function initializeCharts() {
+    // Day Distribution Chart
+    const dayCtx = document.getElementById('dayChart').getContext('2d');
+    new Chart(dayCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'],
+            datasets: [{
+                label: 'Randevu Sayısı',
+                data: [45, 38, 42, 35, 48, 65, 25],
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Time Distribution Chart
+    const timeCtx = document.getElementById('timeChart').getContext('2d');
+    new Chart(timeCtx, {
+        type: 'doughnut',
+        data: {
+            labels: ['Sabah (09:00-12:00)', 'Öğle (12:00-17:00)', 'Akşam (17:00-20:00)'],
+            datasets: [{
+                data: [120, 180, 95],
+                backgroundColor: [
+                    'rgba(255, 206, 86, 0.6)',
+                    'rgba(75, 192, 192, 0.6)',
+                    'rgba(153, 102, 255, 0.6)'
+                ],
+                borderColor: [
+                    'rgba(255, 206, 86, 1)',
+                    'rgba(75, 192, 192, 1)',
+                    'rgba(153, 102, 255, 1)'
+                ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true
+        }
+    });
+}
+
+function showBehaviorDetail(customerId) {
+    $('#behaviorDetailContent').html(`
+        <div class="row">
+            <div class="col-md-6">
+                <h5>Randevu Geçmişi</h5>
+                <ul class="list-group">
+                    <li class="list-group-item">Son 6 ay: 8 randevu</li>
+                    <li class="list-group-item">Ortalama aralık: 21 gün</li>
+                    <li class="list-group-item">En uzun aralık: 35 gün</li>
+                    <li class="list-group-item">En kısa aralık: 14 gün</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h5>Tercihler</h5>
+                <ul class="list-group">
+                    <li class="list-group-item">Tercih edilen gün: Pazartesi (%60)</li>
+                    <li class="list-group-item">Tercih edilen saat: 10:00 (%40)</li>
+                    <li class="list-group-item">Tercih edilen hizmet: Saç Kesimi</li>
+                    <li class="list-group-item">Tercih edilen kuaför: Ayşe Hanım</li>
+                </ul>
+            </div>
+        </div>
+    `);
+    $('#behaviorDetailModal').modal('show');
+}
+
+function sendPersonalizedOffer(customerId) {
+    const message = "Size özel teklif! Tercih ettiğiniz Pazartesi günü saat 10:00'da randevu alın, %15 indirim kazanın!";
+    
+    if (confirm('Kişiselleştirilmiş teklif mesajı gönderilsin mi?')) {
+        fetch('@Url.Action("SendBulkMessage")', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                customerIds: [customerId],
+                message: message,
+                messageType: 'WhatsApp'
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.success ? 'Kişisel teklif gönderildi!' : 'Hata: ' + data.message);
+        });
+    }
+}
+
+function exportBehaviorData() {
+    window.location.href = '@Url.Action("Export", "CustomerAnalytics")';
+}
+</script>
