@@ -54,7 +54,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         [HttpGet("cash-flow")]
         [Route("CashFlow")]
-        public IActionResult CashFlow(DateTime? startDate, DateTime? endDate)
+        public async Task<IActionResult> CashFlow(DateTime? startDate, DateTime? endDate)
         {
             // Nakit akış raporu sayfası
             try
@@ -62,11 +62,17 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 var start = startDate ?? DateTime.Now.AddMonths(-3);
                 var end = endDate ?? DateTime.Now;
 
+                // Nakit akış verilerini al
+                var cashFlows = await _financialService.GetCashFlowRangeAsync(start, end);
+                var totalIncome = cashFlows.Sum(cf => cf.CashIn + cf.CardIn + cf.TransferIn + cf.OtherIn);
+                var totalExpenses = cashFlows.Sum(cf => cf.CashOut + cf.CardOut + cf.TransferOut + cf.OtherOut);
+
                 var viewModel = new CashFlowViewModel
                 {
                     StartDate = start,
                     EndDate = end,
-                    // Nakit akış verileri buraya eklenecek
+                    TotalIncome = totalIncome,
+                    TotalExpenses = totalExpenses
                 };
 
                 return View(viewModel);
@@ -97,7 +103,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
 
         [HttpGet("expense-tracking")]
         [Route("ExpenseTracking")]
-        public IActionResult ExpenseTracking()
+        public async Task<IActionResult> ExpenseTracking()
         {
             // Gider takibi sayfası
             try
@@ -105,11 +111,21 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 var startDate = DateTime.Now.AddMonths(-1);
                 var endDate = DateTime.Now;
 
+                // Finansal işlemlerden gider verilerini al
+                var expenses = await _financialService.GetAllCostAnalysesAsync(startDate, endDate);
+                var expenseItems = expenses.Select(e => new ExpenseItem
+                {
+                    Date = e.PeriodStart,
+                    Category = e.Service?.Category ?? e.Product?.Category ?? "Diğer",
+                    Description = e.Service?.Name ?? e.Product?.Name ?? "Gider",
+                    Amount = e.TotalCost
+                }).ToList();
+
                 var viewModel = new ExpenseTrackingViewModel
                 {
                     StartDate = startDate,
                     EndDate = endDate,
-                    // Gider verileri buraya eklenecek
+                    Expenses = expenseItems
                 };
 
                 return View(viewModel);
