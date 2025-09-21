@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Models.Admin.Adisyon;
 using Kuafor.Web.Services.Interfaces;
 
 namespace Kuafor.Web.Services;
@@ -14,7 +15,93 @@ public class AdisyonService : IAdisyonService
         _context = context;
     }
 
-    public async Task<IEnumerable<Receipt>> GetAllAsync()
+    // Adisyon metotları
+    public async Task<IEnumerable<Adisyon>> GetAllAsync()
+    {
+        return await _context.Adisyons
+            .Include(a => a.Customer)
+            .Include(a => a.AdisyonDetails)
+            .ThenInclude(ad => ad.Service)
+            .OrderByDescending(a => a.CreatedAt)
+            .ToListAsync();
+    }
+
+    public async Task<Adisyon?> GetByIdAsync(int id)
+    {
+        return await _context.Adisyons
+            .Include(a => a.Customer)
+            .Include(a => a.AdisyonDetails)
+            .ThenInclude(ad => ad.Service)
+            .FirstOrDefaultAsync(a => a.Id == id);
+    }
+
+    public async Task<Adisyon> CreateAsync(Adisyon adisyon)
+    {
+        adisyon.CreatedAt = DateTime.UtcNow;
+        adisyon.IsActive = true;
+        
+        _context.Adisyons.Add(adisyon);
+        await _context.SaveChangesAsync();
+        return adisyon;
+    }
+
+    public async Task<Adisyon> UpdateAsync(Adisyon adisyon)
+    {
+        adisyon.UpdatedAt = DateTime.UtcNow;
+        _context.Adisyons.Update(adisyon);
+        await _context.SaveChangesAsync();
+        return adisyon;
+    }
+
+    public async Task<bool> DeleteAsync(int id)
+    {
+        var adisyon = await _context.Adisyons.FindAsync(id);
+        if (adisyon == null) return false;
+
+        adisyon.IsActive = false;
+        adisyon.UpdatedAt = DateTime.UtcNow;
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+    public async Task<bool> AddServicesToAdisyonAsync(int adisyonId, List<AdisyonServiceModel> services)
+    {
+        try
+        {
+            var adisyonDetails = services.Select(s => new AdisyonDetail
+            {
+                AdisyonId = adisyonId,
+                ServiceId = s.ServiceId,
+                Quantity = s.Quantity,
+                UnitPrice = s.UnitPrice,
+                TotalPrice = s.TotalPrice
+            }).ToList();
+
+            _context.AdisyonDetails.AddRange(adisyonDetails);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<List<AdisyonDetail>> GetAdisyonDetailsAsync(int adisyonId)
+    {
+        return await _context.AdisyonDetails
+            .Include(ad => ad.Service)
+            .Where(ad => ad.AdisyonId == adisyonId)
+            .ToListAsync();
+    }
+
+    public Task<decimal> CalculateTotalAsync(List<AdisyonServiceModel> services)
+    {
+        return Task.FromResult(services.Sum(s => s.TotalPrice));
+    }
+
+    // Receipt metotları (eski implementasyon)
+    public async Task<IEnumerable<Receipt>> GetAllReceiptsAsync()
     {
         return await _context.Receipts
             .Include(r => r.Customer)
@@ -23,7 +110,7 @@ public class AdisyonService : IAdisyonService
             .ToListAsync();
     }
 
-    public async Task<Receipt?> GetByIdAsync(int id)
+    public async Task<Receipt?> GetReceiptByIdAsync(int id)
     {
         return await _context.Receipts
             .Include(r => r.Customer)
@@ -34,7 +121,7 @@ public class AdisyonService : IAdisyonService
             .FirstOrDefaultAsync(r => r.Id == id);
     }
 
-    public async Task<Receipt> CreateAsync(Receipt receipt)
+    public async Task<Receipt> CreateReceiptAsync(Receipt receipt)
     {
         receipt.ReceiptNumber = GenerateReceiptNumber();
         receipt.CreatedAt = DateTime.UtcNow;
@@ -45,14 +132,14 @@ public class AdisyonService : IAdisyonService
         return receipt;
     }
 
-    public async Task<Receipt> UpdateAsync(Receipt receipt)
+    public async Task<Receipt> UpdateReceiptAsync(Receipt receipt)
     {
         _context.Receipts.Update(receipt);
         await _context.SaveChangesAsync();
         return receipt;
     }
 
-    public async Task<bool> DeleteAsync(int id)
+    public async Task<bool> DeleteReceiptAsync(int id)
     {
         var receipt = await _context.Receipts.FindAsync(id);
         if (receipt == null) return false;
@@ -64,7 +151,7 @@ public class AdisyonService : IAdisyonService
 
     public async Task<Receipt> CreateForRegisteredCustomerAsync(int customerId, List<ReceiptItem> items)
     {
-        var totalAmount = await CalculateTotalAsync(items);
+        var totalAmount = await CalculateReceiptTotalAsync(items);
         
         var receipt = new Receipt
         {
@@ -76,7 +163,7 @@ public class AdisyonService : IAdisyonService
             ReceiptItems = items
         };
 
-        return await CreateAsync(receipt);
+        return await CreateReceiptAsync(receipt);
     }
 
     public async Task<Receipt> CreateForNewCustomerAsync(Customer customer, List<ReceiptItem> items)
@@ -85,7 +172,7 @@ public class AdisyonService : IAdisyonService
         _context.Customers.Add(customer);
         await _context.SaveChangesAsync();
 
-        var totalAmount = await CalculateTotalAsync(items);
+        var totalAmount = await CalculateReceiptTotalAsync(items);
         
         var receipt = new Receipt
         {
@@ -97,7 +184,7 @@ public class AdisyonService : IAdisyonService
             ReceiptItems = items
         };
 
-        return await CreateAsync(receipt);
+        return await CreateReceiptAsync(receipt);
     }
 
     public async Task<bool> CloseReceiptAsync(int receiptId)
@@ -111,7 +198,7 @@ public class AdisyonService : IAdisyonService
         return true;
     }
 
-    public Task<decimal> CalculateTotalAsync(List<ReceiptItem> items)
+    public Task<decimal> CalculateReceiptTotalAsync(List<ReceiptItem> items)
     {
         return Task.FromResult(items.Sum(item => item.TotalPrice));
     }

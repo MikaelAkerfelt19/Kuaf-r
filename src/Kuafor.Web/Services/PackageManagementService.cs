@@ -94,13 +94,50 @@ public class PackageManagementService : IPackageService
         return true;
     }
 
-    public decimal CalculateTotalPrice(Package package, List<PackageService> services)
+    public Task<decimal> CalculateTotalPrice(Package package, List<PackageService> services)
     {
-        return services.Sum(ps => ps.SessionCount * package.SessionUnitPrice);
+        var total = services.Sum(ps => ps.SessionCount * package.SessionUnitPrice);
+        return Task.FromResult(total);
     }
 
-    Task<decimal> IPackageService.CalculateTotalPrice(Package package, List<PackageService> services)
+    public async Task<bool> AddServicesToPackageAsync(int packageId, List<int> serviceIds)
     {
-        throw new NotImplementedException();
+        try
+        {
+            // Önce mevcut servisleri sil
+            var existingServices = await _context.PackageServices
+                .Where(ps => ps.PackageId == packageId)
+                .ToListAsync();
+            _context.PackageServices.RemoveRange(existingServices);
+
+            // Yeni servisleri ekle
+            var packageServices = serviceIds.Select(serviceId => new PackageService
+            {
+                PackageId = packageId,
+                ServiceId = serviceId,
+                SessionCount = 1 // Default değer
+            }).ToList();
+
+            _context.PackageServices.AddRange(packageServices);
+            await _context.SaveChangesAsync();
+            return true;
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    public async Task<List<PackageService>> GetPackageServicesAsync(int packageId)
+    {
+        return await _context.PackageServices
+            .Include(ps => ps.Service)
+            .Where(ps => ps.PackageId == packageId)
+            .ToListAsync();
+    }
+
+    public async Task<bool> UpdatePackageServicesAsync(int packageId, List<int> serviceIds)
+    {
+        return await AddServicesToPackageAsync(packageId, serviceIds);
     }
 }

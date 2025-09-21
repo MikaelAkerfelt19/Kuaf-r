@@ -13,4 +13,9 @@ public interface IPackageService
     Task<PackageSale> CreateSaleAsync(int packageId, int customerId);
     Task<bool> UseSessionAsync(int packageSaleId);
     Task<decimal> CalculateTotalPrice(Package package, List<PackageService> services);
+    
+    // Eksik metotlar
+    Task<bool> AddServicesToPackageAsync(int packageId, List<int> serviceIds);
+    Task<List<PackageService>> GetPackageServicesAsync(int packageId);
+    Task<bool> UpdatePackageServicesAsync(int packageId, List<int> serviceIds);
 }

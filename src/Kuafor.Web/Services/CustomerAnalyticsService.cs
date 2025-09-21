@@ -451,17 +451,76 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
         
         foreach (var customer in customers)
         {
-            var analytics = await CalculateRFMAsync(customer.Id);
-            segments.Add(new AnalyticsCustomerSegment
+            try
             {
-                CustomerId = customer.Id,
-                CustomerName = customer.FullName,
-                Segment = analytics.Segment,
-                LifecycleStage = analytics.LifecycleStage,
-                TotalSpent = analytics.TotalSpent,
-                LastVisitDate = analytics.LastActivityDate,
-                RiskScore = analytics.ChurnRisk
-            });
+                // Basit segmentasyon logic'i - CustomerAnalytics tablosu olmadan
+                var appointments = customer.Appointments;
+                var totalSpent = appointments.Sum(a => a.FinalPrice);
+                var lastVisit = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt;
+                var daysSinceLastVisit = lastVisit.HasValue ? (DateTime.Now - lastVisit.Value).Days : 999;
+                
+                string segment = "Yeni";
+                string lifecycleStage = "New";
+                double riskScore = 0;
+                
+                // Segment belirleme
+                if (totalSpent > 1000 && appointments.Count() > 5)
+                {
+                    segment = "VIP";
+                    lifecycleStage = "Champion";
+                    riskScore = daysSinceLastVisit > 30 ? 50 : 10;
+                }
+                else if (totalSpent > 500 && appointments.Count() > 3)
+                {
+                    segment = "Sadık";
+                    lifecycleStage = "Loyal";
+                    riskScore = daysSinceLastVisit > 45 ? 60 : 20;
+                }
+                else if (daysSinceLastVisit > 90)
+                {
+                    segment = "Risk";
+                    lifecycleStage = "AtRisk";
+                    riskScore = 80;
+                }
+                else if (appointments.Count() == 0)
+                {
+                    segment = "Yeni";
+                    lifecycleStage = "New";
+                    riskScore = 30;
+                }
+                else
+                {
+                    segment = "Potansiyel";
+                    lifecycleStage = "Potential";
+                    riskScore = daysSinceLastVisit > 60 ? 70 : 40;
+                }
+                
+                segments.Add(new AnalyticsCustomerSegment
+                {
+                    CustomerId = customer.Id,
+                    CustomerName = customer.FullName,
+                    Segment = segment,
+                    LifecycleStage = lifecycleStage,
+                    TotalSpent = totalSpent,
+                    LastVisitDate = lastVisit,
+                    RiskScore = riskScore
+                });
+            }
+            catch (Exception ex)
+            {
+                // Hata durumunda varsayılan değerlerle devam et
+                Console.WriteLine($"Customer segmentation error for ID {customer.Id}: {ex.Message}");
+                segments.Add(new AnalyticsCustomerSegment
+                {
+                    CustomerId = customer.Id,
+                    CustomerName = customer.FullName,
+                    Segment = "Belirsiz",
+                    LifecycleStage = "Unknown",
+                    TotalSpent = 0,
+                    LastVisitDate = null,
+                    RiskScore = 50
+                });
+            }
         }
         
         return segments.OrderByDescending(s => s.TotalSpent).ToList();
@@ -469,14 +528,46 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
 
     public async Task<List<Customer>> GetCustomersAtRiskAsync()
     {
-        // Risk altındaki müşterileri getirir
-        var riskCustomers = await _context.CustomerAnalytics
-            .Include(ca => ca.Customer)
-            .Where(ca => ca.ChurnRisk > 70 || ca.DaysSinceLastVisit > 60)
-            .Select(ca => ca.Customer)
-            .ToListAsync();
+        // Risk altındaki müşterileri getirir - CustomerAnalytics tablosu olmadan
+        var customers = await _context.Customers.Include(c => c.Appointments).ToListAsync();
+        var riskCustomers = new List<Customer>();
         
-        return riskCustomers;
+        foreach (var customer in customers)
+        {
+            try
+            {
+                var appointments = customer.Appointments;
+                var lastVisit = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt;
+                var daysSinceLastVisit = lastVisit.HasValue ? (DateTime.Now - lastVisit.Value).Days : 999;
+                var totalAppointments = appointments.Count();
+                
+                // Risk kriterleri
+                bool isAtRisk = false;
+                
+                // 60 günden fazla gelmemiş
+                if (daysSinceLastVisit > 60 && totalAppointments > 0)
+                    isAtRisk = true;
+                
+                // Hiç randevu almamış ama 30 günden fazla kayıtlı
+                if (totalAppointments == 0 && (DateTime.Now - customer.CreatedAt).Days > 30)
+                    isAtRisk = true;
+                
+                // Eskiden düzenli gelip son 90 günde gelmemiş
+                if (totalAppointments >= 3 && daysSinceLastVisit > 90)
+                    isAtRisk = true;
+                
+                if (isAtRisk)
+                {
+                    riskCustomers.Add(customer);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Risk analysis error for customer ID {customer.Id}: {ex.Message}");
+            }
+        }
+        
+        return riskCustomers.OrderByDescending(c => c.CreatedAt).ToList();
     }
 
     public async Task<CustomerLifetimeValue> CalculateCustomerLTVAsync(int customerId)

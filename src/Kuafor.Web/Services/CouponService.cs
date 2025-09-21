@@ -240,4 +240,15 @@ public class CouponService : ICouponService
             .OrderBy(c => c.Code)
             .ToListAsync();
     }
+
+    public async Task ToggleActiveAsync(int id)
+    {
+        var coupon = await _context.Coupons.FindAsync(id);
+        if (coupon != null)
+        {
+            coupon.IsActive = !coupon.IsActive;
+            coupon.UpdatedAt = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+        }
+    }
 }
