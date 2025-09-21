@@ -134,6 +134,29 @@ public class InventoryService : IInventoryService
         }
     }
 
+    public async Task<bool> UpdateStockAsync(int productId, int quantity, string movementType, string? reason = null)
+    {
+        try
+        {
+            if (movementType.ToUpper() == "IN" || movementType.ToUpper() == "ADD")
+            {
+                return await AddStockAsync(productId, quantity, reason ?? "Manual adjustment", "MANUAL");
+            }
+            else if (movementType.ToUpper() == "OUT" || movementType.ToUpper() == "REMOVE")
+            {
+                return await RemoveStockAsync(productId, quantity, reason ?? "Manual adjustment", "MANUAL");
+            }
+            else
+            {
+                return await AdjustStockAsync(productId, quantity, reason ?? "Stock adjustment");
+            }
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
     public async Task<int> GetCurrentStockAsync(int productId)
     {
         var product = await _context.Products.FindAsync(productId);

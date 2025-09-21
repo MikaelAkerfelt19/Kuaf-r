@@ -40,11 +40,11 @@ public interface ICustomerAnalyticsService
     Task<CustomerAnalyticsReport> GetAnalyticsReportAsync();
     Task<List<SegmentPerformance>> GetSegmentPerformanceAsync();
     Task<List<CustomerJourney>> GetCustomerJourneyAsync(int customerId);
-    Task<List<Customer>> GetCustomersAtRiskAsync();
     
-    // Ek analiz metodları
-    Task<List<CustomerBehaviorPattern>> AnalyzeCustomerBehaviorAsync();
-    Task<CustomerLifetimeValue> CalculateCustomerLTVAsync(int customerId);
+    // Eksik method'lar
+    Task<List<Customer>> GetCustomersAtRiskAsync();
+    Task<List<object>> AnalyzeCustomerBehaviorAsync();
+    Task<decimal> CalculateCustomerLTVAsync(int customerId);
 }
 
 public class CustomerAnalyticsReport

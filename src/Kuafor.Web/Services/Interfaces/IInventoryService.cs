@@ -9,6 +9,7 @@ public interface IInventoryService
     Task<bool> RemoveStockAsync(int productId, int quantity, string reason, string? reference = null);
     Task<bool> AdjustStockAsync(int productId, int newQuantity, string reason);
     Task<bool> ReturnStockAsync(int productId, int quantity, string reason);
+    Task<bool> UpdateStockAsync(int productId, int quantity, string movementType, string? reason = null);
     
     // Stok sorguları
     Task<int> GetCurrentStockAsync(int productId);

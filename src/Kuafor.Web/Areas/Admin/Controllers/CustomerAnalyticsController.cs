@@ -317,11 +317,53 @@ public class CustomerAnalyticsController : Controller
         }
     }
 
+    [HttpPost("update-customer")]
+    [Route("UpdateCustomer")]
+    public async Task<IActionResult> UpdateCustomer([FromBody] CustomerUpdateRequest request)
+    {
+        try
+        {
+            var customer = await _customerService.GetByIdAsync(request.Id);
+            if (customer == null)
+            {
+                return Json(new { success = false, message = "Müşteri bulunamadı" });
+            }
+
+            // Müşteri bilgilerini güncelle
+            customer.FirstName = request.FirstName;
+            customer.LastName = request.LastName;
+            customer.Email = request.Email;
+            customer.Phone = request.Phone;
+            customer.DateOfBirth = request.DateOfBirth;
+            customer.Gender = request.Gender;
+            customer.UpdatedAt = DateTime.UtcNow;
+
+            await _customerService.UpdateAsync(customer);
+            
+            return Json(new { success = true, message = "Müşteri bilgileri başarıyla güncellendi" });
+        }
+        catch (Exception ex)
+        {
+            return Json(new { success = false, message = ex.Message });
+        }
+    }
+
     // Yardımcı model sınıfları
     public class BulkMessageRequest
     {
         public List<int> CustomerIds { get; set; } = new();
         public string Message { get; set; } = string.Empty;
         public string MessageType { get; set; } = "SMS"; // SMS, WhatsApp
+    }
+
+    public class CustomerUpdateRequest
+    {
+        public int Id { get; set; }
+        public string FirstName { get; set; } = string.Empty;
+        public string LastName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
+        public DateTime? DateOfBirth { get; set; }
+        public string? Gender { get; set; }
     }
 }

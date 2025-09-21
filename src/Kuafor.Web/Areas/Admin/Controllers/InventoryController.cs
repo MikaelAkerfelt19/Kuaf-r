@@ -1,6 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Services.Interfaces;
-using Kuafor.Web.Models.Admin;
 using Kuafor.Web.Models.Entities;
 
 namespace Kuafor.Web.Areas.Admin.Controllers;
@@ -11,11 +10,16 @@ public class InventoryController : Controller
 {
     private readonly IInventoryService _inventoryService;
     private readonly IProductService _productService;
+    private readonly IBranchService _branchService;
 
-    public InventoryController(IInventoryService inventoryService, IProductService productService)
+    public InventoryController(
+        IInventoryService inventoryService,
+        IProductService productService,
+        IBranchService branchService)
     {
         _inventoryService = inventoryService;
         _productService = productService;
+        _branchService = branchService;
     }
 
     // GET: /Admin/Inventory
@@ -26,188 +30,165 @@ public class InventoryController : Controller
     {
         try
         {
+            // Products tablosundan inventory bilgileri al
             var products = await _productService.GetAllAsync();
-            var inventoryViewModel = new InventoryViewModel
+            var branches = await _branchService.GetAllAsync();
+
+            var inventoryItems = products.Select(p => new InventoryItemViewModel
             {
-                Products = products.Cast<object>().ToList(),
-                TotalProducts = products.Count(),
-                LowStockProducts = products.Where(p => p.StockQuantity <= p.MinimumStock).Cast<object>().ToList(),
-                OutOfStockProducts = products.Where(p => p.StockQuantity == 0).Cast<object>().ToList()
+                Id = p.Id,
+                ProductName = p.Name,
+                Category = p.Category ?? "Belirtilmemiş",
+                CurrentStock = p.Stock,
+                MinimumStock = p.MinimumStock,
+                MaximumStock = p.MaximumStock,
+                UnitPrice = p.Price,
+                TotalValue = p.Stock * p.Price,
+                Supplier = p.Supplier ?? "Belirtilmemiş",
+                IsLowStock = p.Stock <= p.MinimumStock,
+                IsOutOfStock = p.Stock <= 0,
+                LastUpdated = p.UpdatedAt ?? p.CreatedAt
+            }).ToList();
+
+            var viewModel = new InventoryIndexViewModel
+            {
+                Items = inventoryItems,
+                TotalProducts = inventoryItems.Count,
+                TotalValue = inventoryItems.Sum(i => i.TotalValue),
+                LowStockCount = inventoryItems.Count(i => i.IsLowStock),
+                OutOfStockCount = inventoryItems.Count(i => i.IsOutOfStock),
+                Categories = inventoryItems.GroupBy(i => i.Category).Select(g => g.Key).ToList(),
+                Branches = branches.ToDictionary(b => b.Id, b => b.Name)
             };
 
-            return View(inventoryViewModel);
+            return View(viewModel);
         }
         catch (Exception)
         {
-            var emptyInventory = new InventoryViewModel
-            {
-                Products = new List<object>(),
-                TotalProducts = 0,
-                LowStockProducts = new List<object>(),
-                OutOfStockProducts = new List<object>()
-            };
-            return View(emptyInventory);
+            return View(new InventoryIndexViewModel());
         }
     }
 
-    // GET: /Admin/Inventory/Details/5
+    // GET: /Admin/Inventory/StockMovements
     [HttpGet]
-    [Route("Details/{id}")]
-    public async Task<IActionResult> Details(int id)
+    [Route("StockMovements")]
+    public async Task<IActionResult> StockMovements()
     {
         try
         {
-            var product = await _productService.GetByIdAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return View(product);
+            var movements = await _inventoryService.GetStockMovementsAsync();
+            return View(movements);
         }
         catch (Exception)
         {
-            return NotFound();
-        }
-    }
-
-    // GET: /Admin/Inventory/Create
-    [HttpGet]
-    [Route("Create")]
-    public IActionResult Create()
-    {
-        return View();
-    }
-
-    // POST: /Admin/Inventory/Create
-    [HttpPost]
-    [Route("Create")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create(Product product)
-    {
-        try
-        {
-            if (ModelState.IsValid)
-            {
-                await _productService.CreateAsync(product);
-                TempData["Success"] = "Ürün başarıyla eklendi.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(product);
-        }
-        catch (Exception)
-        {
-            TempData["Error"] = "Ürün eklenirken bir hata oluştu.";
-            return View(product);
-        }
-    }
-
-    // GET: /Admin/Inventory/Edit/5
-    [HttpGet]
-    [Route("Edit/{id}")]
-    public async Task<IActionResult> Edit(int id)
-    {
-        try
-        {
-            var product = await _productService.GetByIdAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return View(product);
-        }
-        catch (Exception)
-        {
-            return NotFound();
-        }
-    }
-
-    // POST: /Admin/Inventory/Edit/5
-    [HttpPost]
-    [Route("Edit/{id}")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, Product product)
-    {
-        try
-        {
-            if (id != product.Id)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                await _productService.UpdateAsync(product);
-                TempData["Success"] = "Ürün başarıyla güncellendi.";
-                return RedirectToAction(nameof(Index));
-            }
-            return View(product);
-        }
-        catch (Exception)
-        {
-            TempData["Error"] = "Ürün güncellenirken bir hata oluştu.";
-            return View(product);
-        }
-    }
-
-    // GET: /Admin/Inventory/Delete/5
-    [HttpGet]
-    [Route("Delete/{id}")]
-    public async Task<IActionResult> Delete(int id)
-    {
-        try
-        {
-            var product = await _productService.GetByIdAsync(id);
-            if (product == null)
-            {
-                return NotFound();
-            }
-            return View(product);
-        }
-        catch (Exception)
-        {
-            return NotFound();
-        }
-    }
-
-    // POST: /Admin/Inventory/Delete/5
-    [HttpPost]
-    [Route("Delete/{id}")]
-    [ValidateAntiForgeryToken]
-    public async Task<IActionResult> DeleteConfirmed(int id)
-    {
-        try
-        {
-            await _productService.DeleteAsync(id);
-            TempData["Success"] = "Ürün başarıyla silindi.";
-            return RedirectToAction(nameof(Index));
-        }
-        catch (Exception)
-        {
-            TempData["Error"] = "Ürün silinirken bir hata oluştu.";
-            return RedirectToAction(nameof(Index));
+            return View(new List<StockTransaction>());
         }
     }
 
     // POST: /Admin/Inventory/UpdateStock
     [HttpPost]
     [Route("UpdateStock")]
-    public async Task<IActionResult> UpdateStock(int productId, int newQuantity)
+    public async Task<IActionResult> UpdateStock(int productId, int quantity, string movementType, string? reason = null)
     {
         try
         {
-            // UpdateStockAsync method'u IInventoryService'de yok, bu yüzden ProductService kullanıyoruz
-            var product = await _productService.GetByIdAsync(productId);
-            if (product != null)
-            {
-                product.StockQuantity = newQuantity;
-                await _productService.UpdateAsync(product);
-                return Json(new { success = true, message = "Stok güncellendi." });
-            }
-            return Json(new { success = false, message = "Ürün bulunamadı." });
+            await _inventoryService.UpdateStockAsync(productId, quantity, movementType, reason);
+            return Json(new { success = true, message = "Stok başarıyla güncellendi" });
         }
         catch (Exception ex)
         {
             return Json(new { success = false, message = ex.Message });
         }
     }
+
+    // GET: /Admin/Inventory/LowStock
+    [HttpGet]
+    [Route("LowStock")]
+    public async Task<IActionResult> LowStock()
+    {
+        try
+        {
+            var products = await _productService.GetAllAsync();
+            var lowStockProducts = products
+                .Where(p => p.Stock <= p.MinimumStock)
+                .Select(p => new InventoryItemViewModel
+                {
+                    Id = p.Id,
+                    ProductName = p.Name,
+                    Category = p.Category ?? "Belirtilmemiş",
+                    CurrentStock = p.Stock,
+                    MinimumStock = p.MinimumStock,
+                    UnitPrice = p.Price,
+                    IsLowStock = true,
+                    IsOutOfStock = p.Stock <= 0
+                }).ToList();
+
+            return View(lowStockProducts);
+        }
+        catch (Exception)
+        {
+            return View(new List<InventoryItemViewModel>());
+        }
+    }
+
+    // GET: /Admin/Inventory/Reports
+    [HttpGet]
+    [Route("Reports")]
+    public async Task<IActionResult> Reports()
+    {
+        try
+        {
+            var report = await _inventoryService.GetInventoryReportAsync();
+            return View(report);
+        }
+        catch (Exception)
+        {
+            return View(new InventoryReport());
+        }
+    }
+}
+
+// ViewModels
+public class InventoryIndexViewModel
+{
+    public List<InventoryItemViewModel> Items { get; set; } = new();
+    public int TotalProducts { get; set; }
+    public decimal TotalValue { get; set; }
+    public int LowStockCount { get; set; }
+    public int OutOfStockCount { get; set; }
+    public List<string> Categories { get; set; } = new();
+    public Dictionary<int, string> Branches { get; set; } = new();
+}
+
+public class InventoryItemViewModel
+{
+    public int Id { get; set; }
+    public string ProductName { get; set; } = string.Empty;
+    public string Category { get; set; } = string.Empty;
+    public int CurrentStock { get; set; }
+    public int MinimumStock { get; set; }
+    public int MaximumStock { get; set; }
+    public decimal UnitPrice { get; set; }
+    public decimal TotalValue { get; set; }
+    public string Supplier { get; set; } = string.Empty;
+    public bool IsLowStock { get; set; }
+    public bool IsOutOfStock { get; set; }
+    public DateTime LastUpdated { get; set; }
+}
+
+public class InventoryReport
+{
+    public int TotalProducts { get; set; }
+    public decimal TotalValue { get; set; }
+    public int LowStockProducts { get; set; }
+    public int OutOfStockProducts { get; set; }
+    public List<CategorySummary> CategorySummaries { get; set; } = new();
+}
+
+public class CategorySummary
+{
+    public string Category { get; set; } = string.Empty;
+    public int ProductCount { get; set; }
+    public decimal TotalValue { get; set; }
+    public int LowStockCount { get; set; }
 }

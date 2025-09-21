@@ -137,6 +137,36 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             }
         }
 
+        [HttpPost("update-budget")]
+        public async Task<IActionResult> UpdateBudget([FromBody] Budget budget)
+        {
+            try
+            {
+                var updatedBudget = await _financialService.UpdateBudgetAsync(budget);
+                return Json(new { success = true, budget = updatedBudget });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bütçe güncellenirken hata oluştu");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        [HttpPost("delete-budget/{id:int}")]
+        public async Task<IActionResult> DeleteBudget(int id)
+        {
+            try
+            {
+                var result = await _financialService.DeleteBudgetAsync(id);
+                return Json(new { success = result });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Bütçe silinirken hata oluştu");
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
         [HttpGet("api/revenue-trend")]
         public async Task<IActionResult> GetRevenueTrend(DateTime startDate, DateTime endDate)
         {

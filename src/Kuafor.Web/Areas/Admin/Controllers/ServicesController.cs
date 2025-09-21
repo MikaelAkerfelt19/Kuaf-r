@@ -83,10 +83,20 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             return View(service);
         }
 
-        [HttpPost]
-        [Route("Delete/{id:int}")] 
-        [ValidateAntiForgeryToken]
+        [HttpGet]
+        [Route("Delete/{id:int}")]
         public async Task<IActionResult> Delete(int id)
+        {
+            var service = await _serviceService.GetByIdAsync(id);
+            if (service == null)
+                return NotFound();
+            return View(service);
+        }
+
+        [HttpPost]
+        [Route("Delete/{id:int}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             try
             {

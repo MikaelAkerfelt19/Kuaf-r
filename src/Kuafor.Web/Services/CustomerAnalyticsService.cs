@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Kuafor.Web.Data;
 using Kuafor.Web.Models.Entities;
 using Kuafor.Web.Models.Entities.Analytics;
+using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Services.Interfaces;
 
 namespace Kuafor.Web.Services;
@@ -526,99 +527,86 @@ public class CustomerAnalyticsService : ICustomerAnalyticsService
         return segments.OrderByDescending(s => s.TotalSpent).ToList();
     }
 
+    // Bu method'lar duplicate olduğu için silindi - aşağıdaki implementasyonlar kullanılacak
+
     public async Task<List<Customer>> GetCustomersAtRiskAsync()
     {
-        // Risk altındaki müşterileri getirir - CustomerAnalytics tablosu olmadan
-        var customers = await _context.Customers.Include(c => c.Appointments).ToListAsync();
-        var riskCustomers = new List<Customer>();
+        // Risk altındaki müşterileri getirir
+        var customers = await _context.Customers
+            .Include(c => c.Appointments)
+            .Where(c => c.IsActive)
+            .ToListAsync();
+
+        var atRiskCustomers = new List<Customer>();
         
         foreach (var customer in customers)
         {
-            try
+            var lastAppointment = customer.Appointments
+                .OrderByDescending(a => a.StartAt)
+                .FirstOrDefault();
+
+            // Son randevudan 90 gün geçmişse risk altında say
+            if (lastAppointment == null || 
+                (DateTime.Now - lastAppointment.StartAt).Days > 90)
             {
-                var appointments = customer.Appointments;
-                var lastVisit = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt;
-                var daysSinceLastVisit = lastVisit.HasValue ? (DateTime.Now - lastVisit.Value).Days : 999;
-                var totalAppointments = appointments.Count();
-                
-                // Risk kriterleri
-                bool isAtRisk = false;
-                
-                // 60 günden fazla gelmemiş
-                if (daysSinceLastVisit > 60 && totalAppointments > 0)
-                    isAtRisk = true;
-                
-                // Hiç randevu almamış ama 30 günden fazla kayıtlı
-                if (totalAppointments == 0 && (DateTime.Now - customer.CreatedAt).Days > 30)
-                    isAtRisk = true;
-                
-                // Eskiden düzenli gelip son 90 günde gelmemiş
-                if (totalAppointments >= 3 && daysSinceLastVisit > 90)
-                    isAtRisk = true;
-                
-                if (isAtRisk)
-                {
-                    riskCustomers.Add(customer);
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Risk analysis error for customer ID {customer.Id}: {ex.Message}");
+                atRiskCustomers.Add(customer);
             }
         }
-        
-        return riskCustomers.OrderByDescending(c => c.CreatedAt).ToList();
+
+        return atRiskCustomers;
     }
 
-    public async Task<CustomerLifetimeValue> CalculateCustomerLTVAsync(int customerId)
+    public async Task<List<object>> AnalyzeCustomerBehaviorAsync()
     {
-        // Müşteri yaşam boyu değerini hesaplar
-        var appointments = await _context.Appointments
-            .Where(a => a.CustomerId == customerId)
+        // Müşteri davranış analizi
+        var behaviors = await _context.CustomerBehaviors
+            .Include(cb => cb.Customer)
+            .Where(cb => cb.Timestamp >= DateTime.Now.AddMonths(-3))
+            .GroupBy(cb => cb.Action)
+            .Select(g => new
+            {
+                Action = g.Key,
+                Count = g.Count(),
+                UniqueCustomers = g.Select(x => x.CustomerId).Distinct().Count(),
+                AverageFrequency = g.Count() / (double)g.Select(x => x.CustomerId).Distinct().Count()
+            })
+            .Cast<object>()
             .ToListAsync();
         
-        if (!appointments.Any()) return new CustomerLifetimeValue { CustomerId = customerId, LTV = 0 };
-        
-        var totalSpent = appointments.Sum(a => a.FinalPrice);
-        var avgOrderValue = appointments.Average(a => a.FinalPrice);
-        var appointmentFrequency = CalculateAppointmentFrequency(appointments);
-        var customerLifespan = CalculateCustomerLifespan(appointments);
-        
-        var ltv = (double)avgOrderValue * appointmentFrequency * customerLifespan;
-        
-        return new CustomerLifetimeValue
-        {
-            CustomerId = customerId,
-            LTV = (decimal)ltv,
-            AverageOrderValue = avgOrderValue,
-            AppointmentFrequency = appointmentFrequency,
-            CustomerLifespan = customerLifespan
-        };
+        return behaviors;
     }
 
-    public async Task<List<CustomerBehaviorPattern>> AnalyzeCustomerBehaviorAsync()
+    public async Task<decimal> CalculateCustomerLTVAsync(int customerId)
     {
-        // Müşteri davranış kalıplarını analiz eder
-        var patterns = new List<CustomerBehaviorPattern>();
-        var customers = await _context.Customers.Include(c => c.Appointments).ToListAsync();
+        // Müşteri yaşam boyu değeri hesaplama
+        var customer = await _context.Customers
+            .Include(c => c.Appointments)
+            .FirstOrDefaultAsync(c => c.Id == customerId);
+
+        if (customer == null) return 0;
+
+        var appointments = customer.Appointments
+            .Where(a => a.Status == AppointmentStatus.Completed)
+            .ToList();
+
+        if (!appointments.Any()) return 0;
+
+        // Toplam harcama
+        var totalSpent = appointments.Sum(a => a.FinalPrice);
         
-        foreach (var customer in customers)
-        {
-            if (!customer.Appointments.Any()) continue;
-            
-            var pattern = new CustomerBehaviorPattern
-            {
-                CustomerId = customer.Id,
-                PreferredDayOfWeek = GetPreferredDayOfWeek(customer.Appointments.ToList()),
-                PreferredTimeSlot = GetPreferredTimeSlot(customer.Appointments.ToList()),
-                AverageAppointmentInterval = CalculateAverageInterval(customer.Appointments.ToList()),
-                SeasonalTrends = AnalyzeSeasonalTrends(customer.Appointments.ToList())
-            };
-            
-            patterns.Add(pattern);
-        }
+        // Ortalama randevu değeri
+        var averageOrderValue = totalSpent / appointments.Count;
         
-        return patterns;
+        // Randevu sıklığı (yılda kaç randevu)
+        var firstAppointment = appointments.Min(a => a.StartAt);
+        var daysSinceFirst = (DateTime.Now - firstAppointment).Days;
+        var frequencyPerYear = daysSinceFirst > 0 ? (appointments.Count * 365.0) / daysSinceFirst : 0;
+        
+        // Basit LTV hesaplama: Ortalama değer × Sıklık × Tahmini müşteri ömrü (2 yıl)
+        var estimatedLifetime = 2; // yıl
+        var ltv = averageOrderValue * (decimal)frequencyPerYear * estimatedLifetime;
+
+        return Math.Round(ltv, 2);
     }
 
     // Yardımcı metodlar
