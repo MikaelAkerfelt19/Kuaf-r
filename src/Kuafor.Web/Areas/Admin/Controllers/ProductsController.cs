@@ -11,10 +11,12 @@ namespace Kuafor.Web.Areas.Admin.Controllers
     public class ProductsController : Controller
     {
         private readonly IProductService _productService;
+        private readonly IBranchService _branchService;
 
-        public ProductsController(IProductService productService)
+        public ProductsController(IProductService productService, IBranchService branchService)
         {
             _productService = productService;
+            _branchService = branchService;
         }
 
         // GET: /Admin/Products
@@ -29,8 +31,10 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         // GET: /Admin/Products/Create
         [HttpGet]
         [Route("Create")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
+            var branches = await _branchService.GetAllAsync();
+            ViewBag.Branches = branches;
             return View(new Product());
         }
 
@@ -42,10 +46,15 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         {
             if (ModelState.IsValid)
             {
+                product.CreatedAt = DateTime.UtcNow;
                 await _productService.CreateAsync(product);
                 TempData["Success"] = "Ürün başarıyla oluşturuldu.";
                 return RedirectToAction(nameof(Index));
             }
+            
+            // Hata durumunda branch listesini tekrar yükle
+            var branches = await _branchService.GetAllAsync();
+            ViewBag.Branches = branches;
             return View(product);
         }
 

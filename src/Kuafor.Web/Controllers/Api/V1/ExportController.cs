@@ -57,6 +57,104 @@ namespace Kuafor.Web.Controllers.Api.V1
             return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "finansal_rapor.xlsx");
         }
 
+        // Talep edilen specific route'lar
+        [HttpGet("download/{fileName}")]
+        public async Task<IActionResult> DownloadFile(string fileName)
+        {
+            try
+            {
+                // Filename'e göre dosya türünü belirle
+                if (fileName.StartsWith("appointments_"))
+                {
+                    var appointments = await _appointmentService.GetAllAsync();
+                    var stream = await GenerateAppointmentsExcel(appointments);
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+                else if (fileName.StartsWith("customers_"))
+                {
+                    var customers = await _customerService.GetAllAsync();
+                    var stream = await GenerateCustomersExcel(customers);
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+                else if (fileName.StartsWith("financial_"))
+                {
+                    var report = await _financialService.GenerateFinancialReportAsync(DateTime.Now.AddMonths(-1), DateTime.Now);
+                    var stream = await GenerateFinancialExcel(report);
+                    return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+                }
+                
+                return NotFound("Dosya bulunamadı");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
+        [HttpGet("all/excel")]
+        public async Task<IActionResult> ExportAllToExcel()
+        {
+            try
+            {
+                // Tüm verileri tek Excel dosyasında export et
+                ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
+                using var package = new ExcelPackage();
+                
+                // Müşteriler
+                var customers = await _customerService.GetAllAsync();
+                var customerSheet = package.Workbook.Worksheets.Add("Müşteriler");
+                customerSheet.Cells[1, 1].Value = "Ad Soyad";
+                customerSheet.Cells[1, 2].Value = "Telefon";
+                customerSheet.Cells[1, 3].Value = "Email";
+                customerSheet.Cells[1, 4].Value = "Kayıt Tarihi";
+                
+                int row = 2;
+                foreach (var customer in customers)
+                {
+                    customerSheet.Cells[row, 1].Value = customer.FullName;
+                    customerSheet.Cells[row, 2].Value = customer.Phone;
+                    customerSheet.Cells[row, 3].Value = customer.Email;
+                    customerSheet.Cells[row, 4].Value = customer.CreatedAt.ToString("dd/MM/yyyy");
+                    row++;
+                }
+                
+                // Randevular
+                var appointments = await _appointmentService.GetAllAsync();
+                var appointmentSheet = package.Workbook.Worksheets.Add("Randevular");
+                appointmentSheet.Cells[1, 1].Value = "Tarih";
+                appointmentSheet.Cells[1, 2].Value = "Müşteri";
+                appointmentSheet.Cells[1, 3].Value = "Hizmet";
+                appointmentSheet.Cells[1, 4].Value = "Durum";
+                appointmentSheet.Cells[1, 5].Value = "Fiyat";
+                
+                row = 2;
+                foreach (var appointment in appointments)
+                {
+                    appointmentSheet.Cells[row, 1].Value = appointment.StartAt.ToString("dd/MM/yyyy HH:mm");
+                    appointmentSheet.Cells[row, 2].Value = appointment.Customer?.FullName;
+                    appointmentSheet.Cells[row, 3].Value = appointment.Service?.Name;
+                    appointmentSheet.Cells[row, 4].Value = appointment.Status.ToString();
+                    appointmentSheet.Cells[row, 5].Value = appointment.FinalPrice;
+                    row++;
+                }
+                
+                // Auto-fit columns
+                customerSheet.Cells.AutoFitColumns();
+                appointmentSheet.Cells.AutoFitColumns();
+                
+                var stream = new MemoryStream();
+                await package.SaveAsAsync(stream);
+                stream.Position = 0;
+                
+                return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                    $"tum_veriler_{DateTime.Now:yyyyMMdd}.xlsx");
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { error = ex.Message });
+            }
+        }
+
         private async Task<MemoryStream> GenerateCustomersExcel(IEnumerable<Customer> customers)
         {
             // Excel dosyası oluşturur ve müşteri verilerini yazar

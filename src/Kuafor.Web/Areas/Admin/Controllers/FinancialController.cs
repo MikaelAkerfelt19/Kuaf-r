@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Entities;
+using Kuafor.Web.Areas.Admin.Models;
 
 namespace Kuafor.Web.Areas.Admin.Controllers
 {

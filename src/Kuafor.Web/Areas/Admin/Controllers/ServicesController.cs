@@ -84,6 +84,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         [HttpPost]
+        [Route("Delete/{id:int}")] 
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {

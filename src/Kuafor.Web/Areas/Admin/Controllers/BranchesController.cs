@@ -10,12 +10,19 @@ namespace Kuafor.Web.Areas.Admin.Controllers
     public class BranchesController : Controller
     {
         private readonly IBranchService _branchService;
+        private readonly IAppointmentService _appointmentService;
+        private readonly IStylistService _stylistService;
         private readonly object _lock = new object();
         private static List<BranchDto> _branches = new List<BranchDto>();
 
-        public BranchesController(IBranchService branchService)
+        public BranchesController(
+            IBranchService branchService,
+            IAppointmentService appointmentService,
+            IStylistService stylistService)
         {
             _branchService = branchService;
+            _appointmentService = appointmentService;
+            _stylistService = stylistService;
         }
 
         // GET: /Admin/Branches
@@ -133,6 +140,131 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             }
 
             return Redirect("/Admin/Branches");
+        }
+
+        // GET: /Admin/Branches/Create
+        [HttpGet]
+        [Route("Create")]
+        public IActionResult Create()
+        {
+            return View(new BranchFormModel());
+        }
+
+        // GET: /Admin/Branches/Details/5
+        [HttpGet]
+        [Route("Details/{id:int}")]
+        public async Task<IActionResult> Details(int id)
+        {
+            try
+            {
+                var branch = await _branchService.GetByIdAsync(id);
+                if (branch == null)
+                {
+                    return NotFound();
+                }
+
+                // Şube istatistikleri
+                var appointments = await _appointmentService.GetByBranchAsync(id);
+                var stylists = await _stylistService.GetByBranchAsync(id);
+                
+                var branchDetails = new BranchDetailsViewModel
+                {
+                    Branch = branch,
+                    TotalAppointments = appointments.Count(),
+                    TotalStylists = stylists.Count(),
+                    MonthlyRevenue = appointments.Where(a => a.StartAt >= DateTime.Now.AddMonths(-1)).Sum(a => a.FinalPrice),
+                    AverageRating = stylists.Any() ? (double)stylists.Average(s => s.Rating) : 0
+                };
+
+                return View(branchDetails);
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
+        }
+
+        // GET: /Admin/Branches/Edit/5
+        [HttpGet]
+        [Route("Edit/{id:int}")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            try
+            {
+                var branch = await _branchService.GetByIdAsync(id);
+                if (branch == null)
+                {
+                    return NotFound();
+                }
+
+                var formModel = new BranchFormModel
+                {
+                    Id = branch.Id,
+                    Name = branch.Name,
+                    Address = branch.Address ?? string.Empty,
+                    Phone = branch.Phone ?? string.Empty,
+                    IsActive = branch.IsActive
+                };
+
+                return View(formModel);
+            }
+            catch (Exception)
+            {
+                return NotFound();
+            }
+        }
+
+        // POST: /Admin/Branches/ToggleActive/5
+        [HttpPost]
+        [Route("ToggleActive/{id:int}")]
+        public async Task<IActionResult> ToggleActive(int id)
+        {
+            try
+            {
+                var branch = await _branchService.GetByIdAsync(id);
+                if (branch == null)
+                {
+                    return Json(new { success = false, message = "Şube bulunamadı" });
+                }
+
+                branch.IsActive = !branch.IsActive;
+                await _branchService.UpdateAsync(branch);
+                
+                return Json(new { success = true, isActive = branch.IsActive });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
+        }
+
+        // GET: /Admin/Branches/Statistics/{id:int}
+        [HttpGet]
+        [Route("Statistics/{id:int}")]
+        public async Task<IActionResult> GetBranchStatistics(int id)
+        {
+            try
+            {
+                var appointments = await _appointmentService.GetByBranchAsync(id);
+                var stylists = await _stylistService.GetByBranchAsync(id);
+                
+                var stats = new
+                {
+                    totalAppointments = appointments.Count(),
+                    monthlyAppointments = appointments.Count(a => a.StartAt >= DateTime.Now.AddMonths(-1)),
+                    totalRevenue = appointments.Sum(a => a.FinalPrice),
+                    monthlyRevenue = appointments.Where(a => a.StartAt >= DateTime.Now.AddMonths(-1)).Sum(a => a.FinalPrice),
+                    totalStylists = stylists.Count(),
+                    activeStylists = stylists.Count(s => s.IsActive),
+                    averageRating = stylists.Any() ? stylists.Average(s => s.Rating) : 0
+                };
+
+                return Json(new { success = true, data = stats });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = ex.Message });
+            }
         }
     }
 }

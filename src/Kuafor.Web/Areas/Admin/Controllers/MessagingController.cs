@@ -6,6 +6,7 @@ using Kuafor.Web.Areas.Admin.Models;
 namespace Kuafor.Web.Areas.Admin.Controllers
 {
     [Area("Admin")]
+    [Route("Admin/[controller]")] // Bu route eksikti
     public class MessagingController : Controller
     {
         private readonly IMessagingService _messagingService;
@@ -23,12 +24,15 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // Ana mesajlaşma sayfası 
+        [Route("")]
+        [Route("Index")]
         public IActionResult Index()
         {
             return View();
         }
 
         // Grup yönetimi 
+        [Route("GroupMessaging")]
         public async Task<IActionResult> GroupMessaging()
         {
             var groups = await _messagingService.GetAllGroupsAsync();
@@ -65,6 +69,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // Toplu mesajlaşma 
+        [Route("BulkMessaging")]
         public async Task<IActionResult> BulkMessaging()
         {
             var customers = await _customerService.GetAllAsync();
@@ -147,6 +152,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         }
 
         // Mesaj raporları 
+        [Route("MessageReports")]
         public async Task<IActionResult> MessageReports()
         {
             var reports = await _messagingService.GetMessageReportsAsync();

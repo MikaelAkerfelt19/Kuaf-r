@@ -35,11 +35,27 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         [HttpGet]
         [Route("")]
         [Route("Index")]
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(DateTime? from, DateTime? to, int? branchId, int? stylistId, string? status)
         {
             var appointments = await _appointmentService.GetAllAsync();
             
-            // Mock referans verileri yerine gerçek veritabanı verilerini kullanalım
+            // Filtreleme işlemleri
+            if (from.HasValue)
+                appointments = appointments.Where(a => a.StartAt.Date >= from.Value.Date);
+            
+            if (to.HasValue)
+                appointments = appointments.Where(a => a.StartAt.Date <= to.Value.Date);
+                
+            if (branchId.HasValue)
+                appointments = appointments.Where(a => a.BranchId == branchId.Value);
+                
+            if (stylistId.HasValue)
+                appointments = appointments.Where(a => a.StylistId == stylistId.Value);
+                
+            if (!string.IsNullOrEmpty(status))
+                appointments = appointments.Where(a => a.Status.ToString() == status);
+            
+            // Referans verileri
             var services = await _serviceService.GetAllAsync();
             var stylists = await _stylistService.GetAllAsync();
             var customers = await _customerService.GetAllAsync();
@@ -49,7 +65,7 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             {
                 Id = a.Id,
                 StartAt = a.StartAt,
-                DurationMin = 30, // Default duration
+                DurationMin = 30,
                 CustomerName = $"{a.Customer?.FirstName} {a.Customer?.LastName}",
                 ServiceName = a.Service?.Name ?? "",
                 Status = a.Status.ToString(),
@@ -59,11 +75,18 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 StylistId = a.StylistId
             }).ToList();
 
-            // AppointmentsPageViewModel oluştur
+            // ViewModel oluştur
             var viewModel = new AppointmentsPageViewModel
             {
                 Items = appointmentDtos,
-                Filter = new AppointmentFilter(), // Varsayılan filtre
+                Filter = new AppointmentFilter 
+                {
+                    From = from,
+                    To = to,
+                    BranchId = branchId,
+                    StylistId = stylistId,
+                    Status = status
+                },
                 BranchNames = branches.ToDictionary(b => b.Id, b => b.Name),
                 StylistNames = stylists.ToDictionary(s => s.Id, s => $"{s.FirstName} {s.LastName}")
             };

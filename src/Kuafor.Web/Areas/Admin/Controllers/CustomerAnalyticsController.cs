@@ -3,6 +3,7 @@ using Kuafor.Web.Services.Interfaces;
 using Kuafor.Web.Models.Admin;
 using Kuafor.Web.Models.Entities;
 using CustomerEntity = Kuafor.Web.Models.Entities.Customer;
+using OfficeOpenXml;
 
 
 namespace Kuafor.Web.Areas.Admin.Controllers;
@@ -75,10 +76,10 @@ public class CustomerAnalyticsController : Controller
             var appointments = await _appointmentService.GetByCustomerIdAsync(id);
             var customerDetails = new CustomerDetailsViewModel
             {
-                Customer = customer,
-                Appointments = appointments.ToList(),
-                TotalSpent = appointments.Sum(a => a.FinalPrice),
-                LastVisit = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt
+                CustomerInfo = customer,
+                AppointmentList = appointments.ToList(),
+                TotalSpentAmount = appointments.Sum(a => a.FinalPrice),
+                LastVisitDate = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt
             };
 
             return View(customerDetails);
@@ -87,6 +88,45 @@ public class CustomerAnalyticsController : Controller
         {
             return NotFound();
         }
+    }
+
+    // POST: /Admin/CustomerAnalytics/Details/5 - Edit customer details
+    [HttpPost]
+    [Route("Details/{id}")]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Details(int id, CustomerEntity customer)
+    {
+        if (id != customer.Id)
+        {
+            return NotFound();
+        }
+
+        try
+        {
+            if (ModelState.IsValid)
+            {
+                customer.UpdatedAt = DateTime.UtcNow;
+                await _customerService.UpdateAsync(customer);
+                TempData["Success"] = "Müşteri bilgileri başarıyla güncellendi.";
+                return RedirectToAction(nameof(Details), new { id = customer.Id });
+            }
+        }
+        catch (Exception ex)
+        {
+            TempData["Error"] = $"Güncelleme hatası: {ex.Message}";
+        }
+
+        // Hata durumunda appointments'ları tekrar yükle
+        var appointments = await _appointmentService.GetByCustomerIdAsync(id);
+        var customerDetails = new CustomerDetailsViewModel
+        {
+            CustomerInfo = customer,
+            AppointmentList = appointments.ToList(),
+            TotalSpentAmount = appointments.Sum(a => a.FinalPrice),
+            LastVisitDate = appointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt
+        };
+
+        return View(customerDetails);
     }
 
     // GET: /Admin/CustomerAnalytics/Delete/5
@@ -143,12 +183,58 @@ public class CustomerAnalyticsController : Controller
         try
         {
             var customers = await _customerService.GetAllAsync();
-            // CSV export logic would go here
-            return Json(new { message = "Export functionality will be implemented" });
+            var appointments = await _appointmentService.GetAllAsync();
+            
+            // Excel dosyası oluştur
+            using var package = new ExcelPackage();
+            var worksheet = package.Workbook.Worksheets.Add("Müşteri Analitikleri");
+            
+            // Header
+            worksheet.Cells[1, 1].Value = "Müşteri ID";
+            worksheet.Cells[1, 2].Value = "Ad Soyad";
+            worksheet.Cells[1, 3].Value = "E-posta";
+            worksheet.Cells[1, 4].Value = "Telefon";
+            worksheet.Cells[1, 5].Value = "Kayıt Tarihi";
+            worksheet.Cells[1, 6].Value = "Toplam Randevu";
+            worksheet.Cells[1, 7].Value = "Toplam Harcama";
+            worksheet.Cells[1, 8].Value = "Son Randevu";
+            worksheet.Cells[1, 9].Value = "Durum";
+            
+            // Veri doldur
+            int row = 2;
+            foreach (var customer in customers)
+            {
+                var customerAppointments = appointments.Where(a => a.CustomerId == customer.Id);
+                var totalSpent = customerAppointments.Sum(a => a.FinalPrice);
+                var lastVisit = customerAppointments.OrderByDescending(a => a.StartAt).FirstOrDefault()?.StartAt;
+                
+                worksheet.Cells[row, 1].Value = customer.Id;
+                worksheet.Cells[row, 2].Value = customer.FullName;
+                worksheet.Cells[row, 3].Value = customer.Email;
+                worksheet.Cells[row, 4].Value = customer.Phone;
+                worksheet.Cells[row, 5].Value = customer.CreatedAt.ToString("dd/MM/yyyy");
+                worksheet.Cells[row, 6].Value = customerAppointments.Count();
+                worksheet.Cells[row, 7].Value = totalSpent;
+                worksheet.Cells[row, 8].Value = lastVisit?.ToString("dd/MM/yyyy") ?? "Hiç";
+                worksheet.Cells[row, 9].Value = customer.IsActive ? "Aktif" : "Pasif";
+                
+                row++;
+            }
+            
+            // Auto-fit columns
+            worksheet.Cells.AutoFitColumns();
+            
+            var stream = new MemoryStream();
+            await package.SaveAsAsync(stream);
+            stream.Position = 0;
+            
+            return File(stream, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", 
+                $"musteri_analitikleri_{DateTime.Now:yyyyMMdd}.xlsx");
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            return Json(new { error = "Export failed" });
+            TempData["Error"] = $"Export hatası: {ex.Message}";
+            return RedirectToAction("Index");
         }
     }
 
