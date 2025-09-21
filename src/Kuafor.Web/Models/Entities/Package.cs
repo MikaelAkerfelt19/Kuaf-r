@@ -13,6 +13,7 @@ public class Package
     public decimal SessionUnitPrice { get; set; }
     public bool IsActive { get; set; } = true;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public DateTime? UpdatedAt { get; set; }
     
     // Navigation properties
     public virtual ICollection<PackageService> PackageServices { get; set; } = new List<PackageService>();
