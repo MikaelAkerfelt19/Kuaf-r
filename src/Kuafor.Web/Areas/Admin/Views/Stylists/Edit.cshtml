@@ -6,186 +6,144 @@
 }
 
 <div class="container-fluid">
-    <!-- Modern Header with Gradient Background -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="card border-0 shadow-sm" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                <div class="card-body py-4">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <div class="d-flex align-items-center">
-                            <div class="me-3">
-                                <div class="bg-white bg-opacity-20 rounded-circle p-3">
-                                    <i class="fas fa-user-edit text-white fs-4"></i>
-                                </div>
-                            </div>
-                            <div>
-                                <h1 class="h3 mb-1 text-white fw-bold">Kuaför Düzenle</h1>
-                                <p class="text-white-50 mb-0">@($"{Model.FirstName} {Model.LastName}") için bilgileri güncelleyin</p>
-                            </div>
-                        </div>
-                        <a href="@Url.Action("Index")" class="btn btn-light btn-lg px-4">
-                            <i class="fas fa-arrow-left me-2"></i> Geri Dön
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h3 mb-0 text-gray-800">Kuaför Düzenle</h1>
+        <a href="@Url.Action("Index")" class="btn btn-secondary">
+            <i class="fas fa-arrow-left"></i> Geri Dön
+        </a>
     </div>
 
     <div class="row">
         <!-- Kuaför Bilgileri -->
         <div class="col-lg-8">
-            <div class="card border-0 shadow-lg">
-                <div class="card-header bg-white border-0 py-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-primary bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="fas fa-user text-primary fs-5"></i>
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Kuaför Bilgileri</h6>
+                </div>
+                <div class="card-body">
+            @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
+            {
+                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                    @err
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                </div>
+            }
+
+            <form id="edit-form" method="post" asp-action="Edit">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="Id" />
+                <input type="hidden" asp-for="CreatedAt" />
+                <input type="hidden" asp-for="UpdatedAt" />
+                
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="FirstName" class="form-label">Ad <span class="text-danger">*</span></label>
+                            <input asp-for="FirstName" class="form-control" placeholder="Kuaförün adı" required />
+                            <span asp-validation-for="FirstName" class="text-danger"></span>
                         </div>
-                        <div>
-                            <h5 class="mb-1 fw-bold text-dark">Kişisel Bilgiler</h5>
-                            <p class="text-muted mb-0">Kuaförün temel bilgilerini güncelleyin</p>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="LastName" class="form-label">Soyad <span class="text-danger">*</span></label>
+                            <input asp-for="LastName" class="form-control" placeholder="Kuaförün soyadı" required />
+                            <span asp-validation-for="LastName" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
-                <div class="card-body p-4">
-                    @if (TempData["Error"] is string err && !string.IsNullOrWhiteSpace(err))
-                    {
-                        <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-exclamation-triangle me-3 fs-5"></i>
-                                <div>@err</div>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
-                        </div>
-                    }
 
-                    @if (TempData["Success"] is string success && !string.IsNullOrWhiteSpace(success))
-                    {
-                        <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm" role="alert">
-                            <div class="d-flex align-items-center">
-                                <i class="fas fa-check-circle me-3 fs-5"></i>
-                                <div>@success</div>
-                            </div>
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Kapat"></button>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Email" class="form-label">E-posta</label>
+                            <input asp-for="Email" type="email" class="form-control" placeholder="ornek@email.com" />
+                            <span asp-validation-for="Email" class="text-danger"></span>
                         </div>
-                    }
-
-                    <form method="post" asp-action="Edit" class="needs-validation" novalidate>
-                        @Html.AntiForgeryToken()
-                        <input type="hidden" asp-for="Id" />
-                        <input type="hidden" asp-for="CreatedAt" />
-                        <input type="hidden" asp-for="UpdatedAt" />
-                        
-                        <!-- Ad Soyad -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input asp-for="FirstName" class="form-control form-control-lg" placeholder="Ad" required />
-                                    <label asp-for="FirstName" class="fw-semibold">
-                                        <i class="fas fa-user me-2 text-primary"></i>Ad <span class="text-danger">*</span>
-                                    </label>
-                                    <span asp-validation-for="FirstName" class="text-danger small"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input asp-for="LastName" class="form-control form-control-lg" placeholder="Soyad" required />
-                                    <label asp-for="LastName" class="fw-semibold">
-                                        <i class="fas fa-user me-2 text-primary"></i>Soyad <span class="text-danger">*</span>
-                                    </label>
-                                    <span asp-validation-for="LastName" class="text-danger small"></span>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Phone" class="form-label">Telefon</label>
+                            <input asp-for="Phone" class="form-control" placeholder="0555 123 45 67" />
+                            <span asp-validation-for="Phone" class="text-danger"></span>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- İletişim Bilgileri -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input asp-for="Email" type="email" class="form-control form-control-lg" placeholder="ornek@email.com" />
-                                    <label asp-for="Email" class="fw-semibold">
-                                        <i class="fas fa-envelope me-2 text-info"></i>E-posta
-                                    </label>
-                                    <span asp-validation-for="Email" class="text-danger small"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <input asp-for="Phone" class="form-control form-control-lg" placeholder="0555 123 45 67" />
-                                    <label asp-for="Phone" class="fw-semibold">
-                                        <i class="fas fa-phone me-2 text-success"></i>Telefon
-                                    </label>
-                                    <span asp-validation-for="Phone" class="text-danger small"></span>
-                                </div>
-                            </div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="BranchId" class="form-label">Şube <span class="text-danger">*</span></label>
+                            <select asp-for="BranchId" class="form-select" required>
+                                <option value="">Şube Seçin</option>
+                                @foreach (var branch in ViewBag.Branches)
+                                {
+                                    @if (Model.BranchId == branch.Id)
+                                {
+                                    <option value="@branch.Id" selected>@branch.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@branch.Id">@branch.Name</option>
+                                }
+                                }
+                            </select>
+                            <span asp-validation-for="BranchId" class="text-danger"></span>
                         </div>
-
-                        <!-- Şube ve Puan -->
-                        <div class="row mb-4">
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <select asp-for="BranchId" class="form-select form-select-lg" required>
-                                        <option value="">Şube Seçin</option>
-                                        @foreach (var branch in ViewBag.Branches)
-                                        {
-                                            <option value="@branch.Id">@branch.Name</option>
-                                        }
-                                    </select>
-                                    <label for="BranchId" class="fw-semibold">
-                                        <i class="fas fa-building me-2 text-warning"></i>Şube <span class="text-danger">*</span>
-                                    </label>
-                                    <span asp-validation-for="BranchId" class="text-danger small"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating">
-                                    <select asp-for="Rating" class="form-select form-select-lg">
-                                        <option value="0">0 - Yeni</option>
-                                        <option value="1">1 - Başlangıç</option>
-                                        <option value="2">2 - Gelişmekte</option>
-                                        <option value="3">3 - İyi</option>
-                                        <option value="4">4 - Çok İyi</option>
-                                        <option value="5">5 - Mükemmel</option>
-                                    </select>
-                                    <label for="Rating" class="fw-semibold">
-                                        <i class="fas fa-star me-2 text-warning"></i>Puan
-                                    </label>
-                                    <span asp-validation-for="Rating" class="text-danger small"></span>
-                                </div>
-                            </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label asp-for="Rating" class="form-label">Puan</label>
+                            <select asp-for="Rating" class="form-select">
+                                @for (int i = 0; i <= 5; i++)
+                                {
+                                    var ratingText = i switch
+                                    {
+                                        0 => "0 - Yeni",
+                                        1 => "1 - Başlangıç",
+                                        2 => "2 - Gelişmekte",
+                                        3 => "3 - İyi",
+                                        4 => "4 - Çok İyi",
+                                        5 => "5 - Mükemmel",
+                                        _ => i.ToString()
+                                    };
+                                    
+                                    @if (Model.Rating == i)
+                                    {
+                                        <option value="@i" selected>@ratingText</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@i">@ratingText</option>
+                                    }
+                                }
+                            </select>
+                            <span asp-validation-for="Rating" class="text-danger"></span>
                         </div>
+                    </div>
+                </div>
 
-                        <!-- Biyografi -->
-                        <div class="mb-4">
-                            <div class="form-floating">
-                                <textarea asp-for="Bio" class="form-control form-control-lg" style="height: 120px" placeholder="Kuaför hakkında kısa bilgi..."></textarea>
-                                <label asp-for="Bio" class="fw-semibold">
-                                    <i class="fas fa-file-alt me-2 text-secondary"></i>Biyografi
-                                </label>
-                                <span asp-validation-for="Bio" class="text-danger small"></span>
-                            </div>
-                            <div class="form-text">
-                                <i class="fas fa-info-circle me-1"></i>Maksimum 500 karakter
-                            </div>
-                        </div>
+                <div class="mb-3">
+                    <label asp-for="Bio" class="form-label">Biyografi</label>
+                    <textarea asp-for="Bio" class="form-control" rows="4" placeholder="Kuaför hakkında kısa bilgi..."></textarea>
+                    <span asp-validation-for="Bio" class="text-danger"></span>
+                    <div class="form-text">Maksimum 500 karakter</div>
+                </div>
 
-                        <!-- Aktif Durumu -->
-                        <div class="mb-4">
-                            <div class="form-check form-switch form-check-lg">
-                                <input asp-for="IsActive" class="form-check-input" type="checkbox" role="switch" />
-                                <label asp-for="IsActive" class="form-check-label fw-semibold">
-                                    <i class="fas fa-toggle-on me-2 text-success"></i>Kuaför aktif olarak çalışıyor
-                                </label>
-                            </div>
-                        </div>
+                <div class="mb-3">
+                    <div class="form-check">
+                        <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                        <label asp-for="IsActive" class="form-check-label">
+                            Kuaför aktif olarak çalışıyor
+                        </label>
+                    </div>
+                </div>
 
-                        <!-- Action Buttons -->
-                        <div class="d-flex justify-content-end gap-3 pt-4 border-top">
-                            <a href="@Url.Action("Index")" class="btn btn-outline-secondary btn-lg px-4">
-                                <i class="fas fa-times me-2"></i> İptal
+                        <div class="d-flex justify-content-end">
+                            <a href="@Url.Action("Index")" class="btn btn-secondary me-2">
+                                <i class="fas fa-times"></i> İptal
                             </a>
-                            <button type="submit" class="btn btn-primary btn-lg px-4">
-                                <i class="fas fa-save me-2"></i> Güncelle
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Güncelle
                             </button>
                         </div>
                     </form>
@@ -195,19 +153,11 @@
 
         <!-- Çalışma Saatleri -->
         <div class="col-lg-4">
-            <div class="card border-0 shadow-lg">
-                <div class="card-header bg-white border-0 py-4">
-                    <div class="d-flex align-items-center">
-                        <div class="bg-success bg-opacity-10 rounded-circle p-3 me-3">
-                            <i class="fas fa-clock text-success fs-5"></i>
-                        </div>
-                        <div>
-                            <h5 class="mb-1 fw-bold text-dark">Çalışma Saatleri</h5>
-                            <p class="text-muted mb-0">Haftalık çalışma programını ayarlayın</p>
-                        </div>
-                    </div>
+            <div class="card shadow">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-success">Çalışma Saatleri</h6>
                 </div>
-                <div class="card-body p-4">
+                <div class="card-body">
                     <form method="post" asp-action="UpdateWorkingHours" asp-route-stylistId="@Model.Id">
                         @Html.AntiForgeryToken()
                         
@@ -230,78 +180,48 @@
                             var workingHour = workingHours.FirstOrDefault(w => w.DayOfWeek == day.Value);
                             var isWorkingDay = workingHour?.IsWorkingDay == true;
                             
-                            <div class="card border-0 mb-3 @(isWorkingDay ? "bg-light" : "")" style="transition: all 0.3s ease;">
-                                <div class="card-body p-3">
-                                    <div class="d-flex justify-content-between align-items-center mb-3">
-                                        <h6 class="mb-0 fw-bold text-dark">
-                                            <i class="fas fa-calendar-day me-2 text-primary"></i>@day.Name
-                                        </h6>
-                                        <div class="form-check form-switch">
-                                            <input type="checkbox" 
-                                                   name="workingHours[@i].IsWorkingDay" 
-                                                   value="true"
-                                                   class="form-check-input working-day-checkbox" 
-                                                   data-target="day-@i"
-                                                   @(isWorkingDay ? "checked" : "") />
-                                            <input type="hidden" name="workingHours[@i].IsWorkingDay" value="false" />
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    <input type="hidden" name="workingHours[@i].DayOfWeek" value="@((int)day.Value)" />
+                                    <input class="form-check-input working-day-checkbox" type="checkbox" 
+                                           name="workingHours[@i].IsWorkingDay" 
+                                           value="true" 
+                                           id="workingDay_@i"
+                                           data-target="day-@i"
+                                           @(isWorkingDay ? "checked" : "") />
+                                    <label class="form-check-label" for="workingDay_@i">
+                                        @day.Name
+                                    </label>
+                                </div>
+                                
+                                <div id="day-@i" class="working-hours-details" style="@(isWorkingDay ? "" : "display: none;")">
+                                    <div class="row">
+                                        <div class="col-6">
+                                            <label class="form-label small">Açılış</label>
+                                            <input type="time" class="form-control form-control-sm" 
+                                                   name="workingHours[@i].OpenTime" 
+                                                   value="@(workingHour?.OpenTime.ToString(@"hh\:mm") ?? "09:00")" />
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small">Kapanış</label>
+                                            <input type="time" class="form-control form-control-sm" 
+                                                   name="workingHours[@i].CloseTime" 
+                                                   value="@(workingHour?.CloseTime.ToString(@"hh\:mm") ?? "18:00")" />
                                         </div>
                                     </div>
                                     
-                                    <input type="hidden" name="workingHours[@i].DayOfWeek" value="@((int)day.Value)" />
-                                    <input type="hidden" name="workingHours[@i].BranchId" value="@Model.BranchId" />
-                                    
-                                    <div id="day-@i" class="working-hours-details" style="@(isWorkingDay ? "" : "display: none;")">
-                                        <!-- Çalışma Saatleri -->
-                                        <div class="row mb-3">
-                                            <div class="col-6">
-                                                <label class="form-label small fw-semibold text-muted">
-                                                    <i class="fas fa-sun me-1"></i>Açılış
-                                                </label>
-                                                <input type="time" 
-                                                       name="workingHours[@i].OpenTime" 
-                                                       class="form-control form-control-sm open-time border-0 bg-white shadow-sm"
-                                                       data-day="@i"
-                                                       value="@(workingHour?.OpenTime.ToString(@"hh\:mm") ?? "09:00")" />
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="form-label small fw-semibold text-muted">
-                                                    <i class="fas fa-moon me-1"></i>Kapanış
-                                                </label>
-                                                <input type="time" 
-                                                       name="workingHours[@i].CloseTime" 
-                                                       class="form-control form-control-sm close-time border-0 bg-white shadow-sm"
-                                                       data-day="@i"
-                                                       value="@(workingHour?.CloseTime.ToString(@"hh\:mm") ?? "18:00")" />
-                                            </div>
+                                    <div class="row mt-2">
+                                        <div class="col-6">
+                                            <label class="form-label small">Öğle Arası Başlangıç</label>
+                                            <input type="time" class="form-control form-control-sm" 
+                                                   name="workingHours[@i].BreakStart" 
+                                                   value="@(workingHour?.BreakStart?.ToString(@"hh\:mm") ?? "12:00")" />
                                         </div>
-                                        
-                                        <!-- Öğle Arası -->
-                                        <div class="row mb-3">
-                                            <div class="col-6">
-                                                <label class="form-label small fw-semibold text-muted">
-                                                    <i class="fas fa-coffee me-1"></i>Öğle Başı
-                                                </label>
-                                                <input type="time" 
-                                                       name="workingHours[@i].BreakStart" 
-                                                       class="form-control form-control-sm break-start border-0 bg-white shadow-sm"
-                                                       data-day="@i"
-                                                       value="@(workingHour?.BreakStart?.ToString(@"hh\:mm") ?? "12:00")" />
-                                            </div>
-                                            <div class="col-6">
-                                                <label class="form-label small fw-semibold text-muted">
-                                                    <i class="fas fa-utensils me-1"></i>Öğle Sonu
-                                                </label>
-                                                <input type="time" 
-                                                       name="workingHours[@i].BreakEnd" 
-                                                       class="form-control form-control-sm break-end border-0 bg-white shadow-sm"
-                                                       data-day="@i"
-                                                       value="@(workingHour?.BreakEnd?.ToString(@"hh\:mm") ?? "13:00")" />
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="alert alert-info alert-sm border-0 mb-0">
-                                            <i class="fas fa-info-circle me-2"></i>
-                                            <small>Öğle arası saatleri çalışma saatleri içinde olmalıdır.</small>
+                                        <div class="col-6">
+                                            <label class="form-label small">Öğle Arası Bitiş</label>
+                                            <input type="time" class="form-control form-control-sm" 
+                                                   name="workingHours[@i].BreakEnd" 
+                                                   value="@(workingHour?.BreakEnd?.ToString(@"hh\:mm") ?? "13:00")" />
                                         </div>
                                     </div>
                                 </div>
@@ -309,7 +229,7 @@
                         }
 
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-success btn-lg">
+                            <button type="submit" class="btn btn-success">
                                 <i class="fas fa-clock me-2"></i> Çalışma Saatlerini Güncelle
                             </button>
                         </div>
@@ -320,156 +240,16 @@
     </div>
 </div>
 
-@section Styles {
-    <style>
-        /* Modern Form Styling */
-        .form-floating > .form-control:focus ~ label,
-        .form-floating > .form-control:not(:placeholder-shown) ~ label {
-            opacity: 0.8;
-            transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-        }
-        
-        .form-control:focus, .form-select:focus {
-            border-color: #667eea;
-            box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
-        }
-        
-        .form-control-lg, .form-select-lg {
-            border-radius: 0.75rem;
-            border: 2px solid #e9ecef;
-            transition: all 0.3s ease;
-        }
-        
-        .form-control-lg:focus, .form-select-lg:focus {
-            border-color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
-        }
-        
-        /* Working Hours Styling */
-        .working-hours-details {
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            animation: slideDown 0.3s ease-out;
-        }
-        
-        @@keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        .working-day-checkbox:checked ~ .card-body {
-            background-color: #f8f9fa !important;
-            border-left: 4px solid #28a745;
-        }
-        
-        .form-check-input:checked {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        
-        .form-control-sm:focus {
-            border-color: #28a745;
-            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-        }
-        
-        /* Card Hover Effects */
-        .card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1) !important;
-        }
-        
-        /* Button Styling */
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: none;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-        }
-        
-        .btn-success {
-            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
-            border: none;
-            border-radius: 0.75rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-success:hover {
-            background: linear-gradient(135deg, #218838 0%, #1ea085 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(40, 167, 69, 0.3);
-        }
-        
-        .btn-outline-secondary {
-            border-radius: 0.75rem;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-outline-secondary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(108, 117, 125, 0.3);
-        }
-        
-        /* Alert Styling */
-        .alert {
-            border-radius: 0.75rem;
-            border: none;
-            font-weight: 500;
-        }
-        
-        /* Form Switch Styling */
-        .form-check-input:checked {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        
-        .form-switch .form-check-input:checked {
-            background-color: #28a745;
-            border-color: #28a745;
-        }
-        
-        /* Time Input Styling */
-        input[type="time"] {
-            border-radius: 0.5rem;
-        }
-        
-        input[type="time"]:focus {
-            border-color: #28a745;
-            box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.25);
-        }
-        
-        /* Responsive Design */
-        @@media (max-width: 768px) {
-            .form-control-lg, .form-select-lg {
-                font-size: 1rem;
-            }
-            
-            .btn-lg {
-                padding: 0.75rem 1.5rem;
-                font-size: 1rem;
-            }
-        }
-    </style>
-}
-
 @section Scripts {
     <script>
-        // Çalışma günü checkbox'larını yönet
+        console.log('Stylists Edit page loaded');
+        
+        // Form validation ve debug
         document.addEventListener('DOMContentLoaded', function() {
+            const form = document.querySelector('form');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            // Çalışma günü checkbox'larını yönet
             const checkboxes = document.querySelectorAll('.working-day-checkbox');
             
             checkboxes.forEach(function(checkbox) {
@@ -477,94 +257,41 @@
                     const target = document.getElementById(this.dataset.target);
                     if (target) {
                         target.style.display = this.checked ? 'block' : 'none';
-                        
-                        // Çalışma günü seçildiğinde saatleri sıfırla
-                        if (this.checked) {
-                            resetWorkingHours(this.dataset.target);
-                        }
                     }
                 });
             });
             
-            // Saat validasyonu
-            document.querySelectorAll('.open-time, .close-time, .break-start, .break-end').forEach(function(input) {
-                input.addEventListener('change', function() {
-                    validateWorkingHours(this.dataset.day);
+            form.addEventListener('submit', function(e) {
+                console.log('Form submit ediliyor...');
+                
+                // Form verilerini logla
+                const formData = new FormData(form);
+                for (let [key, value] of formData.entries()) {
+                    console.log(`${key}: ${value}`);
+                }
+                
+                // Validation kontrolü
+                const firstName = document.querySelector('#FirstName').value.trim();
+                const lastName = document.querySelector('#LastName').value.trim();
+                const branchId = document.querySelector('#BranchId').value;
+                const isActive = document.querySelector('#IsActive').checked;
+                
+                console.log('Validation değerleri:', {
+                    firstName: firstName,
+                    lastName: lastName,
+                    branchId: branchId,
+                    isActive: isActive
                 });
+                
+                if (!firstName || !lastName || !branchId) {
+                    console.log('Validation hatası var!');
+                    e.preventDefault();
+                    alert('Lütfen zorunlu alanları doldurun!');
+                    return false;
+                }
+                
+                console.log('Form gönderiliyor...');
             });
         });
-        
-        function resetWorkingHours(dayId) {
-            const dayElement = document.getElementById(dayId);
-            if (dayElement) {
-                const openTime = dayElement.querySelector('.open-time');
-                const closeTime = dayElement.querySelector('.close-time');
-                const breakStart = dayElement.querySelector('.break-start');
-                const breakEnd = dayElement.querySelector('.break-end');
-                
-                if (openTime && !openTime.value) openTime.value = '09:00';
-                if (closeTime && !closeTime.value) closeTime.value = '18:00';
-                if (breakStart && !breakStart.value) breakStart.value = '12:00';
-                if (breakEnd && !breakEnd.value) breakEnd.value = '13:00';
-            }
-        }
-        
-        function validateWorkingHours(dayIndex) {
-            const dayElement = document.getElementById('day-' + dayIndex);
-            if (!dayElement) return;
-            
-            const openTime = dayElement.querySelector('.open-time');
-            const closeTime = dayElement.querySelector('.close-time');
-            const breakStart = dayElement.querySelector('.break-start');
-            const breakEnd = dayElement.querySelector('.break-end');
-            
-            if (!openTime || !closeTime || !breakStart || !breakEnd) return;
-            
-            const open = new Date('2000-01-01 ' + openTime.value);
-            const close = new Date('2000-01-01 ' + closeTime.value);
-            const breakS = new Date('2000-01-01 ' + breakStart.value);
-            const breakE = new Date('2000-01-01 ' + breakEnd.value);
-            
-            // Açılış kapanıştan önce olmalı
-            if (open >= close) {
-                closeTime.value = new Date(open.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
-            }
-            
-            // Öğle arası çalışma saatleri içinde olmalı
-            if (breakS < open) {
-                breakStart.value = openTime.value;
-            }
-            if (breakE > close) {
-                breakEnd.value = closeTime.value;
-            }
-            if (breakS >= breakE) {
-                breakEnd.value = new Date(breakS.getTime() + 60 * 60 * 1000).toTimeString().slice(0, 5);
-            }
-            
-            // Uyarı göster
-            if (breakS < open || breakE > close) {
-                showTimeWarning(dayElement, 'Öğle arası saatleri çalışma saatleri içinde olmalıdır!');
-            } else {
-                hideTimeWarning(dayElement);
-            }
-        }
-        
-        function showTimeWarning(element, message) {
-            let warning = element.querySelector('.time-warning');
-            if (!warning) {
-                warning = document.createElement('div');
-                warning.className = 'time-warning alert alert-warning alert-sm mt-2';
-                element.appendChild(warning);
-            }
-            warning.innerHTML = '<i class="fas fa-exclamation-triangle"></i> ' + message;
-            warning.style.display = 'block';
-        }
-        
-        function hideTimeWarning(element) {
-            const warning = element.querySelector('.time-warning');
-            if (warning) {
-                warning.style.display = 'none';
-            }
-        }
     </script>
 }
