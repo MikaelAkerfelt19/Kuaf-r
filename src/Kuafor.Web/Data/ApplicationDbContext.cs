@@ -40,6 +40,10 @@ public class ApplicationDbContext : IdentityDbContext
     public DbSet<MessageTemplate> MessageTemplates { get; set; }
     public DbSet<FinancialTransaction> FinancialTransactions { get; set; }
     
+    // Adisyon DbSets
+    public DbSet<Adisyon> Adisyons { get; set; } = null!;
+    public DbSet<AdisyonDetail> AdisyonDetails { get; set; } = null!;
+    
     // Yeni eklenen DbSets
     public DbSet<WorkingHours> WorkingHours { get; set; } = null!;
     public DbSet<Loyalty> Loyalties { get; set; } = null!;
@@ -1133,6 +1137,57 @@ public DbSet<WhatsAppTemplateUsage> WhatsAppTemplateUsages { get; set; }
             entity.HasIndex(e => e.Type);
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.CreatedAt);
+        });
+
+        // Adisyon configuration
+        builder.Entity<Adisyon>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.CustomerName).IsRequired().HasMaxLength(100);
+            entity.Property(e => e.CustomerPhone).HasMaxLength(20);
+            entity.Property(e => e.CustomerEmail).HasMaxLength(100);
+            entity.Property(e => e.PaymentMethod).IsRequired().HasMaxLength(50);
+            entity.Property(e => e.Notes).HasMaxLength(500);
+            entity.Property(e => e.TotalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.DiscountAmount).HasPrecision(18, 2);
+            entity.Property(e => e.FinalAmount).HasPrecision(18, 2);
+            entity.Property(e => e.IsActive).IsRequired();
+            entity.Property(e => e.CreatedAt).IsRequired();
+            
+            // Foreign key
+            entity.HasOne(e => e.Customer)
+                .WithMany()
+                .HasForeignKey(e => e.CustomerId)
+                .OnDelete(DeleteBehavior.SetNull);
+            
+            // Indexes
+            entity.HasIndex(e => e.CustomerId);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasIndex(e => e.IsActive);
+        });
+
+        // AdisyonDetail configuration
+        builder.Entity<AdisyonDetail>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Quantity).IsRequired();
+            entity.Property(e => e.UnitPrice).HasPrecision(18, 2);
+            entity.Property(e => e.TotalPrice).HasPrecision(18, 2);
+            
+            // Foreign keys
+            entity.HasOne(e => e.Adisyon)
+                .WithMany(a => a.AdisyonDetails)
+                .HasForeignKey(e => e.AdisyonId)
+                .OnDelete(DeleteBehavior.Cascade);
+            
+            entity.HasOne(e => e.Service)
+                .WithMany()
+                .HasForeignKey(e => e.ServiceId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            // Indexes
+            entity.HasIndex(e => e.AdisyonId);
+            entity.HasIndex(e => e.ServiceId);
         });
     }
 }
