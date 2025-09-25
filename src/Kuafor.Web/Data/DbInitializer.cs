@@ -25,6 +25,9 @@ public static class DbInitializer
         
         // Mesaj şablonlarını oluştur
         await EnsureMessageTemplatesAsync(context);
+        
+        // WhatsApp şablonlarını oluştur
+        await EnsureWhatsAppTemplatesAsync(context);
     }
 
     private static async Task EnsureRolesAsync(RoleManager<IdentityRole> roleManager)
@@ -331,6 +334,86 @@ public static class DbInitializer
         };
 
         await context.MessageTemplates.AddRangeAsync(templates);
+        await context.SaveChangesAsync();
+    }
+
+    private static async Task EnsureWhatsAppTemplatesAsync(ApplicationDbContext context)
+    {
+        // WhatsApp şablonları zaten var mı kontrol et
+        if (await context.WhatsAppTemplates.AnyAsync())
+            return;
+
+        var whatsappTemplates = new[]
+        {
+            new WhatsAppTemplate
+            {
+                Name = "hoşgeldin_mesajı",
+                Category = "UTILITY",
+                Content = "Merhaba {{FirstName}}! 🎉 Kuafor salonumuza hoş geldiniz. Size en iyi hizmeti sunmak için buradayız. Randevu almak için bizi arayabilirsiniz. 💇‍♀️✨",
+                Description = "Yeni müşteriler için hoş geldin mesajı",
+                Language = "tr",
+                Status = "APPROVED",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new WhatsAppTemplate
+            {
+                Name = "randevu_hatirlatma",
+                Category = "UTILITY",
+                Content = "Merhaba {{FirstName}}! 📅 Yarın saat {{Time}}'da {{Service}} randevunuz bulunmaktadır. Lütfen 15 dakika önce salonda olunuz. 🕐",
+                Description = "Randevu hatırlatma mesajı",
+                Language = "tr",
+                Status = "APPROVED",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new WhatsAppTemplate
+            {
+                Name = "randevu_iptal_bildirimi",
+                Category = "UTILITY",
+                Content = "Merhaba {{FirstName}}! 😔 Randevunuz iptal edilmiştir. Yeni bir randevu için bizi arayabilirsiniz. 📞",
+                Description = "Randevu iptal bildirimi",
+                Language = "tr",
+                Status = "APPROVED",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new WhatsAppTemplate
+            {
+                Name = "dogum_gunu_mesaji",
+                Category = "MARKETING",
+                Content = "🎂🎉 Doğum gününüz kutlu olsun {{FirstName}}! Bugün özel gününüzde size %20 indirimli hizmet sunuyoruz. Hemen randevu alın! 🎁",
+                Description = "Doğum günü tebrik mesajı",
+                Language = "tr",
+                Status = "APPROVED",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new WhatsAppTemplate
+            {
+                Name = "kampanya_duyurusu",
+                Category = "MARKETING",
+                Content = "🎯 {{FirstName}}, özel kampanyamızı kaçırma! Bu hafta sonu tüm hizmetlerde %25 indirim. Hemen randevu al! ⚡",
+                Description = "Kampanya duyuru mesajı",
+                Language = "tr",
+                Status = "APPROVED",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new WhatsAppTemplate
+            {
+                Name = "kupon_bildirimi",
+                Category = "MARKETING",
+                Content = "🎁 {{FirstName}}! Size özel bir kupon hazırladık. Kod: {{CouponCode}} - {{Discount}}% indirim. Son kullanma: {{ExpiryDate}} 📱",
+                Description = "Kupon bildirim mesajı",
+                Language = "tr",
+                Status = "APPROVED",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        await context.WhatsAppTemplates.AddRangeAsync(whatsappTemplates);
         await context.SaveChangesAsync();
     }
 }

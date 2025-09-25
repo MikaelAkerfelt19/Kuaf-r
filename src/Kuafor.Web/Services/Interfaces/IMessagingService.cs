@@ -47,12 +47,18 @@ namespace Kuafor.Web.Services.Interfaces
         Task<MessageTemplate> CreateTemplateAsync(string name, string type, string content, string? description = null);
         Task<List<MessageTemplate>> GetTemplatesAsync(string? type = null);
         Task<bool> UpdateTemplateAsync(MessageTemplate template);
-        Task<bool> DeleteTemplateAsync(int templateId);
 
         // Müşteri mesaj yönetimi
         Task<List<MessageRecipient>> GetCustomerMessagesAsync(int customerId);
         Task<bool> SendWhatsAppMessageToCustomerAsync(int customerId, string message);
         Task<List<Customer>> GetAllCustomersForMessagingAsync();
+
+        // WhatsApp şablon yönetimi
+        Task<List<WhatsAppTemplate>> GetAllTemplatesAsync();
+        Task<bool> CreateTemplateAsync(WhatsAppTemplate template);
+        Task<bool> UpdateTemplateAsync(WhatsAppTemplate template);
+        Task<bool> DeleteTemplateAsync(int templateId);
+        Task<WhatsAppTemplate?> GetTemplateAsync(int templateId);
     }
 
     public class MessagingCustomerFilter

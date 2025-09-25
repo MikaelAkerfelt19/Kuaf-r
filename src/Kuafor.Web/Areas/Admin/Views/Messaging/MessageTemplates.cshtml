@@ -1,0 +1,243 @@
+@model List<Kuafor.Web.Models.Entities.WhatsAppTemplate>
+
+@{
+    ViewData["Title"] = "Mesaj Şablonları";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>📝 Mesaj Şablonları</h2>
+    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+        <i class="fas fa-plus"></i> Yeni Şablon
+    </button>
+</div>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        @TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        @TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="row">
+    @if (Model.Any())
+    {
+        @foreach (var template in Model)
+        {
+            <div class="col-md-6 col-lg-4 mb-3">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">@template.Name</h6>
+                        <span class="badge bg-@(template.Status == "APPROVED" ? "success" : template.Status == "REJECTED" ? "danger" : "warning")">
+                            @template.Status
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">@template.Content</p>
+                        @if (!string.IsNullOrEmpty(template.Description))
+                        {
+                            <small class="text-muted">@template.Description</small>
+                        }
+                    </div>
+                    <div class="card-footer">
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-sm btn-outline-primary" 
+                                    onclick="editTemplate(@template.Id, '@template.Name', '@template.Category', '@Html.Raw(template.Content.Replace("'", "\\'"))', '@template.Description')">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button type="button" class="btn btn-sm btn-outline-danger" 
+                                    onclick="deleteTemplate(@template.Id)">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12">
+            <div class="text-center text-muted py-5">
+                <i class="fas fa-file-alt fa-3x mb-3"></i>
+                <p>Henüz mesaj şablonu bulunmuyor.</p>
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createTemplateModal">
+                    İlk Şablonu Oluştur
+                </button>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Yeni Şablon Oluşturma Modal -->
+<div class="modal fade" id="createTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Mesaj Şablonu</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="CreateTemplate" method="post">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Şablon Adı</label>
+                            <input type="text" class="form-control" id="name" name="Name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="category" class="form-label">Kategori</label>
+                            <select class="form-select" id="category" name="Category">
+                                <option value="UTILITY">UTILITY</option>
+                                <option value="MARKETING">MARKETING</option>
+                                <option value="AUTHENTICATION">AUTHENTICATION</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="content" class="form-label">Mesaj İçeriği</label>
+                        <textarea class="form-control" id="content" name="Content" rows="4" required 
+                                  placeholder="Örnek: Merhaba {{FirstName}}, randevunuz için teşekkür ederiz."></textarea>
+                        <div class="form-text">
+                            <strong>Değişkenler:</strong> {{FirstName}}, {{LastName}}, {{FullName}}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="description" name="Description" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Şablon Oluştur</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Şablon Düzenleme Modal -->
+<div class="modal fade" id="editTemplateModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Şablon Düzenle</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form id="editTemplateForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editTemplateId" name="Id">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editName" class="form-label">Şablon Adı</label>
+                            <input type="text" class="form-control" id="editName" name="Name" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editCategory" class="form-label">Kategori</label>
+                            <select class="form-select" id="editCategory" name="Category">
+                                <option value="UTILITY">UTILITY</option>
+                                <option value="MARKETING">MARKETING</option>
+                                <option value="AUTHENTICATION">AUTHENTICATION</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editContent" class="form-label">Mesaj İçeriği</label>
+                        <textarea class="form-control" id="editContent" name="Content" rows="4" required></textarea>
+                        <div class="form-text">
+                            <strong>Değişkenler:</strong> {{FirstName}}, {{LastName}}, {{FullName}}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="editDescription" class="form-label">Açıklama</label>
+                        <textarea class="form-control" id="editDescription" name="Description" rows="2"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Güncelle</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function editTemplate(id, name, category, content, description) {
+            document.getElementById('editTemplateId').value = id;
+            document.getElementById('editName').value = name;
+            document.getElementById('editCategory').value = category;
+            document.getElementById('editContent').value = content;
+            document.getElementById('editDescription').value = description || '';
+            
+            const modal = new bootstrap.Modal(document.getElementById('editTemplateModal'));
+            modal.show();
+        }
+
+        function deleteTemplate(id) {
+            if (confirm('Bu şablonu silmek istediğinizden emin misiniz?')) {
+                fetch(`/Admin/Messaging/DeleteTemplate/${id}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        alert('Hata: ' + data.message);
+                    }
+                })
+                .catch(error => {
+                    console.error('Hata:', error);
+                    alert('Şablon silinirken bir hata oluştu');
+                });
+            }
+        }
+
+        // Şablon düzenleme formu
+        document.getElementById('editTemplateForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                Name: formData.get('Name'),
+                Category: formData.get('Category'),
+                Content: formData.get('Content'),
+                Description: formData.get('Description')
+            };
+            
+            const templateId = document.getElementById('editTemplateId').value;
+            
+            fetch(`/Admin/Messaging/UpdateTemplate/${templateId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Hata: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Hata:', error);
+                alert('Şablon güncellenirken bir hata oluştu');
+            });
+        });
+    </script>
+}

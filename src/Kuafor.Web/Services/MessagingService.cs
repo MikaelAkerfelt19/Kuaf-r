@@ -550,24 +550,6 @@ namespace Kuafor.Web.Services
             }
         }
 
-        public async Task<bool> DeleteTemplateAsync(int templateId)
-        {
-            try
-            {
-                var template = await _context.MessageTemplates.FindAsync(templateId);
-                if (template == null) return false;
-
-                template.IsActive = false;
-                template.UpdatedAt = DateTime.UtcNow;
-                await _context.SaveChangesAsync();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Şablon silinirken hata oluştu: {TemplateId}", templateId);
-                return false;
-            }
-        }
 
         public async Task<bool> SendScheduledMessageAsync(List<int> recipientIds, string message, DateTime scheduledTime, string messageType)
         {
@@ -738,6 +720,70 @@ namespace Kuafor.Web.Services
                 .Where(c => c.IsActive && !string.IsNullOrEmpty(c.PhoneNumber ?? c.Phone))
                 .OrderBy(c => c.FirstName)
                 .ToListAsync();
+        }
+
+        // WhatsApp şablon yönetimi
+        public async Task<List<WhatsAppTemplate>> GetAllTemplatesAsync()
+        {
+            return await _context.WhatsAppTemplates
+                .Where(t => t.IsActive)
+                .OrderBy(t => t.Name)
+                .ToListAsync();
+        }
+
+        public async Task<bool> CreateTemplateAsync(WhatsAppTemplate template)
+        {
+            try
+            {
+                _context.WhatsAppTemplates.Add(template);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp şablonu oluşturulurken hata oluştu");
+                return false;
+            }
+        }
+
+        public async Task<bool> UpdateTemplateAsync(WhatsAppTemplate template)
+        {
+            try
+            {
+                _context.WhatsAppTemplates.Update(template);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp şablonu güncellenirken hata oluştu: {TemplateId}", template.Id);
+                return false;
+            }
+        }
+
+        public async Task<bool> DeleteTemplateAsync(int templateId)
+        {
+            try
+            {
+                var template = await _context.WhatsAppTemplates.FindAsync(templateId);
+                if (template == null) return false;
+
+                template.IsActive = false;
+                template.UpdatedAt = DateTime.UtcNow;
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp şablonu silinirken hata oluştu: {TemplateId}", templateId);
+                return false;
+            }
+        }
+
+        public async Task<WhatsAppTemplate?> GetTemplateAsync(int templateId)
+        {
+            return await _context.WhatsAppTemplates
+                .FirstOrDefaultAsync(t => t.Id == templateId && t.IsActive);
         }
     }
 }

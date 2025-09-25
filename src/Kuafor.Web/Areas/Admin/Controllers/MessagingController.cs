@@ -339,6 +339,93 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 return Json(new { success = false, message = "Test sırasında hata oluştu: " + ex.Message });
             }
         }
+
+        // Mesaj şablonları yönetimi
+        [Route("MessageTemplates")]
+        public async Task<IActionResult> MessageTemplates()
+        {
+            var templates = await _messagingService.GetAllTemplatesAsync();
+            return View(templates);
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> CreateTemplate(CreateTemplateRequest request)
+        {
+            try
+            {
+                var template = new WhatsAppTemplate
+                {
+                    Name = request.Name,
+                    Category = request.Category,
+                    Content = request.Content,
+                    Description = request.Description,
+                    Language = "tr",
+                    Status = "PENDING",
+                    IsActive = true,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                var success = await _messagingService.CreateTemplateAsync(template);
+                
+                if (success)
+                {
+                    TempData["SuccessMessage"] = "Mesaj şablonu oluşturuldu.";
+                }
+                else
+                {
+                    TempData["ErrorMessage"] = "Şablon oluşturulurken hata oluştu.";
+                }
+
+                return RedirectToAction(nameof(MessageTemplates));
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mesaj şablonu oluşturulurken hata oluştu");
+                TempData["ErrorMessage"] = "Şablon oluşturulurken hata oluştu.";
+                return RedirectToAction(nameof(MessageTemplates));
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> UpdateTemplate(int id, UpdateTemplateRequest request)
+        {
+            try
+            {
+                var template = new WhatsAppTemplate
+                {
+                    Id = id,
+                    Name = request.Name,
+                    Category = request.Category,
+                    Content = request.Content,
+                    Description = request.Description,
+                    UpdatedAt = DateTime.UtcNow
+                };
+
+                var success = await _messagingService.UpdateTemplateAsync(template);
+                
+                return Json(new { success, message = success ? "Şablon güncellendi" : "Şablon güncellenemedi" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mesaj şablonu güncellenirken hata oluştu: {TemplateId}", id);
+                return Json(new { success = false, message = "Hata oluştu" });
+            }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> DeleteTemplate(int id)
+        {
+            try
+            {
+                var success = await _messagingService.DeleteTemplateAsync(id);
+                return Json(new { success, message = success ? "Şablon silindi" : "Şablon silinemedi" });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mesaj şablonu silinirken hata oluştu: {TemplateId}", id);
+                return Json(new { success = false, message = "Hata oluştu" });
+            }
+        }
     }
 
     // WhatsApp mesaj gönderme request modeli
@@ -352,5 +439,23 @@ namespace Kuafor.Web.Areas.Admin.Controllers
     public class TestWhatsAppRequest
     {
         public int CustomerId { get; set; }
+    }
+
+    // Mesaj şablonu oluşturma request modeli
+    public class CreateTemplateRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = "UTILITY";
+        public string Content { get; set; } = string.Empty;
+        public string? Description { get; set; }
+    }
+
+    // Mesaj şablonu güncelleme request modeli
+    public class UpdateTemplateRequest
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = "UTILITY";
+        public string Content { get; set; } = string.Empty;
+        public string? Description { get; set; }
     }
 }

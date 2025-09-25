@@ -14,25 +14,23 @@ namespace Kuafor.Web.ViewComponents
 
         public IViewComponentResult Invoke()
         {
-            var whatsappNumber = _configuration["WhatsAppSettings:PhoneNumber"] ?? "+905559998877";
-            var callToAction = _configuration["WhatsAppSettings:WidgetCallToAction"] ?? "Nasıl yardımcı olabilirim?";
-            var position = _configuration["WhatsAppSettings:WidgetPosition"] ?? "right";
-
-            var model = new WhatsAppWidgetViewModel
+            var whatsappSettings = _configuration.GetSection("WhatsAppSettings");
+            
+            var model = new WhatsAppWidgetModel
             {
-                PhoneNumber = whatsappNumber,
-                CallToAction = callToAction,
-                Position = position
+                PhoneNumber = whatsappSettings["PhoneNumber"] ?? "+905314687179",
+                CallToAction = whatsappSettings["WidgetCallToAction"] ?? "Nasıl yardımcı olabilirim?",
+                Position = whatsappSettings["WidgetPosition"] ?? "right"
             };
 
             return View(model);
         }
     }
 
-    public class WhatsAppWidgetViewModel
+    public class WhatsAppWidgetModel
     {
         public string PhoneNumber { get; set; } = string.Empty;
         public string CallToAction { get; set; } = string.Empty;
-        public string Position { get; set; } = string.Empty;
+        public string Position { get; set; } = "right";
     }
 }
