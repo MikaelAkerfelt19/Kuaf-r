@@ -47,4 +47,7 @@ public class Customer
     public string Status { get; set; } = "Active"; // Active, Inactive, Suspended
     
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
+
+    // Müşteri mesajları için navigation property
+    public virtual ICollection<MessageRecipient> MessageRecipients { get; set; } = new List<MessageRecipient>();
 }

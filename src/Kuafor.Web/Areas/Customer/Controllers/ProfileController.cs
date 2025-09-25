@@ -18,6 +18,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
         private readonly IStylistService _stylistService;
         private readonly ICouponService _couponService;
         private readonly ILoyaltyService _loyaltyService;
+        private readonly IMessagingService _messagingService;
 
         public ProfileController(
             ICustomerService customerService,
@@ -25,7 +26,8 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             IBranchService branchService,
             IStylistService stylistService,
             ICouponService couponService,
-            ILoyaltyService loyaltyService)
+            ILoyaltyService loyaltyService,
+            IMessagingService messagingService)
         {
             _customerService = customerService;
             _appointmentService = appointmentService;
@@ -33,6 +35,7 @@ namespace Kuafor.Web.Areas.Customer.Controllers
             _stylistService = stylistService;
             _couponService = couponService;
             _loyaltyService = loyaltyService;
+            _messagingService = messagingService;
         }
 
         public async Task<IActionResult> Index()
@@ -62,6 +65,9 @@ namespace Kuafor.Web.Areas.Customer.Controllers
 
             // Loyalty bilgilerini al
             var loyalty = await _loyaltyService.GetByCustomerIdAsync(customer.Id);
+
+            // Müşteri mesajlarını al
+            var customerMessages = await _messagingService.GetCustomerMessagesAsync(customer.Id);
 
             var vm = new ProfilePageViewModel
             {
@@ -172,6 +178,18 @@ namespace Kuafor.Web.Areas.Customer.Controllers
                     ConsentedIp = "203.0.113.42", // Default value - will be stored in database when user updates
                     ExportReady = true, // Default value - will be stored in database when user updates
                     LastExportFileName = "export_2023-03-15.json" // Default value - will be stored in database when user exports
+                },
+                Messages = new MessagesViewModel
+                {
+                    Messages = customerMessages.Select(m => new MessageItemViewModel
+                    {
+                        Id = m.Id,
+                        Content = m.MessageCampaign.Content,
+                        Type = m.MessageCampaign.Type,
+                        Status = m.Status,
+                        SentAt = m.SentAt,
+                        CreatedAt = m.CreatedAt
+                    }).ToList()
                 }
             };
 

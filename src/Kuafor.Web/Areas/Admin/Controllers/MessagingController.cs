@@ -253,5 +253,104 @@ namespace Kuafor.Web.Areas.Admin.Controllers
                 whatsapp = whatsappCredit.CreditAmount
             });
         }
+
+        // WhatsApp mesaj gönderme endpoint'i
+        [HttpPost]
+        public async Task<IActionResult> SendWhatsAppMessage([FromBody] SendWhatsAppMessageRequest request)
+        {
+            try
+            {
+                var success = await _messagingService.SendWhatsAppMessageToCustomerAsync(request.CustomerId, request.Message);
+                
+                return Json(new 
+                { 
+                    success, 
+                    message = success ? "WhatsApp mesajı gönderildi" : "WhatsApp mesajı gönderilemedi" 
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp mesajı gönderilirken hata oluştu: {CustomerId}", request.CustomerId);
+                return Json(new { success = false, message = "Hata oluştu" });
+            }
+        }
+
+        // Müşterileri getirme (WhatsApp mesaj için)
+        [HttpGet]
+        public async Task<IActionResult> GetCustomers()
+        {
+            try
+            {
+                var customers = await _messagingService.GetAllCustomersForMessagingAsync();
+                var result = customers.Select(c => new
+                {
+                    id = c.Id,
+                    fullName = c.FullName,
+                    phone = c.PhoneNumber ?? c.Phone,
+                    firstName = c.FirstName,
+                    lastName = c.LastName
+                }).ToList();
+
+                return Json(result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Müşteriler getirilirken hata oluştu");
+                return Json(new List<object>());
+            }
+        }
+
+        // Mesaj şablonları endpoint'i
+        [HttpGet]
+        public async Task<IActionResult> GetMessageTemplates(string type = "WhatsApp")
+        {
+            try
+            {
+                var templates = await _messagingService.GetTemplatesAsync(type);
+                return Json(templates);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Mesaj şablonları getirilirken hata oluştu");
+                return Json(new List<object>());
+            }
+        }
+
+        // WhatsApp API test endpoint'i
+        [HttpPost]
+        public async Task<IActionResult> TestWhatsAppApi([FromBody] TestWhatsAppRequest request)
+        {
+            try
+            {
+                var testMessage = $"Test mesajı - {DateTime.Now:HH:mm:ss}";
+                var success = await _messagingService.SendWhatsAppMessageToCustomerAsync(request.CustomerId, testMessage);
+                
+                return Json(new 
+                { 
+                    success, 
+                    message = success ? "WhatsApp API test başarılı!" : "WhatsApp API test başarısız!",
+                    testMessage,
+                    timestamp = DateTime.Now
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp API test hatası: {CustomerId}", request.CustomerId);
+                return Json(new { success = false, message = "Test sırasında hata oluştu: " + ex.Message });
+            }
+        }
+    }
+
+    // WhatsApp mesaj gönderme request modeli
+    public class SendWhatsAppMessageRequest
+    {
+        public int CustomerId { get; set; }
+        public string Message { get; set; } = string.Empty;
+    }
+
+    // WhatsApp API test request modeli
+    public class TestWhatsAppRequest
+    {
+        public int CustomerId { get; set; }
     }
 }

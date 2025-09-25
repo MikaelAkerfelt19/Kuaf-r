@@ -35,6 +35,7 @@
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-notifications" type="button" role="tab">Bildirimler</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-preferences" type="button" role="tab">Tercihler</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-loyalty" type="button" role="tab">Sadakat & Kuponlar</button></li>
+        <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-messages" type="button" role="tab">Mesajlarım</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-security" type="button" role="tab">Güvenlik</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-payments" type="button" role="tab">Ödemeler</button></li>
         <li class="nav-item" role="presentation"><button class="nav-link" data-bs-toggle="tab" data-bs-target="#tab-privacy" type="button" role="tab">Gizlilik / KVKK</button></li>
@@ -57,6 +58,9 @@
             <partial name="Partials/_Profile.Loyalty" model="Model.Loyalty" />
             <div class="my-3"></div>
             <partial name="Partials/_Profile.Coupons" model="Model.Coupons" />
+        </div>
+        <div class="tab-pane fade" id="tab-messages" role="tabpanel">
+            <partial name="Partials/_Profile.Messages" model="Model.Messages" />
         </div>
         <div class="tab-pane fade" id="tab-security" role="tabpanel">
             <partial name="Partials/_Profile.Security" model="Model.Security" />

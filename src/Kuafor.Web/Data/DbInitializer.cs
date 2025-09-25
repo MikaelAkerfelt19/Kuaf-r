@@ -22,6 +22,9 @@ public static class DbInitializer
         
         // Temel verileri oluştur
         await EnsureBasicDataAsync(context);
+        
+        // Mesaj şablonlarını oluştur
+        await EnsureMessageTemplatesAsync(context);
     }
 
     private static async Task EnsureRolesAsync(RoleManager<IdentityRole> roleManager)
@@ -243,5 +246,91 @@ public static class DbInitializer
             await context.Coupons.AddRangeAsync(coupons);
             await context.SaveChangesAsync();
         }
+    }
+
+    private static async Task EnsureMessageTemplatesAsync(ApplicationDbContext context)
+    {
+        // Mesaj şablonları zaten var mı kontrol et
+        if (await context.MessageTemplates.AnyAsync())
+            return;
+
+        var templates = new[]
+        {
+            new MessageTemplate
+            {
+                Name = "Hoş Geldin Mesajı",
+                Type = "WhatsApp",
+                Content = "Merhaba {{FirstName}}! 🎉 Kuafor salonumuza hoş geldiniz. Size en iyi hizmeti sunmak için buradayız. Randevu almak için bizi arayabilirsiniz. 💇‍♀️✨",
+                Description = "Yeni müşteriler için hoş geldin mesajı",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "Randevu Hatırlatması",
+                Type = "WhatsApp",
+                Content = "Merhaba {{FirstName}}! 📅 Yarın saat {{Time}}'da {{Service}} randevunuz bulunmaktadır. Lütfen 15 dakika önce salonda olunuz. 🕐",
+                Description = "Randevu hatırlatma mesajı",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "Randevu İptal Bildirimi",
+                Type = "WhatsApp",
+                Content = "Merhaba {{FirstName}}! 😔 Randevunuz iptal edilmiştir. Yeni bir randevu için bizi arayabilirsiniz. 📞",
+                Description = "Randevu iptal bildirimi",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "Doğum Günü Mesajı",
+                Type = "WhatsApp",
+                Content = "🎂🎉 Doğum gününüz kutlu olsun {{FirstName}}! Bugün özel gününüzde size %20 indirimli hizmet sunuyoruz. Hemen randevu alın! 🎁",
+                Description = "Doğum günü tebrik mesajı",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "Kampanya Duyurusu",
+                Type = "WhatsApp",
+                Content = "🎯 {{FirstName}}, özel kampanyamızı kaçırma! Bu hafta sonu tüm hizmetlerde %25 indirim. Hemen randevu al! ⚡",
+                Description = "Kampanya duyuru mesajı",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "Kupon Bildirimi",
+                Type = "WhatsApp",
+                Content = "🎁 {{FirstName}}! Size özel bir kupon hazırladık. Kod: {{CouponCode}} - {{Discount}}% indirim. Son kullanma: {{ExpiryDate}} 📱",
+                Description = "Kupon bildirim mesajı",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "SMS Hoş Geldin",
+                Type = "SMS",
+                Content = "Merhaba {{FirstName}}! Kuafor salonumuza hoş geldiniz. Randevu için: 0212 XXX XX XX",
+                Description = "SMS hoş geldin mesajı",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            },
+            new MessageTemplate
+            {
+                Name = "SMS Randevu Hatırlatma",
+                Type = "SMS",
+                Content = "{{FirstName}}, yarın {{Time}} randevunuz var. 15 dk önce geliniz.",
+                Description = "SMS randevu hatırlatma",
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow
+            }
+        };
+
+        await context.MessageTemplates.AddRangeAsync(templates);
+        await context.SaveChangesAsync();
     }
 }

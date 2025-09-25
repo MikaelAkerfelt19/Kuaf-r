@@ -647,5 +647,97 @@ namespace Kuafor.Web.Services
                 DeliveryRate = campaigns.Any() ? (campaigns.Sum(c => c.DeliveredCount) * 100.0 / campaigns.Sum(c => c.SentCount)) : 0
             };
         }
+
+        // Müşteri mesajlarını getirme
+        public async Task<List<MessageRecipient>> GetCustomerMessagesAsync(int customerId)
+        {
+            return await _context.MessageRecipients
+                .Where(mr => mr.CustomerId == customerId)
+                .Include(mr => mr.MessageCampaign)
+                .OrderByDescending(mr => mr.CreatedAt)
+                .ToListAsync();
+        }
+
+        // Tek müşteriye WhatsApp mesaj gönderme
+        public async Task<bool> SendWhatsAppMessageToCustomerAsync(int customerId, string message)
+        {
+            try
+            {
+                var customer = await _context.Customers.FindAsync(customerId);
+                if (customer == null)
+                {
+                    _logger.LogWarning("Müşteri bulunamadı: {CustomerId}", customerId);
+                    return false;
+                }
+
+                var phoneNumber = customer.PhoneNumber ?? customer.Phone ?? "";
+                if (string.IsNullOrEmpty(phoneNumber))
+                {
+                    _logger.LogWarning("Müşteri telefon numarası bulunamadı: {CustomerId}", customerId);
+                    return false;
+                }
+
+                // Kişiselleştirilmiş mesaj oluştur
+                var personalizedMessage = message.Replace("{{FirstName}}", customer.FirstName)
+                                               .Replace("{{LastName}}", customer.LastName)
+                                               .Replace("{{FullName}}", customer.FullName);
+
+                // WhatsApp mesajı gönder
+                var success = await _whatsAppService.SendPromotionalMessageAsync(phoneNumber, personalizedMessage);
+
+                // Kampanya oluştur
+                var campaign = new MessageCampaign
+                {
+                    Name = $"WhatsApp Mesaj - {customer.FullName}",
+                    Content = personalizedMessage,
+                    Type = "WhatsApp",
+                    Status = success ? "Sent" : "Failed",
+                    SentAt = success ? DateTime.UtcNow : null,
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.MessageCampaigns.Add(campaign);
+                await _context.SaveChangesAsync();
+
+                // MessageRecipient oluştur
+                var recipient = new MessageRecipient
+                {
+                    MessageCampaignId = campaign.Id,
+                    CustomerId = customerId,
+                    Status = success ? "Sent" : "Failed",
+                    SentAt = success ? DateTime.UtcNow : null,
+                    ErrorMessage = success ? null : "WhatsApp mesajı gönderilemedi",
+                    CreatedAt = DateTime.UtcNow
+                };
+
+                _context.MessageRecipients.Add(recipient);
+                await _context.SaveChangesAsync();
+
+                if (success)
+                {
+                    _logger.LogInformation("WhatsApp mesajı gönderildi: {CustomerId}, {PhoneNumber}", customerId, phoneNumber);
+                }
+                else
+                {
+                    _logger.LogWarning("WhatsApp mesajı gönderilemedi: {CustomerId}, {PhoneNumber}", customerId, phoneNumber);
+                }
+
+                return success;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp mesajı gönderilirken hata oluştu: {CustomerId}", customerId);
+                return false;
+            }
+        }
+
+        // Tüm müşterileri getirme (Admin için)
+        public async Task<List<Customer>> GetAllCustomersForMessagingAsync()
+        {
+            return await _context.Customers
+                .Where(c => c.IsActive && !string.IsNullOrEmpty(c.PhoneNumber ?? c.Phone))
+                .OrderBy(c => c.FirstName)
+                .ToListAsync();
+        }
     }
 }

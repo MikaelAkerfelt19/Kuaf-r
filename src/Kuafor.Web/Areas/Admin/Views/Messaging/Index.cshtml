@@ -60,8 +60,338 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-success text-white">
+                                <div class="card-body">
+                                    <h5>Hızlı WhatsApp</h5>
+                                    <p>Tek müşteriye WhatsApp mesajı</p>
+                                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#quickWhatsAppModal">
+                                        WhatsApp Gönder
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-primary text-white">
+                                <div class="card-body">
+                                    <h5>Mesaj Şablonları</h5>
+                                    <p>Hazır mesaj şablonlarını yönetin</p>
+                                    <button type="button" class="btn btn-light" onclick="manageTemplates()">
+                                        Şablonları Yönet
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="card bg-dark text-white">
+                                <div class="card-body">
+                                    <h5>API Test</h5>
+                                    <p>WhatsApp API'sini test edin</p>
+                                    <button type="button" class="btn btn-light" data-bs-toggle="modal" data-bs-target="#testWhatsAppModal">
+                                        <i class="fab fa-whatsapp"></i> API Test
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<!-- Quick WhatsApp Modal -->
+<div class="modal fade" id="quickWhatsAppModal" tabindex="-1" aria-labelledby="quickWhatsAppModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="quickWhatsAppModalLabel">Hızlı WhatsApp Mesajı</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="quickWhatsAppForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="customerSelect" class="form-label">Müşteri Seçin</label>
+                                <select id="customerSelect" class="form-select" required>
+                                    <option value="">Müşteri seçin...</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="messageTemplate" class="form-label">Mesaj Şablonu</label>
+                                <select id="messageTemplate" class="form-select">
+                                    <option value="">Şablon seçin...</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="messageContent" class="form-label">Mesaj İçeriği</label>
+                        <textarea id="messageContent" class="form-control" rows="4" required placeholder="Mesajınızı yazın..."></textarea>
+                        <div class="form-text">{{FirstName}}, {{LastName}}, {{FullName}} kullanabilirsiniz</div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="previewMessage">
+                            <label class="form-check-label" for="previewMessage">
+                                Mesaj önizlemesini göster
+                            </label>
+                        </div>
+                    </div>
+                    <div id="messagePreview" class="alert alert-info" style="display: none;">
+                        <strong>Önizleme:</strong>
+                        <div id="previewContent"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-success" onclick="sendQuickWhatsApp()">
+                    <i class="fab fa-whatsapp"></i> WhatsApp Gönder
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Test WhatsApp Modal -->
+<div class="modal fade" id="testWhatsAppModal" tabindex="-1" aria-labelledby="testWhatsAppModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="testWhatsAppModalLabel">WhatsApp API Test</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Bu test, gerçek WhatsApp API'sine test mesajı gönderecektir.
+                </div>
+                <div class="mb-3">
+                    <label for="testCustomerSelect" class="form-label">Test Müşterisi Seçin</label>
+                    <select id="testCustomerSelect" class="form-select" required>
+                        <option value="">Müşteri seçin...</option>
+                    </select>
+                </div>
+                <div id="testResult" class="alert" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                <button type="button" class="btn btn-warning" onclick="testWhatsAppApi()">
+                    <i class="fas fa-flask"></i> API Test Et
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    loadCustomers();
+    loadMessageTemplates();
+    
+    // Mesaj şablonu değiştiğinde
+    $('#messageTemplate').change(function() {
+        $('#messageContent').val(this.value);
+        updatePreview();
+    });
+    
+    // Mesaj içeriği değiştiğinde
+    $('#messageContent').on('input', function() {
+        updatePreview();
+    });
+    
+    // Önizleme checkbox'ı
+    $('#previewMessage').change(function() {
+        if (this.checked) {
+            updatePreview();
+            $('#messagePreview').show();
+        } else {
+            $('#messagePreview').hide();
+        }
+    });
+});
+
+function loadCustomers() {
+    fetch('/Admin/Messaging/GetCustomers')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('customerSelect');
+            const testSelect = document.getElementById('testCustomerSelect');
+            
+            data.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = customer.id;
+                option.textContent = `${customer.fullName} (${customer.phone})`;
+                select.appendChild(option);
+                
+                // Test modal için de aynı müşterileri ekle
+                const testOption = option.cloneNode(true);
+                testSelect.appendChild(testOption);
+            });
+        })
+        .catch(error => {
+            console.error('Müşteriler yüklenirken hata:', error);
+        });
+}
+
+function loadMessageTemplates() {
+    fetch('/Admin/Messaging/GetMessageTemplates?type=WhatsApp')
+        .then(response => response.json())
+        .then(data => {
+            const select = document.getElementById('messageTemplate');
+            data.forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.content;
+                option.textContent = template.name;
+                select.appendChild(option);
+            });
+        })
+        .catch(error => {
+            console.error('Şablonlar yüklenirken hata:', error);
+        });
+}
+
+function updatePreview() {
+    const customerId = document.getElementById('customerSelect').value;
+    const message = document.getElementById('messageContent').value;
+    
+    if (customerId && message) {
+        // Seçili müşteriyi bul
+        const customerOption = document.getElementById('customerSelect').selectedOptions[0];
+        if (customerOption) {
+            const customerText = customerOption.textContent;
+            const customerName = customerText.split(' (')[0]; // İsim kısmını al
+            
+            // Mesajı kişiselleştir
+            let previewMessage = message
+                .replace(/\{\{FirstName\}\}/g, customerName.split(' ')[0])
+                .replace(/\{\{LastName\}\}/g, customerName.split(' ').slice(1).join(' '))
+                .replace(/\{\{FullName\}\}/g, customerName);
+            
+            document.getElementById('previewContent').textContent = previewMessage;
+        }
+    }
+}
+
+function sendQuickWhatsApp() {
+    const customerId = document.getElementById('customerSelect').value;
+    const message = document.getElementById('messageContent').value;
+    
+    if (!customerId || !message) {
+        alert('Lütfen müşteri ve mesaj seçin');
+        return;
+    }
+    
+    // Gönder butonunu devre dışı bırak
+    const sendButton = event.target;
+    sendButton.disabled = true;
+    sendButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Gönderiliyor...';
+    
+    fetch('/Admin/Messaging/SendWhatsAppMessage', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            customerId: parseInt(customerId),
+            message: message
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert('✅ WhatsApp mesajı başarıyla gönderildi!');
+            $('#quickWhatsAppModal').modal('hide');
+            // Formu temizle
+            document.getElementById('quickWhatsAppForm').reset();
+            document.getElementById('customerSelect').innerHTML = '<option value="">Müşteri seçin...</option>';
+            document.getElementById('messageTemplate').innerHTML = '<option value="">Şablon seçin...</option>';
+            loadCustomers();
+            loadMessageTemplates();
+        } else {
+            alert('❌ Hata: ' + data.message);
+        }
+    })
+    .catch(error => {
+        console.error('Hata:', error);
+        alert('❌ Mesaj gönderilirken bir hata oluştu');
+    })
+    .finally(() => {
+        // Gönder butonunu tekrar aktif et
+        sendButton.disabled = false;
+        sendButton.innerHTML = '<i class="fab fa-whatsapp"></i> WhatsApp Gönder';
+    });
+}
+
+function testWhatsAppApi() {
+    const customerId = document.getElementById('testCustomerSelect').value;
+    
+    if (!customerId) {
+        alert('Lütfen test için bir müşteri seçin');
+        return;
+    }
+    
+    const testButton = event.target;
+    testButton.disabled = true;
+    testButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Test ediliyor...';
+    
+    const testResult = document.getElementById('testResult');
+    testResult.style.display = 'none';
+    
+    fetch('/Admin/Messaging/TestWhatsAppApi', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            customerId: parseInt(customerId)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        testResult.style.display = 'block';
+        testResult.className = `alert ${data.success ? 'alert-success' : 'alert-danger'}`;
+        
+        if (data.success) {
+            testResult.innerHTML = `
+                <i class="fas fa-check-circle me-2"></i>
+                <strong>API Test Başarılı!</strong><br>
+                ${data.message}<br>
+                <small>Test Mesajı: ${data.testMessage}</small><br>
+                <small>Zaman: ${new Date(data.timestamp).toLocaleString()}</small>
+            `;
+        } else {
+            testResult.innerHTML = `
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <strong>API Test Başarısız!</strong><br>
+                ${data.message}
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Test hatası:', error);
+        testResult.style.display = 'block';
+        testResult.className = 'alert alert-danger';
+        testResult.innerHTML = `
+            <i class="fas fa-exclamation-triangle me-2"></i>
+            <strong>Test Hatası!</strong><br>
+            API testi sırasında bir hata oluştu.
+        `;
+    })
+    .finally(() => {
+        testButton.disabled = false;
+        testButton.innerHTML = '<i class="fas fa-flask"></i> API Test Et';
+    });
+}
+
+function manageTemplates() {
+    alert('Mesaj şablonları yönetimi yakında eklenecek!');
+}
+</script>

@@ -203,14 +203,34 @@ namespace Kuafor.Web.Services
             if (string.IsNullOrEmpty(phoneNumber))
                 return string.Empty;
 
+            // Sadece rakamları al
             var clean = new string(phoneNumber.Where(char.IsDigit).ToArray());
 
-            if (clean.StartsWith("0"))
-                clean = "90" + clean.Substring(1);
-            else if (!clean.StartsWith("90"))
-                clean = "90" + clean;
+            // Boşsa döndür
+            if (string.IsNullOrEmpty(clean))
+                return string.Empty;
 
-            return clean.Length == 12 ? clean : string.Empty;
+            // Türkiye formatına çevir
+            if (clean.StartsWith("0"))
+            {
+                // 0 ile başlıyorsa 90 ekle
+                clean = "90" + clean.Substring(1);
+            }
+            else if (!clean.StartsWith("90"))
+            {
+                // 90 ile başlamıyorsa 90 ekle
+                clean = "90" + clean;
+            }
+
+            // Türkiye telefon numarası uzunluğu kontrolü (12 karakter: 90XXXXXXXXXX)
+            if (clean.Length == 12)
+            {
+                _logger.LogDebug("Temizlenmiş telefon numarası: {CleanPhone}", clean);
+                return clean;
+            }
+
+            _logger.LogWarning("Geçersiz telefon numarası formatı: {OriginalPhone} -> {CleanPhone}", phoneNumber, clean);
+            return string.Empty;
         }
 
         private async Task<bool> SendViaMetaApi(string phoneNumber, string message, string? accessToken, string? phoneNumberId)
@@ -221,26 +241,57 @@ namespace Kuafor.Web.Services
                 return false;
             }
 
-            var client = new HttpClient();
-            client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
-
-            var url = $"https://graph.facebook.com/v18.0/{phoneNumberId}/messages";
-
-            var request = new
+            try
             {
-                messaging_product = "whatsapp",
-                to = phoneNumber,
-                type = "text",
-                text = new { body = message }
-            };
+                using var client = new HttpClient();
+                client.DefaultRequestHeaders.Add("Authorization", $"Bearer {accessToken}");
+                client.Timeout = TimeSpan.FromSeconds(30);
 
-            var json = JsonSerializer.Serialize(request);
-            var content = new StringContent(json, Encoding.UTF8, "application/json");
-            var response = await client.PostAsync(url, content);
-            var result = await response.Content.ReadAsStringAsync();
+                var url = $"https://graph.facebook.com/v18.0/{phoneNumberId}/messages";
 
-            _logger.LogInformation("WhatsApp Meta API Response: {Response}", result);
-            return response.IsSuccessStatusCode;
+                var request = new
+                {
+                    messaging_product = "whatsapp",
+                    to = phoneNumber,
+                    type = "text",
+                    text = new { body = message }
+                };
+
+                var json = JsonSerializer.Serialize(request, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower
+                });
+                
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                var response = await client.PostAsync(url, content);
+                var result = await response.Content.ReadAsStringAsync();
+
+                if (response.IsSuccessStatusCode)
+                {
+                    _logger.LogInformation("WhatsApp mesajı başarıyla gönderildi: {PhoneNumber}, Response: {Response}", phoneNumber, result);
+                    return true;
+                }
+                else
+                {
+                    _logger.LogError("WhatsApp Meta API hatası: {StatusCode} - {Response}", response.StatusCode, result);
+                    return false;
+                }
+            }
+            catch (HttpRequestException ex)
+            {
+                _logger.LogError(ex, "WhatsApp Meta API HTTP hatası: {PhoneNumber}", phoneNumber);
+                return false;
+            }
+            catch (TaskCanceledException ex)
+            {
+                _logger.LogError(ex, "WhatsApp Meta API timeout hatası: {PhoneNumber}", phoneNumber);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "WhatsApp Meta API beklenmeyen hata: {PhoneNumber}", phoneNumber);
+                return false;
+            }
         }
 
         private async Task<bool> SendViaTwilio(string phoneNumber, string message, string? accessToken)
