@@ -146,7 +146,7 @@ public class AuthController : Controller
                     Phone = model.Phone,
                     UserId = user.Id,
                     IsActive = true
-                    // CreatedAt otomatik olarak DateTime.UtcNow olarak set edilecek
+                    // CreatedAt default değeri DateTime.UtcNow olarak ayarlanacak
                 };
 
                 try

@@ -1,27 +1,19 @@
 @model Kuafor.Web.ViewComponents.WhatsAppWidgetModel
 
-<!-- WhatsApp Widget -->
-<div class="whatsapp-widget" style="position: fixed; @Model.Position: 20px; bottom: 20px; z-index: 9999;">
-    <a href="https://wa.me/@(Model.PhoneNumber.Replace("+", "").Replace(" ", ""))" 
-       target="_blank" 
-       class="btn btn-success rounded-circle shadow-lg"
-       style="width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; text-decoration: none; animation: pulse 2s infinite;">
-        <i class="fab fa-whatsapp fa-2x text-white"></i>
-    </a>
-    <div class="whatsapp-tooltip" style="position: absolute; bottom: 70px; @Model.Position: 0; background: #333; color: white; padding: 10px 15px; border-radius: 20px; font-size: 14px; white-space: nowrap; opacity: 0; transition: opacity 0.3s; pointer-events: none;">
-        @Model.CallToAction
-        <div style="position: absolute; top: 100%; @Model.Position: 20px; border: 5px solid transparent; border-top-color: #333;"></div>
-    </div>
-</div>
-
-<style>
-    .whatsapp-widget:hover .whatsapp-tooltip {
-        opacity: 1;
-    }
-    
-    @@keyframes pulse {
-        0% { transform: scale(1); }
-        50% { transform: scale(1.1); }
-        100% { transform: scale(1); }
-    }
-</style>
+@if (Model != null && !string.IsNullOrEmpty(Model.PhoneNumber))
+{
+    <!-- WhatsApp Widget -->
+    <script type="text/javascript">
+        (function () {
+            var options = {
+                whatsapp: "@Model.PhoneNumber",
+                call_to_action: "@Model.CallToAction",
+                position: "@Model.Position"
+            };
+            var proto = document.location.protocol, host = "getbutton.io", url = proto + "//static." + host;
+            var s = document.createElement('script'); s.type = 'text/javascript'; s.async = true; s.src = url + '/widget-send-button/js/init.js';
+            s.onload = function () { WhWidgetSendButton.init(host, proto, options); };
+            var x = document.getElementsByTagName('script')[0]; x.parentNode.insertBefore(s, x);
+        })();
+    </script>
+}
