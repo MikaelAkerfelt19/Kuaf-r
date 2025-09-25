@@ -43,9 +43,10 @@ jobs:
         run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration Release --no-restore
 
       - name: Run EF Core migrations
-        run: dotnet ef database update --project ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
+        run: dotnet ef database update --project ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --no-build
         env:
           ConnectionStrings__DefaultConnection: ${{ secrets.AZURE_SQL_CONNECTION }}
+          ASPNETCORE_ENVIRONMENT: Production
 
       - name: Publish
         run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} -c Release -o ${{env.DOTNET_ROOT}}/myapp
@@ -76,3 +77,11 @@ jobs:
           app-name: ${{ env.AZURE_WEBAPP_NAME }}
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: .
+
+      - name: Verify deployment
+        run: |
+          echo "🚀 Deployment completed successfully!"
+          echo "📱 WhatsApp Widget should be visible on the main page"
+          echo "⚙️ Admin panel: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin"
+          echo "�� Message Templates: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin/Messaging/MessageTemplates"
+          echo "💬 Quick WhatsApp: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin/Messaging"
