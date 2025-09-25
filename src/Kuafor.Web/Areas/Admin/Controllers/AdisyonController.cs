@@ -28,8 +28,17 @@ namespace Kuafor.Web.Areas.Admin.Controllers
         [Route("")]
         public async Task<IActionResult> Index()
         {
-            var adisyonlar = await _adisyonService.GetAllAsync();
-            return View(adisyonlar);
+            try
+            {
+                var adisyonlar = await _adisyonService.GetAllAsync();
+                return View(adisyonlar);
+            }
+            catch (Exception ex)
+            {
+                // Hata durumunda boş liste döndür
+                TempData["Error"] = "Adisyon listesi yüklenirken hata oluştu: " + ex.Message;
+                return View(new List<Adisyon>());
+            }
         }
 
         // GET: /Admin/Adisyon/CreateForRegistered

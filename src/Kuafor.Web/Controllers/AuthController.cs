@@ -145,8 +145,8 @@ public class AuthController : Controller
                     Email = model.Email,
                     Phone = model.Phone,
                     UserId = user.Id,
-                    IsActive = true,
-                    CreatedAt = DateTime.Now // CreatedAt alanını ekleyin
+                    IsActive = true
+                    // CreatedAt otomatik olarak DateTime.UtcNow olarak set edilecek
                 };
 
                 try

@@ -1,143 +1,36 @@
 @model Kuafor.Web.Models.HomeViewModel
-<section class="hero-section position-relative overflow-hidden">
-  <div class="hero-bg position-absolute w-100 h-100"></div>
-  <div class="container position-relative py-5">
-    <div class="row align-items-center min-vh-75">
-      <div class="col-lg-6">
-        <div class="hero-content text-white">
-          <h1 class="display-4 fw-bold mb-4 animate-fade-in">
-            Profesyonel Kuaförlük Hizmetleri
-          </h1>
-          <p class="lead mb-4 fs-5 animate-slide-up">
-            Modern teknikler ve deneyimli kadromuzla size en iyi hizmeti sunuyoruz. 
-            Saç kesimi, boyama, bakım ve daha fazlası için hemen randevu alın.
-          </p>
-          <div class="hero-buttons d-flex gap-3 animate-slide-up">
-            @if (Model.IsAuthenticated)
-            {
-                <a class="btn btn-warning btn-lg px-4 py-3 fw-bold" asp-controller="Appointments" asp-action="New">
-                  <i class="fas fa-calendar-plus me-2"></i>Hemen Randevu Al
-                </a>
-            }
-            else
-            {
-                <button class="btn btn-warning btn-lg px-4 py-3 fw-bold" data-bs-toggle="modal" data-bs-target="#loginModal">
-                  <i class="fas fa-calendar-plus me-2"></i>Hemen Randevu Al
-                </button>
-            }
-            <a class="btn btn-outline-light btn-lg px-4 py-3" href="#services">
-              <i class="fas fa-info-circle me-2"></i>Hizmetlerimiz
-            </a>
-          </div>
-          <div class="hero-stats row mt-5 animate-fade-in">
-            <div class="col-4">
-              <div class="stat-item text-center">
-                <div class="stat-number h3 fw-bold">500+</div>
-                <div class="stat-label small">Mutlu Müşteri</div>
-              </div>
+
+<div class="hero-section bg-primary text-white py-5">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-6">
+                <h1 class="display-4 fw-bold mb-4">Profesyonel Kuaförlük Hizmetleri</h1>
+                <p class="lead mb-4">
+                    Modern teknikler ve deneyimli kadromuzla size en iyi hizmeti sunuyoruz. 
+                    Saç kesimi, boyama, bakım ve daha fazlası için hemen randevu alın.
+                </p>
+                <div class="d-flex gap-3">
+                    @if (Model.IsAuthenticated)
+                    {
+                        <a class="btn btn-warning btn-lg" asp-controller="Appointments" asp-action="New">
+                            <i class="fas fa-calendar-plus me-2"></i>Hemen Randevu Al
+                        </a>
+                    }
+                    else
+                    {
+                        <button class="btn btn-warning btn-lg" data-bs-toggle="modal" data-bs-target="#loginModal">
+                            <i class="fas fa-calendar-plus me-2"></i>Hemen Randevu Al
+                        </button>
+                    }
+                    <a class="btn btn-outline-light btn-lg" href="#services">
+                        <i class="fas fa-info-circle me-2"></i>Hizmetlerimiz
+                    </a>
+                </div>
             </div>
-            <div class="col-4">
-              <div class="stat-item text-center">
-                <div class="stat-number h3 fw-bold">5★</div>
-                <div class="stat-label small">Ortalama Puan</div>
-              </div>
+            <div class="col-lg-6">
+                <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                     alt="Profesyonel Kuaförlük" class="img-fluid rounded">
             </div>
-            <div class="col-4">
-              <div class="stat-item text-center">
-                <div class="stat-number h3 fw-bold">10+</div>
-                <div class="stat-label small">Yıl Deneyim</div>
-              </div>
-            </div>
-          </div>
         </div>
-      </div>
-      <div class="col-lg-6">
-        <div class="hero-image animate-slide-left">
-          <div class="image-container position-relative">
-            <img src="https://images.unsplash.com/photo-1560066984-138dadb4c035?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
-                 alt="Profesyonel Kuaförlük" class="img-fluid rounded-4 shadow-lg">
-            <div class="floating-card position-absolute top-0 end-0 bg-white rounded-3 p-3 shadow">
-              <div class="d-flex align-items-center gap-2">
-                <i class="fas fa-star text-warning"></i>
-                <span class="fw-bold">4.9/5</span>
-              </div>
-              <small class="text-muted">Google Yorumları</small>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<style>
-.hero-section {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
-
-.hero-bg {
-  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 1000"><polygon fill="%23ffffff10" points="0,1000 1000,0 1000,1000"/></svg>');
-  background-size: cover;
-}
-
-.min-vh-75 {
-  min-height: 75vh;
-}
-
-.animate-fade-in {
-  animation: fadeIn 1s ease-in-out;
-}
-
-.animate-slide-up {
-  animation: slideUp 1s ease-out 0.3s both;
-}
-
-.animate-slide-left {
-  animation: slideLeft 1s ease-out 0.6s both;
-}
-
-@@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@@keyframes slideUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-@@keyframes slideLeft {
-  from { 
-    opacity: 0; 
-    transform: translateX(30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateX(0); 
-  }
-}
-
-.floating-card {
-  animation: float 3s ease-in-out infinite;
-}
-
-@@keyframes float {
-  0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
-}
-
-.hero-stats .stat-item {
-  border-right: 1px solid rgba(255,255,255,0.2);
-}
-
-.hero-stats .col-4:last-child .stat-item {
-  border-right: none;
-}
-</style>
+    </div>  
+</div>
