@@ -83,5 +83,5 @@ jobs:
           echo "🚀 Deployment completed successfully!"
           echo "📱 WhatsApp Widget should be visible on the main page"
           echo "⚙️ Admin panel: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin"
-          echo "�� Message Templates: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin/Messaging/MessageTemplates"
+          echo " Message Templates: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin/Messaging/MessageTemplates"
           echo "💬 Quick WhatsApp: ${{ steps.deploy-to-webapp.outputs.webapp-url }}/Admin/Messaging"
