@@ -1,4 +1,4 @@
-name: Build and deploy ASP.Net Core app to Azure Web App with migrations
+name: Build and deploy ASP.Net Core app to Azure Web App
 
 env:
   AZURE_WEBAPP_NAME: SeaSoftKuaforRandevuWeb
@@ -25,9 +25,6 @@ jobs:
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
 
-      - name: Install EF Core tools
-        run: dotnet tool install --global dotnet-ef
-
       - name: Cache dependencies
         uses: actions/cache@v3
         with:
@@ -41,11 +38,6 @@ jobs:
 
       - name: Build
         run: dotnet build ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} --configuration Release --no-restore
-
-      - name: Run EF Core migrations
-        run: dotnet ef database update --project ${{ env.AZURE_WEBAPP_PACKAGE_PATH }}
-        env:
-          ConnectionStrings__DefaultConnection: ${{ secrets.AZURE_SQL_CONNECTION }}
 
       - name: Publish
         run: dotnet publish ${{ env.AZURE_WEBAPP_PACKAGE_PATH }} -c Release -o ${{env.DOTNET_ROOT}}/myapp
