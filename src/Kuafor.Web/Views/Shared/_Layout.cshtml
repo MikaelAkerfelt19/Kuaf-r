@@ -43,7 +43,7 @@
     <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/datetime-locale.js" asp-append-version="true"></script>
     
-    <!-- WhatsApp Widget - Sadece müşteri sayfalarında göster -->
+    <!-- WhatsApp Widget - Ana sayfa ve müşteri sayfalarında göster -->
     @if (!ViewContext.RouteData.Values.ContainsKey("area") || ViewContext.RouteData.Values["area"]?.ToString() == "Customer")
     {
         @await Component.InvokeAsync("WhatsAppWidget")

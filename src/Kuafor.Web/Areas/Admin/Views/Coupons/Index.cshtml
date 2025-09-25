@@ -1,20 +1,168 @@
-@model IEnumerable<object>
+@model List<Kuafor.Web.Models.Admin.Coupons.CouponDto>
 @{
     ViewData["Title"] = "Kuponlar";
     Layout = "~/Areas/Admin/Views/Shared/_Layout.Admin.cshtml";
 }
 
-<div class="admin-content">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 mb-0">Kuponlar</h1>
-        <button class="btn btn-primary">
-            <i class="bi bi-plus"></i> Yeni Kupon
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Kupon Yönetimi</h3>
+                    <div class="card-tools">
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCouponModal">
+                            <i class="fas fa-plus"></i> Yeni Kupon Oluştur
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    @if (Model != null && Model.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-bordered table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Kupon Kodu</th>
+                                        <th>Başlık</th>
+                                        <th>İndirim Türü</th>
+                                        <th>Miktar</th>
+                                        <th>Minimum Harcama</th>
+                                        <th>Bitiş Tarihi</th>
+                                        <th>Durum</th>
+                                        <th>İşlemler</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var coupon in Model)
+                                    {
+                                        <tr>
+                                            <td><code>@coupon.Code</code></td>
+                                            <td>@coupon.Title</td>
+                                            <td>
+                                                <span class="badge bg-@(coupon.DiscountType == Kuafor.Web.Models.Admin.Coupons.DiscountType.Percent ? "info" : "warning")">
+                                                    @(coupon.DiscountType == Kuafor.Web.Models.Admin.Coupons.DiscountType.Percent ? "Yüzde" : "Tutar")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                @if (coupon.DiscountType == Kuafor.Web.Models.Admin.Coupons.DiscountType.Percent)
+                                                {
+                                                    <span>% @coupon.Amount</span>
+                                                }
+                                                else
+                                                {
+                                                    <span>₺ @coupon.Amount</span>
+                                                }
+                                            </td>
+                                            <td>₺ @coupon.MinSpend</td>
+                                            <td>@(coupon.ExpiresAt?.ToString("dd.MM.yyyy") ?? "Sınırsız")</td>
+                                            <td>
+                                                <span class="badge bg-@(coupon.IsActive ? "success" : "danger")">
+                                                    @(coupon.IsActive ? "Aktif" : "Pasif")
+                                                </span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-primary" onclick="editCoupon(@coupon.Id)">
+                                                    <i class="fas fa-edit"></i>
+                                                </button>
+                                                <button class="btn btn-sm btn-@(coupon.IsActive ? "danger" : "success")" onclick="toggleCoupon(@coupon.Id, @coupon.IsActive.ToString().ToLower())">
+                                                    <i class="fas fa-@(coupon.IsActive ? "pause" : "play")"></i>
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-ticket-alt fa-3x mb-3"></i>
+                            <p>Henüz kupon bulunmuyor.</p>
+                            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createCouponModal">
+                                İlk Kuponu Oluştur
         </button>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
     </div>
 
-    <div class="card">
-        <div class="card-body">
-            <p class="text-muted">Kuponlar sayfası geliştiriliyor...</p>
+<!-- Yeni Kupon Oluşturma Modal -->
+<div class="modal fade" id="createCouponModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Yeni Kupon Oluştur</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form asp-action="Create" method="post">
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="Code" class="form-label">Kupon Kodu</label>
+                            <input type="text" class="form-control" id="Code" name="Code" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Title" class="form-label">Başlık</label>
+                            <input type="text" class="form-control" id="Title" name="Title" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="DiscountType" class="form-label">İndirim Türü</label>
+                            <select class="form-select" id="DiscountType" name="DiscountType" required>
+                                <option value="Percent">Yüzde (%)</option>
+                                <option value="Amount">Sabit Tutar (₺)</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="Amount" class="form-label">İndirim Miktarı</label>
+                            <input type="number" class="form-control" id="Amount" name="Amount" step="0.01" required>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="MinSpend" class="form-label">Minimum Harcama (₺)</label>
+                            <input type="number" class="form-control" id="MinSpend" name="MinSpend" step="0.01" required>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="ExpiresAt" class="form-label">Bitiş Tarihi</label>
+                            <input type="date" class="form-control" id="ExpiresAt" name="ExpiresAt">
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="IsActive" name="IsActive" checked>
+                            <label class="form-check-label" for="IsActive">Aktif</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">İptal</button>
+                    <button type="submit" class="btn btn-primary">Kupon Oluştur</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        function editCoupon(id) {
+            alert('Kupon düzenleme özelliği yakında eklenecek - ID: ' + id);
+        }
+
+        function toggleCoupon(id, isActive) {
+            const action = isActive ? 'deaktif' : 'aktif';
+            if (confirm(`Bu kuponu ${action} etmek istediğinizden emin misiniz?`)) {
+                // API çağrısı burada yapılacak
+                alert(`Kupon ${action} edildi!`);
+                location.reload();
+            }
+        }
+    </script>
+}

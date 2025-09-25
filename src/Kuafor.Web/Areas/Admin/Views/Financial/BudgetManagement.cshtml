@@ -334,8 +334,26 @@ function editBudget(budgetId) {
 
 function deleteBudget(budgetId) {
     if (confirm('Bu bütçeyi silmek istediğinizden emin misiniz?')) {
-        // Delete budget API call
-        alert('Bütçe silindi - ID: ' + budgetId);
+        fetch(`/Admin/Financial/delete-budget/${budgetId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Bütçe başarıyla silindi!');
+                location.reload(); // Sayfayı yenile
+            } else {
+                alert('Hata: ' + (data.message || 'Bütçe silinemedi'));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Bütçe silinirken bir hata oluştu');
+        });
     }
 }
 </script>
