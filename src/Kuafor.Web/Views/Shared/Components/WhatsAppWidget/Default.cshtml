@@ -2,12 +2,14 @@
 
 @if (Model != null && !string.IsNullOrEmpty(Model.PhoneNumber))
 {
+    
+
     <!-- WhatsApp Widget -->
     <script type="text/javascript">
         (function () {
             var options = {
                 whatsapp: "@Model.PhoneNumber",
-                call_to_action: "@Model.CallToAction",
+                call_to_action: "@Html.Raw(Model.CallToAction)", // Türkçe dil desteði eklenmiþ bulundu
                 position: "@Model.Position"
             };
             var proto = document.location.protocol, host = "getbutton.io", url = proto + "//static." + host;

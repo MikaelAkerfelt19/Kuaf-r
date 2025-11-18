@@ -1,0 +1,30 @@
+﻿@model Kuafor.Web.Models.Account.ResetStartViewModel
+@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+@{
+    ViewData["Title"] = "Şifre Sıfırlama - Başlat";
+}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <h3 class="mb-3">Şifreyi Sıfırla</h3>
+            <p class="text-muted">Eğer bilgiler doğruysa, telefonunuza 6 haneli doğrulama kodu göndereceğiz.</p>
+            <form asp-action="ResetStart" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-2"></div>
+                <div class="mb-3">
+                    <label asp-for="EmailOrUserName" class="form-label"></label>
+                    <input asp-for="EmailOrUserName" class="form-control" placeholder="ornek@site.com veya kullaniciadi" />
+                    <span asp-validation-for="EmailOrUserName" class="text-danger small"></span>
+                </div>
+                <button class="btn btn-primary w-100" type="submit">Devam</button>
+            </form>
+            @if (TempData["Info"] is string info)
+            {
+                <div class="alert alert-info mt-3">@info</div>
+            }
+        </div>
+    </div>
+</div>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

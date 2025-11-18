@@ -9,27 +9,41 @@
     <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
     <title>@Html.Raw(Html.Encode(ViewData["Title"])) - Kuaför</title>
     <base href="~/" />
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Kuafor.Web.styles.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/fontawesome/css/all.min.css" />
     <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
     @RenderSection("Styles", required: false)
+    @RenderSection("Head", required: false)
 </head>
-<body>
+
+<!-- 🔹 GÜNCELLEME: Sticky footer için flex iskelet -->
+<body class="d-flex flex-column min-vh-100">
     <partial name="_Navbar" />
-    <main class="py-4">
+
+    <!-- 🔹 GÜNCELLEME: İçerik esnesin -->
+    <main class="flex-fill py-4">
         @RenderBody()
     </main>
+
+    <!-- Footer hep en altta -->
     <partial name="_Footer" />
+
     <!-- Modals -->
-    <partial name="~/Views/Account/_LoginModal.cshtml"
+    <partial name="~/Views/Auth/_LoginModal.cshtml"
              model="new Kuafor.Web.ViewModels.LoginViewModel()" />
-    <partial name="~/Views/Account/_RegisterModal.cshtml"
+    <partial name="~/Views/Auth/_RegisterModal.cshtml"
              model="new Kuafor.Web.ViewModels.RegisterViewModel()" />
+
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     @RenderSection("Scripts", required: false)
+
     @if (TempData["OpenModal"]?.ToString() == "Login")
     {
         <script>new bootstrap.Modal('#loginModal').show();</script>
@@ -38,11 +52,12 @@
     {
         <script>new bootstrap.Modal('#registerModal').show();</script>
     }
+
     @await Html.PartialAsync("_Toast")
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script src="~/js/toast.js" asp-append-version="true"></script>
     <script src="~/js/datetime-locale.js" asp-append-version="true"></script>
-    
+
     <!-- WhatsApp Widget - Ana sayfa ve müşteri sayfalarında göster -->
     @if (!ViewContext.RouteData.Values.ContainsKey("area") || ViewContext.RouteData.Values["area"]?.ToString() == "Customer")
     {

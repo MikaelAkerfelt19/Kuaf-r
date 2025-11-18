@@ -1,4 +1,4 @@
-(function () {
+s(function () {
     const modalEl = document.getElementById('stylistModal');
     if (!modalEl) return;
 

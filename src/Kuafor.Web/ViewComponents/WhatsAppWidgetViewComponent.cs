@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
+using System.Net;
 
 namespace Kuafor.Web.ViewComponents
 {
@@ -15,11 +16,11 @@ namespace Kuafor.Web.ViewComponents
         public IViewComponentResult Invoke()
         {
             var whatsappSettings = _configuration.GetSection("WhatsAppSettings");
-            
+
             var model = new WhatsAppWidgetModel
             {
                 PhoneNumber = whatsappSettings["PhoneNumber"] ?? "+905314687179",
-                CallToAction = whatsappSettings["WidgetCallToAction"] ?? "Nasıl yardımcı olabilirim?",
+                CallToAction = whatsappSettings["WidgetCallToAction"] ?? @"Nasıl yardımcı olabilirim?",
                 Position = whatsappSettings["WidgetPosition"] ?? "right"
             };
 

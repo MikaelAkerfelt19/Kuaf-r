@@ -7,37 +7,85 @@
         <div class="col-md-8">
             <h2>İletişim</h2>
             <p class="lead">Bizimle iletişime geçin</p>
-            
-            <form>
+
+            <form id="contactForm">
                 <div class="mb-3">
                     <label for="name" class="form-label">Ad Soyad</label>
                     <input type="text" class="form-control" id="name" required>
                 </div>
-                
+
                 <div class="mb-3">
                     <label for="email" class="form-label">E-posta</label>
                     <input type="email" class="form-control" id="email" required>
                 </div>
-                
+
                 <div class="mb-3">
                     <label for="subject" class="form-label">Konu</label>
                     <input type="text" class="form-control" id="subject" required>
                 </div>
-                
+
                 <div class="mb-3">
                     <label for="message" class="form-label">Mesaj</label>
                     <textarea class="form-control" id="message" rows="5" required></textarea>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary">Gönder</button>
             </form>
         </div>
-        
+
         <div class="col-md-4">
             <h3>İletişim Bilgileri</h3>
-            <p><i class="fas fa-map-marker-alt"></i> Adres bilgisi</p>
-            <p><i class="fas fa-phone"></i> Telefon bilgisi</p>
-            <p><i class="fas fa-envelope"></i> E-posta bilgisi</p>
+            <p>
+                <i class="fas fa-map-marker-alt text-primary me-2"></i>
+                <strong>Adres:</strong> Cumhuriyet Mahallesi, Atatürk Bulvarı No:42, Kocasinan / Kayseri
+            </p>
+
+            <p>
+                <i class="fas fa-phone text-primary me-2"></i>
+                <strong>Telefon:</strong> +90 (352) 555 77 88
+            </p>
+
+            <p>
+                <i class="fas fa-envelope text-primary me-2"></i>
+                <strong>E-posta:</strong> info@xxxhairdresser.com
+            </p>
+
+            <hr>
+
+            <h5>Çalışma Saatleri</h5>
+            <p>Pazartesi - Cumartesi: 09:00 - 19:00<br>Pazar: Kapalı</p>
         </div>
     </div>
 </div>
+
+<!-- Modal Başlangıç -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title" id="successModalLabel">Mesaj Gönderildi</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+            <div class="modal-body">
+                Mesajınız iletilmiştir. 24 saat içerisinde mail adresinize dönüş yapılacaktır.
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Kapat</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- Modal Bitiş -->
+@section Scripts {
+    <script>
+        // Form gönderilince sayfa yenilenmeden modal aç
+        document.getElementById("contactForm").addEventListener("submit", function (e) {
+            e.preventDefault(); // Sayfanın yenilenmesini engelle
+            var modal = new bootstrap.Modal(document.getElementById('successModal'));
+            modal.show();
+
+            // Formu temizle
+            this.reset();
+        });
+    </script>
+}

@@ -1,12 +1,16 @@
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
 <header data-user-authenticated="@(User?.Identity?.IsAuthenticated ?? false)">
     <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom">
         <div class="container justify-content-center">
+
             <!-- Mobile toggler + Mobil Offcanvas (yalnızca mobilde) -->
             <button class="navbar-toggler d-lg-none" type="button" data-bs-toggle="offcanvas" data-bs-target="#mainNav"
-                aria-controls="mainNav" aria-label="Menüyü aç">
+                    aria-controls="mainNav" aria-label="Menüyü aç">
                 <span class="navbar-toggler-icon"></span>
             </button>
+
+            <!-- Mobil Menü -->
             <div class="offcanvas offcanvas-start d-lg-none" tabindex="-1" id="mainNav" aria-labelledby="mainNavLabel">
                 <div class="offcanvas-header">
                     <a class="navbar-brand" asp-controller="Home" asp-action="Index">
@@ -14,18 +18,20 @@
                     </a>
                     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Kapat"></button>
                 </div>
+
                 <div class="offcanvas-body">
                     <ul class="navbar-nav">
-                        <!-- Mobil menü: tüm linkler burada -->
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hizmetler</a>
-                            <ul class="dropdown-menu">
-                                @await Component.InvokeAsync("NavbarServices")
-                            </ul>
+
+                        <!-- Mobil: Hizmetler Menüsü -->
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Services" asp-action="Index">Hizmetler</a>
                         </li>
+
+
                         <li class="nav-item"><a class="nav-link" href="#testimonials">Yorumlar</a></li>
-                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">İletişim</a>
-                        </li>
+                        <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">İletişim</a></li>
+
+                        <!-- Mobil: Hesap Menüsü -->
                         <li class="nav-item dropdown">
                             @if (User?.Identity?.IsAuthenticated ?? false)
                             {
@@ -53,35 +59,36 @@
                             {
                                 <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hesap</a>
                                 <ul class="dropdown-menu">
-                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                            data-bs-target="#loginModal">Giriş Yap</a></li>
-                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                            data-bs-target="#registerModal">Kayıt Ol</a></li>
+                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş Yap</a></li>
+                                    <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt Ol</a></li>
                                 </ul>
                             }
                         </li>
                     </ul>
                 </div>
             </div>
-            <!-- Masaüstü (lg+) Grid: [sol menü] [logo] [sağ menü] -->
+
+            <!-- Masaüstü Navigasyon (lg ve üzeri) -->
             <div class="nav-center-grid d-none d-lg-grid align-items-center">
-                <!-- Sol grup (logoya yaslı) -->
+                <!-- Sol grup -->
                 <ul class="navbar-nav flex-row justify-self-end gap-3">
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hizmetler</a>
-                        <ul class="dropdown-menu">
-                            @await Component.InvokeAsync("NavbarServices")
-                        </ul>
+                    <li class="nav-item">
+                        <a class="nav-link" asp-controller="Services" asp-action="Index">Hizmetler</a>
                     </li>
+
                     <li class="nav-item"><a class="nav-link" href="#testimonials">Yorumlar</a></li>
                 </ul>
-                <!-- Orta grup (logo) -->
+
+                <!-- Orta grup (Logo) -->
                 <a class="navbar-brand mx-2 justify-self-center" asp-controller="Home" asp-action="Index">
                     <img src="~/images/logo.png" alt="Logo" class="brand-logo" />
                 </a>
-                <!-- Sağ grup (logoya yaslı) -->
+
+                <!-- Sağ grup -->
                 <ul class="navbar-nav flex-row gap-3 align-items-center justify-self-start">
                     <li class="nav-item"><a class="nav-link" asp-controller="Home" asp-action="Contact">İletişim</a></li>
+
+                    <!-- Hesap menüsü -->
                     <li class="nav-item dropdown">
                         @if (User?.Identity?.IsAuthenticated ?? false)
                         {
@@ -102,8 +109,8 @@
                                     <li><hr class="dropdown-divider" /></li>
                                 }
                                 <li>
-                                    <form method="post" asp-controller="Auth" asp-action="Logout" style="display: inline;">
-                                        <button type="submit" class="dropdown-item" style="background: none; border: none; text-align: left; width: 100%; cursor: pointer;">
+                                    <form method="post" asp-controller="Auth" asp-action="Logout" style="display:inline;">
+                                        <button type="submit" class="dropdown-item" style="background:none;border:none;text-align:left;width:100%;cursor:pointer;">
                                             <i class="fas fa-sign-out-alt me-2"></i>Çıkış Yap
                                         </button>
                                     </form>
@@ -114,10 +121,8 @@
                         {
                             <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown">Hesap</a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                        data-bs-target="#loginModal">Giriş Yap</a></li>
-                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal"
-                                        data-bs-target="#registerModal">Kayıt Ol</a></li>
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#loginModal">Giriş Yap</a></li>
+                                <li><a class="dropdown-item" href="#" data-bs-toggle="modal" data-bs-target="#registerModal">Kayıt Ol</a></li>
                             </ul>
                         }
                     </li>

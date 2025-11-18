@@ -1,0 +1,106 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+
+<div class="modal fade" id="authModal" tabindex="-1" aria-labelledby="authModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content shadow-lg border-0 rounded-4">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title" id="authModalLabel">Hesabınıza Giriş Yapın</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+
+            <div class="modal-body p-4">
+                <!-- Giriş Formu -->
+                <form asp-controller="Auth" asp-action="Login" method="post" id="loginForm">
+                    <div class="mb-3">
+                        <label for="EmailOrUserName" class="form-label">E-posta veya Kullanıcı Adı</label>
+                        <input type="text" class="form-control" id="EmailOrUserName" name="EmailOrUserName" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Password" class="form-label">Şifre</label>
+                        <input type="password" class="form-control" id="Password" name="Password" required />
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <input type="checkbox" id="RememberMe" name="RememberMe" />
+                            <label for="RememberMe" class="ms-1">Beni Hatırla</label>
+                        </div>
+                        <a href="@Url.Action("ForgotPassword", "Auth")" class="text-decoration-none text-primary fw-semibold">Şifremi Unuttum?</a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 py-2">Giriş Yap</button>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0">Hesabın yok mu?
+                            <a href="#" class="text-decoration-none text-primary fw-semibold" id="switchToRegister">
+                                Hesap Oluştur
+                            </a>
+                        </p>
+                    </div>
+                </form>
+
+                <!-- Kayıt Formu -->
+                <form asp-controller="Auth" asp-action="Register" method="post" id="registerForm" class="d-none">
+                    <div class="mb-3">
+                        <label for="FullName" class="form-label">Ad Soyad</label>
+                        <input type="text" class="form-control" id="FullName" name="FullName" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Email" class="form-label">E-posta</label>
+                        <input type="email" class="form-control" id="Email" name="Email" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="PhoneNumber" class="form-label">Telefon Numarası</label>
+                        <input type="tel" class="form-control" id="PhoneNumber" name="PhoneNumber" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="Password" class="form-label">Şifre</label>
+                        <input type="password" class="form-control" id="Password" name="Password" required />
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="ConfirmPassword" class="form-label">Şifre Tekrar</label>
+                        <input type="password" class="form-control" id="ConfirmPassword" name="ConfirmPassword" required />
+                    </div>
+
+                    <button type="submit" class="btn btn-success w-100 py-2">Hesap Oluştur</button>
+
+                    <div class="text-center mt-3">
+                        <p class="mb-0">Zaten hesabın var mı?
+                            <a href="#" class="text-decoration-none text-primary fw-semibold" id="switchToLogin">
+                                Giriş Yap
+                            </a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const switchToRegister = document.getElementById('switchToRegister');
+        const switchToLogin = document.getElementById('switchToLogin');
+
+        switchToRegister?.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginForm.classList.add('d-none');
+            registerForm.classList.remove('d-none');
+            document.getElementById('authModalLabel').innerText = 'Yeni Hesap Oluştur';
+        });
+
+        switchToLogin?.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerForm.classList.add('d-none');
+            loginForm.classList.remove('d-none');
+            document.getElementById('authModalLabel').innerText = 'Hesabınıza Giriş Yapın';
+        });
+    </script>
+}

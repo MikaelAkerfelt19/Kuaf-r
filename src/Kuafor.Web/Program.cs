@@ -13,28 +13,41 @@ using Kuafor.Web.Models.Enums;
 using Kuafor.Web.Controllers.Api.V1;
 using Kuafor.Web.Areas.Admin.Controllers;
 using OfficeOpenXml;
+using Microsoft.Extensions.Caching.Memory;
 
 var builder = WebApplication.CreateBuilder(args);
 
 ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
 
 // 1. Veritabanı ve Identity'yi yapılandır
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection")
     ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(connectionString, sqlServerOptions => 
+    options.UseSqlServer(connectionString, sqlServerOptions =>
     {
         sqlServerOptions.CommandTimeout(120); // Azure'daki ilk veritabanı oluşturma işlemi için zaman aşımını artır
     }));
 
-builder.Services.AddIdentity<IdentityUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+// >>> Identity politikalarıyla birlikte ve token providers dahil <<<
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(opts =>
+{
+    opts.Password.RequiredLength = 6;
+    opts.Password.RequireDigit = true;
+    opts.User.RequireUniqueEmail = true;
+
+    opts.Lockout.MaxFailedAccessAttempts = 5;
+    opts.Lockout.DefaultLockoutTimeSpan = TimeSpan.FromMinutes(5);
+})
+.AddEntityFrameworkStores<ApplicationDbContext>()
+.AddDefaultTokenProviders(); // Phone provider dahil
 
 // 2. Diğer servisleri ekle
 builder.Services.AddControllersWithViews();
 builder.Services.AddRazorPages();
+
+// Bellek önbelleği (SMS reset oturumları vs. için)
+builder.Services.AddMemoryCache();
 
 // ... (Tüm servis kayıtların burada) ...
 builder.Services.AddScoped<IBranchService, BranchService>();
@@ -61,7 +74,11 @@ builder.Services.AddScoped<IStaffManagementService, StaffManagementService>();
 builder.Services.AddScoped<IFinancialAnalyticsService, FinancialAnalyticsService>();
 builder.Services.AddScoped<IMarketingService, MarketingService>();
 builder.Services.AddScoped<IJwtService, JwtService>();
-builder.Services.AddScoped<ISmsService, SmsService>();
+
+// ~~ Eski satır: builder.Services.AddScoped<ISmsService, SmsService>();
+// >>> Twilio'ya yönlendirildi <<<
+builder.Services.AddScoped<ISmsService, TwilioSmsSender>();
+
 builder.Services.AddScoped<IWhatsAppService, WhatsAppService>();
 builder.Services.AddScoped<IWhatsAppTemplateService, WhatsAppTemplateService>();
 builder.Services.AddScoped<IWhatsAppMediaService, WhatsAppMediaService>();
@@ -75,10 +92,8 @@ builder.Services.AddScoped<Kuafor.Web.Controllers.Api.V1.ExportController>();
 builder.Services.AddScoped<FinancialController>();
 builder.Services.AddScoped<Kuafor.Web.Areas.Admin.Controllers.ExportController>();
 
-
 // ÖNEMLİ: Yarış durumunu engellemek için bu servis şimdilik kapalı kalacak.
 // builder.Services.AddHostedService<AppointmentReminderService>();
-
 
 // 3. Authentication (Kimlik Doğrulama) Ayarları
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
@@ -87,10 +102,10 @@ var jwtSecret = jwtSettings["SecretKey"];
 if (string.IsNullOrEmpty(jwtSecret))
 {
     // Azure'da bu ayar "JwtSettings__SecretKey" olarak aranacak.
-    jwtSecret = builder.Configuration["JwtSettings__SecretKey"]; 
+    jwtSecret = builder.Configuration["JwtSettings__SecretKey"];
     if (string.IsNullOrEmpty(jwtSecret))
     {
-         throw new InvalidOperationException("JWT Secret Key is required! Check Azure App Settings for 'JwtSettings__SecretKey'.");
+        throw new InvalidOperationException("JWT Secret Key is required! Check Azure App Settings for 'JwtSettings__SecretKey'.");
     }
 }
 
@@ -121,7 +136,6 @@ builder.Services.AddAuthorization(options =>
     // Diğer roller...
 });
 
-
 var app = builder.Build();
 
 // ===== 5. KONTROLLÜ VERİTABANI OLUŞTURMA VE BAŞLATMA =====
@@ -144,7 +158,7 @@ try
         logger.LogInformation("DbInitializer çalıştırılıyor...");
         await DbInitializer.InitializeAsync(services);
         logger.LogInformation("DbInitializer tamamlandı.");
-        
+
         logger.LogInformation("Azure App Service başarıyla başlatıldı!");
     }
 }
@@ -154,7 +168,7 @@ catch (Exception ex)
     logger.LogError(ex, "Uygulama başlangıcında veritabanı kurulumu sırasında kritik bir hata oluştu.");
     logger.LogError($"Hata detayı: {ex.Message}");
     logger.LogError($"Stack trace: {ex.StackTrace}");
-    
+
     // Azure'da daha iyi hata raporlama için
     if (ex.InnerException != null)
     {
@@ -162,7 +176,6 @@ catch (Exception ex)
     }
 }
 // =======================================================
-
 
 // 6. HTTP Pipeline Yapılandırması
 if (!app.Environment.IsDevelopment())

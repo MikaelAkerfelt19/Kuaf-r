@@ -1,0 +1,82 @@
+@model Kuafor.Web.ViewModels.LoginViewModel
+
+@{
+    ViewData["Title"] = "Giriş Yap";
+  
+}
+
+<div class="modal fade" id="loginModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 overflow-hidden shadow-lg border-0">
+            <div class="modal-header bg-gradient gap-2 align-items-center">
+                <img src="~/images/logo.png" alt="Logo" class="brand-logo" style="height:40px;" />
+                <h5 class="modal-title ms-2">Giriş Yap</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+
+            <div class="modal-body">
+                <form asp-controller="Auth" asp-action="Login" method="post" asp-antiforgery="true">
+                    <div class="text-danger small mb-2" asp-validation-summary="ModelOnly"></div>
+
+                    <div class="outlined-group mb-3">
+                        <label class="outlined-label" asp-for="UserNameOrEmail">Kullanıcı adı veya E-posta</label>
+                        <input class="form-control outlined-control"
+                               asp-for="UserNameOrEmail"
+                               placeholder="Buraya yazınız..." />
+                        <span class="text-danger small" asp-validation-for="UserNameOrEmail"></span>
+                    </div>
+
+                    <div class="outlined-group mb-3">
+                        <label class="outlined-label" asp-for="Password">Şifre</label>
+                        <input class="form-control outlined-control"
+                               asp-for="Password"
+                               type="password"
+                               placeholder="Buraya yazınız..." />
+                        <span class="text-danger small" asp-validation-for="Password"></span>
+                    </div>
+
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div class="form-check">
+                            <input class="form-check-input" asp-for="RememberMe" type="checkbox" id="rememberMe" />
+                            <label class="form-check-label" asp-for="RememberMe">Beni hatırla</label>
+                        </div>
+
+                        <!-- ✅ ForgotPassword yönlendirmesi -->
+                        <a asp-controller="Auth"
+                           asp-action="ForgotPassword"
+                           class="small text-decoration-none text-primary">
+                            Şifremi unuttum
+                        </a>
+                    </div>
+
+                    <button type="submit" class="btn btn-primary w-100 rounded-pill py-2 mt-2">Giriş Yap</button>
+                </form>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <div class="small text-muted">Hesabın yok mu?</div>
+                <button class="btn btn-outline-secondary rounded-pill"
+                        data-bs-target="#registerModal"
+                        data-bs-toggle="modal"
+                        data-bs-dismiss="modal">
+                    Kayıt Ol
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script src="~/js/login.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const modalElement = document.getElementById('loginModal');
+            if (modalElement && '@(TempData["OpenModal"] as string)' === 'Login') {
+                const loginModal = new bootstrap.Modal(modalElement);
+                loginModal.show();
+            }
+        });
+    </script>
+}

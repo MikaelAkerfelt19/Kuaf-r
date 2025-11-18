@@ -1,75 +1,77 @@
-<footer class="site-footer text-white bg-gradient" data-bs-theme="dark">
-  <div class="footer-top pt-5">
-    <div class="container">
-      <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
-        @* Hakkımızda *@
-        <div class="col">
-          <h5 class="fw-bold mb-3">Hakkımızda</h5>
-          <p class="mb-0 text-white-50">
-            XXX Hairdresser, kalite ve müşteri memnuniyetini ön planda tutan profesyonel bir ekipten oluşur. Modern teknikler ve kaliteli ürünlerle, müşterilerimize en iyi hizmeti sunmayı amaçlıyoruz. Güler yüzlü ekibimizle, saç ve güzellik alanında güvenilir bir adresiz.
-          </p>
+<footer class="site-footer text-white bg-gradient mt-auto" data-bs-theme="dark">
+    <div class="footer-top pt-5">
+        <div class="container">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-lg-4 g-4">
+                <!-- Hakkımızda -->
+                <div class="col">
+                    <h5 class="fw-bold mb-3">Hakkımızda</h5>
+                    <p class="mb-0 text-white-50">
+                        XXX Hairdresser, kalite ve müşteri memnuniyetini ön planda tutan profesyonel bir ekipten oluşur.
+                        Modern teknikler ve kaliteli ürünlerle en iyi hizmeti sunmayı amaçlıyoruz. Güler yüzlü ekibimizle
+                        saç ve güzellik alanında güvenilir bir adresiz.
+                    </p>
+                </div>
+
+                <!-- Bağlantılar -->
+                <div class="col">
+                    <h5 class="fw-bold mb-3">Bağlantılar</h5>
+                    <ul class="list-unstyled">
+                        <li class="mb-2"><a class="link-light link-opacity-75-hover" asp-controller="Home" asp-action="Index">Ana Sayfa</a></li>
+                        <li class="mb-2"><a class="link-light link-opacity-75-hover" href="#services">Hizmetler</a></li>
+                        <li class="mb-2"><a class="link-light link-opacity-75-hover" href="#testimonials">Referanslar</a></li>
+                        <li class="mb-2"><a class="link-light link-opacity-75-hover" asp-controller="Home" asp-action="Contact">İletişim</a></li>
+
+                        <!-- ADDED: Gizlilik Politikası ve Kullanım Koşulları bağlantıları -->
+                        <li class="mb-2"><a class="link-light link-opacity-75-hover" asp-controller="Legal" asp-action="Privacy">Gizlilik Politikası</a></li>
+                        <!-- ADDED -->
+                        <li class="mb-2"><a class="link-light link-opacity-75-hover" asp-controller="Legal" asp-action="Terms">Kullanım Koşulları</a></li>
+                        <!-- ADDED -->
+                    </ul>
+                </div>
+
+                <!-- İletişim -->
+                <div class="col">
+                    <h5 class="fw-bold mb-3">İletişim</h5>
+                    <ul class="list-unstyled m-0">
+                        <li class="mb-2">
+                            <i class="bi bi-telephone me-2"></i>
+                            <a class="link-light link-opacity-75-hover" href="tel:+1234567890">+1 (234) 567-890</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-envelope me-2"></i>
+                            <a class="link-light link-opacity-75-hover" href="mailto:info@xxxhairdresser.com">info@xxxhairdresser.com</a>
+                        </li>
+                        <li class="mb-2">
+                            <i class="bi bi-geo-alt me-2"></i>
+                            <span class="text-white-50">Kocasinan Mah., Güzellik Sok. No:12, Kayseri / Türkiye</span>
+                        </li>
+
+                        <li class="mb-2">
+                            <i class="bi bi-clock me-2"></i>
+                            <span class="text-white-50">Pzt–Cmt: 09:00–20:00 • Paz: Kapalı</span>
+                        </li>
+
+                    </ul>
+                </div>
+
+                <div class="col">
+                    <h5 class="fw-bold mb-3">Bizi Takip Et</h5>
+                    <div class="d-flex align-items-center gap-3">
+                        <a class="text-white fs-4" href="#" aria-label="Facebook"><i class="bi bi-facebook"></i></a>
+                        <a class="text-white fs-4" href="#" aria-label="Instagram"><i class="bi bi-instagram"></i></a>
+                        <a class="text-white fs-4" href="#" aria-label="Twitter"><i class="bi bi-twitter"></i></a>
+                        <a class="text-white fs-4" href="#" aria-label="YouTube"><i class="bi bi-youtube"></i></a>
+                    </div>
+                </div>
+
+            </div>
+
+,
+            <hr class="my-4 text-white-50" />
+            <div class="text-center text-white-50 small">
+                <p class="mb-0">&copy; @DateTime.Now.Year XXX Hairdresser. Tüm hakları saklıdır.</p>
+                <p class="mb-0">Bu site ASP.NET Core ile geliştirilmiştir.</p>
+            </div>
         </div>
-        @* Bağlantılar *@
-        <div class="col">
-          <h5 class="fw-bold mb-3">Bağlantılar</h5>
-          <ul class="list-unstyled">
-            <li class="mb-2"><a class="link-light link-opacity-75-hover" asp-controller="Home" asp-action="Index">Ana Sayfa</a></li>
-            <li class="mb-2"><a class="link-light link-opacity-75-hover" href="#services">Hizmetler</a></li>
-            <li class="mb-2"><a class="link-light link-opacity-75-hover" href="#testimonials">Referanslar</a></li>
-            <li class="mb-2"><a class="link-light link-opacity-75-hover" asp-controller="Home" asp-action="Contact">İletişim</a></li>
-          </ul>
-        </div>
-        @* İletişim *@
-        <div class="col">
-          <h5 class="fw-bold mb-3">İletişim</h5>
-          <ul class="list-unstyled m-0">
-            <li class="mb-2">
-              <i class="bi bi-telephone me-2"></i>
-              <a class="link-light link-opacity-75-hover" href="tel:+1234567890">+1 (234) 567-890</a>
-            </li>
-            <li class="mb-2">
-              <i class="bi bi-envelope me-2"></i>
-              <a class="link-light link-opacity-75-hover" href="mailto:info@xxxhairdresser.com">info@xxxhairdresser.com</a>
-            </li>
-            <li class="mb-2">
-              <i class="bi bi-geo-alt me-2"></i>
-              <span class="text-white-75">1234 Hairdresser St, City, Country</span>
-            </li>
-          </ul>
-        </div>
-        @* Sosyal *@
-        <div class="col">
-          <h5 class="fw-bold mb-3">Bizi Takip Et</h5>
-          <div class="d-flex align-items-center gap-3">
-            <a class="social-icon" href="#" aria-label="Facebook">
-              <i class="bi bi-facebook"></i>
-            </a>
-            <a class="social-icon" href="https://x.com/sansursuzprof/status/1955667688300401136" aria-label="Twitter">
-              <i class="bi bi-twitter"></i>
-            </a>
-            <a class="social-icon" href="https://www.instagram.com/ibrahimtskn0/" aria-label="Instagram">
-              <i class="bi bi-instagram"></i>
-            </a>
-            <a class="social-icon" href="#" aria-label="WhatsApp">
-              <i class="bi bi-whatsapp"></i>
-            </a>
-          </div>
-        </div>
-      </div>
-      <hr class="footer-sep my-4" />
     </div>
-  </div>
-  @* Footer Alt *@
-  <div class="footer-bottom py-1 pb-4">
-    <div class="container d-flex flex-column flex-md-row justify-content-between align-items-center gap-2 small">
-      <div class="text-white-75">
-        &copy; @DateTime.Now.Year - XXX Hairdresser. Tüm hakları saklıdır.
-      </div>
-      <div class="d-flex gap-3">
-        <a class="link-light link-opacity-75-hover" asp-controller="Home" asp-action="Privacy">Gizlilik Politikası</a>
-        <span class="opacity-50">|</span>
-        <a class="link-light link-opacity-75-hover" asp-controller="Home" asp-action="Terms">Kullanım Şartları</a>
-      </div>
-    </div>
-  </div>
 </footer>

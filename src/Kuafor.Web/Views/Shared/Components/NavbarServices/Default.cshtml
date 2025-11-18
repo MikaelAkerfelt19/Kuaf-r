@@ -1,12 +1,11 @@
 @model List<Kuafor.Web.Models.Entities.Service>
 
-<li><a class="dropdown-item" asp-controller="Services" asp-action="Index">Tümü</a></li>
-<li><a class="dropdown-item" asp-controller="Services" asp-action="Index">Fiyat Listesi</a></li>
+<li><a class="dropdown-item" asp-controller="Services" asp-action="Index">T�m Hizmetler</a></li>
 @if (Model.Any())
 {
     <li><hr class="dropdown-divider" /></li>
-    @foreach (var service in Model)
+   /* @foreach (var service in Model)
     {
         <li><a class="dropdown-item" asp-controller="Services" asp-action="Details" asp-route-id="@service.Id">@service.Name</a></li>
-    }
+    }*/
 }

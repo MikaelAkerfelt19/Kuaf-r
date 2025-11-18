@@ -1,0 +1,38 @@
+﻿@{
+    ViewData["Title"] = "Gizlilik Politikası";
+    var lastUpdated = ViewData["LastUpdated"] as string;
+}
+
+<section class="container my-5">
+    <h1>@ViewData["Title"]</h1>
+    <p><em>Son Güncelleme: @lastUpdated</em></p>
+    <hr />
+
+    <h2>1. Toplanan Bilgiler</h2>
+    <ul>
+        <li>Ad, soyad, telefon, e-posta</li>
+        <li>Randevu geçmişi ve tercih bilgileri</li>
+        <li>IP adresi ve tarayıcı bilgileri (analitik amaçlı)</li>
+    </ul>
+
+    <h2>2. Kullanım Amaçları</h2>
+    <ul>
+        <li>Randevu oluşturma/hatırlatma</li>
+        <li>Müşteri desteği</li>
+        <li>İzin verilmesi halinde kampanya/duyuru iletimi</li>
+    </ul>
+
+    <h2>3. Güvenlik</h2>
+    <p>Kişisel veriler güvenli sunucularda saklanır, üçüncü kişilerle paylaşılmaz. Yalnızca yasal zorunluluk durumunda resmi kurumlarla paylaşılabilir.</p>
+
+    <h2>4. Çerezler (Cookies)</h2>
+    <p>Deneyimi iyileştirmek için çerezler kullanılabilir. Tarayıcınızdan devre dışı bırakabilirsiniz.</p>
+
+    <h2>5. İletişim</h2>
+    <p>Sorularınız için: <a href="mailto:info@xxxhairdresser.com">info@xxxhairdresser.com</a></p>
+</section>
+
+@section Head {
+    <meta name="description" content="XXX Hairdresser gizlilik politikası: hangi verileri topluyoruz, nasıl kullanıyoruz ve nasıl koruyoruz.">
+    <meta name="robots" content="index,follow">
+}

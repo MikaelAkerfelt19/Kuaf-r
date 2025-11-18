@@ -1,0 +1,251 @@
+@model Kuafor.Web.ViewModels.RegisterViewModel
+
+<div class="modal fade" id="registerModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content rounded-4 overflow-hidden">
+            <div class="modal-header bg-gradient gap-2">
+                <img src="~/images/logo.png" alt="Logo" class="brand-logo" />
+                <h5 class="modal-title">Kayıt Ol</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Kapat"></button>
+            </div>
+
+            <div class="modal-body">
+                <form class="needs-validation" novalidate method="post"
+                      asp-controller="Auth" asp-action="Register" asp-antiforgery="true" autocomplete="off">
+                    <div class="text-danger small mb-2" asp-validation-summary="ModelOnly"></div>
+
+                    <div class="row g-3">
+                        <!-- Ad -->
+                        <div class="col-md-6">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="FirstName">Ad</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="FirstName"
+                                       required
+                                       minlength="2"
+                                       autocomplete="given-name" />
+                            </div>
+                            <span class="text-danger small" asp-validation-for="FirstName"></span>
+                        </div>
+
+                        <!-- Soyad -->
+                        <div class="col-md-6">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="LastName">Soyad</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="LastName"
+                                       required
+                                       minlength="2"
+                                       autocomplete="family-name" />
+                            </div>
+                            <span class="text-danger small" asp-validation-for="LastName"></span>
+                        </div>
+
+                        <!-- Kullanıcı Adı -->
+                        <div class="col-md-6">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="UserName">Kullanıcı Adı</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="UserName"
+                                       required
+                                       minlength="3"
+                                       maxlength="32"
+                                       autocomplete="username" />
+                            </div>
+                            <span class="text-danger small" asp-validation-for="UserName"></span>
+                        </div>
+
+                        <!-- E-posta -->
+                        <div class="col-md-6">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="Email">E-posta</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="Email"
+                                       required
+                                       type="email"
+                                       inputmode="email"
+                                       autocomplete="email" />
+                            </div>
+                            <span class="text-danger small" asp-validation-for="Email"></span>
+                        </div>
+
+                        <!-- Telefon (TR formatı opsiyonel) -->
+                        <div class="col-md-12">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="Phone">Telefon</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="Phone"
+                                       inputmode="tel"
+                                       autocomplete="tel-national"
+                                       pattern="^(\+90|0)?\s?5\d{2}\s?\d{3}\s?\d{2}\s?\d{2}$"
+                                       placeholder="+90 5xx xxx xx xx" />
+                            </div>
+                            <small class="text-muted">Örn: +90 5xx xxx xx xx</small>
+                            <span class="text-danger small" asp-validation-for="Phone"></span>
+                        </div>
+
+                        <!-- Şifre -->
+                        <div class="col-md-6">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="Password">Şifre</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="Password"
+                                       type="password"
+                                       required
+                                       minlength="6"
+                                       autocomplete="new-password"
+                                       aria-describedby="pwdHelp pwdCaps" />
+                            </div>
+                            <small id="pwdHelp" class="text-muted d-block">
+                                En az 6 karakter ve en az 1 rakam içermelidir.
+                            </small>
+                            <small id="pwdCaps" class="text-warning d-none">Caps Lock açık görünüyor.</small>
+                            <span class="text-danger small" asp-validation-for="Password"></span>
+                        </div>
+
+                        <!-- Şifre Tekrar -->
+                        <div class="col-md-6">
+                            <div class="outlined-group w-100">
+                                <label class="outlined-label" asp-for="ConfirmPassword">Şifre (Tekrar)</label>
+                                <input class="form-control outlined-control"
+                                       asp-for="ConfirmPassword"
+                                       type="password"
+                                       required
+                                       autocomplete="new-password"
+                                       aria-describedby="cpwdCaps" />
+                            </div>
+                            <small id="cpwdCaps" class="text-warning d-none">Caps Lock açık görünüyor.</small>
+                            <span class="text-danger small" asp-validation-for="ConfirmPassword"></span>
+                        </div>
+
+                        <!-- Sözleşme / Bülten -->
+                        <div class="col-md-12 mt-1">
+                            <div class="form-check">
+                                <input class="form-check-input" asp-for="Terms" type="checkbox" required>
+                                <label class="form-check-label" asp-for="Terms">
+                                    Kullanıcı sözleşmesini kabul ediyorum
+                                </label>
+                                <div class="invalid-feedback">Devam etmek için sözleşmeyi kabul etmelisiniz.</div>
+                            </div>
+
+                            <div class="form-check mt-2">
+                                <input class="form-check-input" asp-for="Newsletter" type="checkbox">
+                                <label class="form-check-label" asp-for="Newsletter">
+                                    Duyuru ve teklifler için e-posta almak istiyorum
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Submit -->
+                        <div class="col-12">
+                            <button id="btnRegisterSubmit" type="submit" class="btn btn-primary w-100">
+                                Kayıt Ol
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            <div class="modal-footer justify-content-between">
+                <div class="small text-muted">Zaten hesabın var mı?</div>
+                <button class="btn btn-outline-secondary"
+                        data-bs-target="#loginModal"
+                        data-bs-toggle="modal"
+                        data-bs-dismiss="modal">
+                    Giriş Yap
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        // Bootstrap native doğrulama
+        (function () {
+            const form = document.querySelector('#registerModal form.needs-validation');
+            if (!form) return;
+
+            form.addEventListener('submit', function (e) {
+                // Şifre policy: en az 6 ve en az bir rakam
+                const pwd = form.querySelector('[name="Password"]');
+                const cpwd = form.querySelector('[name="ConfirmPassword"]');
+                const numberOk = /\d/.test(pwd.value);
+                if (pwd.value.length < 6 || !numberOk) {
+                    e.preventDefault(); e.stopPropagation();
+                    pwd.setCustomValidity('Şifre en az 6 karakter ve en az 1 rakam içermelidir.');
+                } else {
+                    pwd.setCustomValidity('');
+                }
+
+                if (cpwd.value !== pwd.value) {
+                    e.preventDefault(); e.stopPropagation();
+                    cpwd.setCustomValidity('Şifreler aynı olmalı.');
+                } else {
+                    cpwd.setCustomValidity('');
+                }
+
+                if (!form.checkValidity()) {
+                    e.preventDefault(); e.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+
+            // Blur anında (on-the-fly) doğrulama
+            form.querySelectorAll('input').forEach(inp => {
+                inp.addEventListener('blur', () => {
+                    if (inp.name === 'ConfirmPassword') {
+                        const pwd = form.querySelector('[name="Password"]');
+                        if (inp.value && inp.value !== pwd.value) {
+                            inp.setCustomValidity('Şifreler aynı olmalı.');
+                        } else {
+                            inp.setCustomValidity('');
+                        }
+                    }
+                    inp.reportValidity();
+                });
+            });
+
+            // Caps Lock uyarıları
+            const pwdInput = form.querySelector('[name="Password"]');
+            const cpwdInput = form.querySelector('[name="ConfirmPassword"]');
+            const caps1 = document.getElementById('pwdCaps');
+            const caps2 = document.getElementById('cpwdCaps');
+            function capsHandler(e, el) {
+                if (typeof e.getModifierState === 'function' && e.getModifierState('CapsLock')) {
+                    el.classList.remove('d-none');
+                } else {
+                    el.classList.add('d-none');
+                }
+            }
+            ['keyup', 'keydown'].forEach(ev => {
+                pwdInput?.addEventListener(ev, (e) => capsHandler(e, caps1));
+                cpwdInput?.addEventListener(ev, (e) => capsHandler(e, caps2));
+            });
+
+            // Terms tiklenmeden submit butonunu pasifleştir (isteğe bağlı)
+            const terms = form.querySelector('[name="Terms"]');
+            const submitBtn = document.getElementById('btnRegisterSubmit');
+            function syncTerms() {
+                submitBtn.disabled = !terms.checked;
+            }
+            if (terms && submitBtn) {
+                syncTerms();
+                terms.addEventListener('change', syncTerms);
+            }
+        })();
+
+        // Hata varsa veya TempData "Register" ise modalı otomatik aç
+        document.addEventListener('DOMContentLoaded', function () {
+            const shouldOpen =
+        @((ViewData.ModelState?.ErrorCount ?? 0) > 0 ? "true" : "false") ||
+                '@(TempData["OpenModal"] as string ?? "")' === 'Register';
+
+            if (shouldOpen) {
+                const el = document.getElementById('registerModal');
+                if (el) new bootstrap.Modal(el).show();
+            }
+        });
+    </script>
+}

@@ -1,0 +1,30 @@
+﻿@{
+    ViewData["Title"] = "Kullanım Şartları";
+    var lastUpdated = ViewData["LastUpdated"] as string;
+}
+
+<section class="container my-5">
+    <h1>@ViewData["Title"]</h1>
+    <p><em>Son Güncelleme: @lastUpdated</em></p>
+    <hr />
+
+    <h2>1. Hizmet</h2>
+    <p>Bu site, XXX Hairdresser için çevrimiçi randevu ve bilgilendirme hizmeti sağlar.</p>
+
+    <h2>2. Kullanıcı Sorumluluğu</h2>
+    <p>Site yasalara aykırı amaçlarla kullanılamaz. Yanlış/eksik bilgi verilmemelidir.</p>
+
+    <h2>3. Fikri Mülkiyet</h2>
+    <p>Metin, görsel ve logolar XXX Hairdresser’a aittir; izinsiz kullanılamaz.</p>
+
+    <h2>4. Sorumluluk Reddi</h2>
+    <p>İçerikler genel bilgilendirme amaçlıdır. Rezervasyon hataları veya bağlantı sorunlarından doğan zararlardan sorumluluk kabul edilmez.</p>
+
+    <h2>5. Değişiklikler</h2>
+    <p>Şartlar zaman zaman güncellenebilir; değişiklikler sitede yayımlandığı anda geçerlidir.</p>
+</section>
+
+@section Head {
+    <meta name="description" content="XXX Hairdresser kullanım şartları: siteyi kullanırken geçerli kurallar ve sorumluluklar.">
+    <meta name="robots" content="index,follow">
+}

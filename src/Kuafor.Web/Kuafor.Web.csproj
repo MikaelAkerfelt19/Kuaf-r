@@ -6,8 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <UserSecretsId>aspnet-Kuafor.Web-8517a2b3-282c-4c4d-b80c-4eaaddcf3329</UserSecretsId>
     <PublishSingleFile>false</PublishSingleFile>
-    <SelfContained>false</SelfContained>
-    <RuntimeIdentifier>linux-x64</RuntimeIdentifier>
     <!-- Bu satırı ekle -->
     <PublishReadyToRun>false</PublishReadyToRun>
   </PropertyGroup>
@@ -26,9 +24,10 @@
     </PackageReference>
     <PackageReference Include="Swashbuckle.AspNetCore" Version="6.5.0" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="8.0.4" />
-    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.0.1" />
     <PackageReference Include="EPPlus" Version="7.0.0" />
     <PackageReference Include="itext7" Version="8.0.2" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
+    <PackageReference Include="Twilio" Version="7.13.4" />
   </ItemGroup>
 
 </Project>
