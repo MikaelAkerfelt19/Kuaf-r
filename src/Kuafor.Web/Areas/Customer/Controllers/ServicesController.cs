@@ -36,6 +36,7 @@ public class ServicesController : Controller
     {
         var services = await _serviceService.GetActiveAsync();
         var branches = await _branchService.GetActiveAsync();
+        var stylists = await _stylistService.GetActiveAsync();
         
         // Database'den gelen hizmetlerin kategorilerini al
         var categories = services
@@ -49,6 +50,7 @@ public class ServicesController : Controller
         {
             Services = services.ToList(),
             Branches = branches.ToList(),
+            Stylists = stylists.ToList(),
             Categories = categories
         };
 
@@ -116,11 +118,13 @@ public class ServicesController : Controller
     {
         var services = await _serviceService.GetActiveAsync();
         var branches = await _branchService.GetActiveAsync();
-        
+        var stylists = await _stylistService.GetActiveAsync();
+
         var vm = new ServicesIndexViewModel
         {
             Services = services.ToList(),
-            Branches = branches.ToList()
+            Branches = branches.ToList(),
+            Stylists = stylists.ToList()
         };
 
         return View("Index", vm);

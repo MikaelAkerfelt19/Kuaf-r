@@ -2,131 +2,303 @@
 
 
 @model Kuafor.Web.Models.Services.ServicesIndexViewModel
-@{
+@{ 
     ViewData["Title"] = "Hizmetlerimiz";
 }
+
+<style>
+    .icon-circle {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+    }
+
+    .branch-card.active,
+    .select-branch.active,
+    .select-stylist.active {
+        border-color: var(--bs-primary);
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+    }
+
+    .branch-card .card-body,
+    .stylist-card .card-body {
+        min-height: 160px;
+    }
+</style>
 
 <div class="container py-4">
     <div class="text-center mb-5">
         <h1 class="display-4">Hizmetlerimiz</h1>
-        <p class="lead text-muted">Profesyonel kuaför hizmetlerimizi keşfedin</p>
+        <p class="lead text-muted">Önce şubemizi ve kuaförümüzü seçin, ardından kuaförünüzün sunduğu hizmetleri keşfedin.</p>
     </div>
 
-    <!-- Hizmet Kategorileri -->
-    <div class="row mb-4">
-        <div class="col-12">
-            <div class="d-flex justify-content-center">
-                <div class="btn-group" role="group">
-                    <button type="button" class="btn btn-outline-primary active" data-category="all">Tümü</button>
-                    @if (Model.Categories.Any())
-                    {
-                        @foreach (var category in Model.Categories)
+    <div class="row g-4 mb-5">
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-primary-subtle text-primary me-3">
+                            <i class="bi bi-geo-alt"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase">Adım 1</div>
+                            <h4 class="mb-0">Şubenizi Seçin</h4>
+                        </div>
+                    </div>
+                    <p class="text-muted">Size en yakın veya tercih ettiğiniz şubeyi seçerek o şubede çalışan kuaförleri görebilirsiniz.</p>
+
+                    <div class="row g-3" id="branchList">
+                        @foreach (var branch in Model.Branches)
                         {
-                            var categoryName = category switch
-                            {
-                                "haircut" => "Saç Kesimi",
-                                "coloring" => "Renklendirme",
-                                "styling" => "Şekillendirme",
-                                "beard" => "Sakal Traşı",
-                                "care" => "Bakım & Spa",
-                                "manicure" => "Manikür & Pedikür",
-                                "other" => "Diğer",
-                                _ => category
-                            };
-                            <button type="button" class="btn btn-outline-primary" data-category="@category.ToLower()">@categoryName</button>
+                            <div class="col-md-6">
+                                <div class="card branch-card h-100" data-branch-id="@branch.Id">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start justify-content-between">
+                                            <div>
+                                                <h5 class="card-title mb-1">@branch.Name</h5>
+                                                <p class="card-text text-muted small mb-2">@branch.Address</p>
+                                                <div class="text-muted small">
+                                                    <i class="bi bi-telephone"></i> @branch.Phone
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-light text-dark">Şube</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0">
+                                        <button type="button" class="btn btn-outline-primary w-100 select-branch" data-branch-id="@branch.Id">Bu Şubeyi Seç</button>
+                                    </div>
+                                </div>
+                            </div>
                         }
-                    }
-                    else
-                    {
-                        <!-- Varsayılan kategoriler (henüz hizmet yoksa) -->
-                        <button type="button" class="btn btn-outline-primary" data-category="haircut">Saç Kesimi</button>
-                        <button type="button" class="btn btn-outline-primary" data-category="coloring">Renklendirme</button>
-                        <button type="button" class="btn btn-outline-primary" data-category="styling">Şekillendirme</button>
-                        <button type="button" class="btn btn-outline-primary" data-category="beard">Sakal Traşı</button>
-                    }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-lg-6">
+            <div class="card h-100 shadow-sm" id="stylistCard">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="icon-circle bg-success-subtle text-success me-3">
+                            <i class="bi bi-person-badge"></i>
+                        </div>
+                        <div>
+                            <div class="text-muted small text-uppercase">Adım 2</div>
+                            <h4 class="mb-0">Kuaförünüzü Seçin</h4>
+                        </div>
+                    </div>
+                    <p class="text-muted">Seçtiğiniz şubede hizmet veren kuaförler arasından tercih yapın.</p>
+
+                    <div id="stylistPlaceholder" class="alert alert-light border text-muted mb-0">
+                        Önce şube seçin.
+                    </div>
+
+                    <div id="stylistList" class="row g-3 d-none">
+                        @foreach (var stylist in Model.Stylists)
+                        {
+                            <div class="col-md-6 stylist-card" data-branch-id="@stylist.BranchId">
+                                <div class="card h-100">
+                                    <div class="card-body">
+                                        <div class="d-flex align-items-start justify-content-between">
+                                            <div>
+                                                <h6 class="mb-1">@stylist.FirstName @stylist.LastName</h6>
+                                                <div class="small text-muted mb-2">@stylist.Bio</div>
+                                                <div class="small text-muted">
+                                                    <i class="bi bi-star-fill text-warning"></i> @stylist.Rating.ToString("0.0")
+                                                </div>
+                                            </div>
+                                            <span class="badge bg-light text-dark">Kuaför</span>
+                                        </div>
+                                    </div>
+                                    <div class="card-footer bg-transparent border-0">
+                                        <button type="button" class="btn btn-outline-success w-100 select-stylist" data-stylist-id="@stylist.Id">
+                                            Bu Kuaförü Seç
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Hizmetler Grid -->
-    <div class="row g-4">
-        @foreach (var service in Model.Services)
-        {
-            var categoryClass = service.Category?.ToLower() switch
-            {
-                "haircut" => "haircut",
-                "coloring" => "coloring", 
-                "styling" => "styling",
-                "beard" => "beard",
-                "care" => "care",
-                "manicure" => "manicure",
-                "other" => "other",
-                _ => "other"
-            };
-            
-            <div class="col-md-6 col-lg-4 service-item" data-category="@categoryClass">
-                <div class="card h-100 service-card">
-                    <div class="card-body text-center">
-                        <div class="service-icon mb-3">
-                            <i class="@(service.IconClass ?? "bi bi-scissors") fa-3x text-primary"></i>
+    <div class="card shadow-sm" id="serviceCard">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <div class="icon-circle bg-info-subtle text-info me-3">
+                    <i class="bi bi-scissors"></i>
+                </div>
+                <div>
+                    <div class="text-muted small text-uppercase">Adım 3</div>
+                    <h4 class="mb-0">Hizmetleri Görüntüleyin</h4>
+                </div>
+            </div>
+            <p class="text-muted">Seçtiğiniz kuaförün sunduğu hizmetler aşağıda listelenir. Filtreler ile hızlıca seçim yapabilirsiniz.</p>
+
+            <div id="selectionSummary" class="alert alert-info d-none"></div>
+
+            <!-- Hizmet Kategorileri -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="d-flex justify-content-center">
+                        <div class="btn-group" role="group" id="categoryFilters">
+                            <button type="button" class="btn btn-outline-primary active" data-category="all">Tümü</button>
+                            @if (Model.Categories.Any())
+                            {
+                                @foreach (var category in Model.Categories)
+                                {
+                                    var categoryName = category switch
+                                    {
+                                        "haircut" => "Saç Kesimi",
+                                        "coloring" => "Renklendirme",
+                                        "styling" => "Şekillendirme",
+                                        "beard" => "Sakal Traşı",
+                                        "care" => "Bakım & Spa",
+                                        "manicure" => "Manikür & Pedikür",
+                                        "other" => "Diğer",
+                                        _ => category
+                                    };
+                                    <button type="button" class="btn btn-outline-primary" data-category="@category.ToLower()">@categoryName</button>
+                                }
+                            }
+                            else
+                            {
+                                <!-- Varsayılan kategoriler (henüz hizmet yoksa) -->
+                                <button type="button" class="btn btn-outline-primary" data-category="haircut">Saç Kesimi</button>
+                                <button type="button" class="btn btn-outline-primary" data-category="coloring">Renklendirme</button>
+                                <button type="button" class="btn btn-outline-primary" data-category="styling">Şekillendirme</button>
+                                <button type="button" class="btn btn-outline-primary" data-category="beard">Sakal Traşı</button>
+                            }
                         </div>
-                        <h5 class="card-title">@service.Name</h5>
-                        <p class="card-text text-muted">@service.Description</p>
-                        <div class="service-details">
-                            <span class="badge bg-light text-dark me-2">
-                                <i class="bi bi-clock"></i> @service.DurationMin dk
-                            </span>
-                            <span class="badge bg-primary">@service.Price.ToString("0.##") ₺</span>
-                        </div>
-                    </div>
-                    <div class="card-footer bg-transparent border-0 text-center">
-                        <a href="@Url.Action("Details", new { id = service.Id })" 
-                           class="btn btn-outline-primary">
-                            Detaylar & Randevu
-                        </a>
                     </div>
                 </div>
             </div>
-        }
-    </div>
 
-    <!-- Şubeler -->
-    <div class="mt-5">
-        <h3 class="text-center mb-4">Şubelerimiz</h3>
-        <div class="row g-4">
-            @foreach (var branch in Model.Branches)
-            {
-                <div class="col-md-6 col-lg-4">
-                    <div class="card h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">@branch.Name</h5>
-                            <p class="card-text text-muted">@branch.Address</p>
-                            <p class="card-text">
-                                <small class="text-muted">
-                                    <i class="bi bi-telephone"></i> @branch.Phone
-                                </small>
-                            </p>
+            <!-- Hizmetler Grid -->
+            <div id="servicesWrapper" class="d-none">
+                <div class="row g-4">
+                    @foreach (var service in Model.Services)
+                    {
+                        var categoryClass = service.Category?.ToLower() switch
+                        {
+                            "haircut" => "haircut",
+                            "coloring" => "coloring",
+                            "styling" => "styling",
+                            "beard" => "beard",
+                            "care" => "care",
+                            "manicure" => "manicure",
+                            "other" => "other",
+                            _ => "other"
+                        };
+
+                        <div class="col-md-6 col-lg-4 service-item" data-category="@categoryClass">
+                            <div class="card h-100 service-card">
+                                <div class="card-body text-center">
+                                    <div class="service-icon mb-3">
+                                        <i class="@(service.IconClass ?? "bi bi-scissors") fa-3x text-primary"></i>
+                                    </div>
+                                    <h5 class="card-title">@service.Name</h5>
+                                    <p class="card-text text-muted">@service.Description</p>
+                                    <div class="service-details">
+                                        <span class="badge bg-light text-dark me-2">
+                                            <i class="bi bi-clock"></i> @service.DurationMin dk
+                                        </span>
+                                        <span class="badge bg-primary">@service.Price.ToString("0.##") ₺</span>
+                                    </div>
+                                </div>
+                                <div class="card-footer bg-transparent border-0 text-center">
+                                    <a href="@Url.Action("Details", new { id = service.Id })"
+                                       class="btn btn-outline-primary">
+                                        Detaylar & Randevu
+                                    </a>
+                                </div>
+                            </div>
                         </div>
-                    </div>
+                    }
                 </div>
-            }
+            </div>
+            <div id="servicePlaceholder" class="alert alert-light border text-muted">
+                Önce şube ve kuaför seçimi yapın.
+            </div>
         </div>
     </div>
 </div>
 
 @section Scripts {
     <script>
+        const branchButtons = document.querySelectorAll('.select-branch');
+        const stylistList = document.getElementById('stylistList');
+        const stylistCards = document.querySelectorAll('.stylist-card');
+        const stylistPlaceholder = document.getElementById('stylistPlaceholder');
+        const serviceWrapper = document.getElementById('servicesWrapper');
+        const servicePlaceholder = document.getElementById('servicePlaceholder');
+        const selectionSummary = document.getElementById('selectionSummary');
+        const categoryButtons = document.querySelectorAll('#categoryFilters button[data-category]');
+
+        let selectedBranchId = null;
+        let selectedStylistId = null;
+
+        function clearStylistSelection() {
+            selectedStylistId = null;
+            document.querySelectorAll('.select-stylist').forEach(btn => btn.classList.remove('active'));
+            selectionSummary.classList.add('d-none');
+            serviceWrapper.classList.add('d-none');
+            servicePlaceholder.classList.remove('d-none');
+        }
+
+        branchButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedBranchId = btn.dataset.branchId;
+
+                branchButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                stylistPlaceholder.classList.add('d-none');
+                stylistList.classList.remove('d-none');
+
+                stylistCards.forEach(card => {
+                    const shouldShow = card.dataset.branchId === selectedBranchId;
+                    card.classList.toggle('d-none', !shouldShow);
+                });
+
+                clearStylistSelection();
+                stylistList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        document.querySelectorAll('.select-stylist').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedStylistId = btn.dataset.stylistId;
+
+                document.querySelectorAll('.select-stylist').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+
+                const branchName = document.querySelector(`.branch-card[data-branch-id="${selectedBranchId}"] .card-title`)?.textContent?.trim() ?? '';
+                const stylistName = btn.closest('.card')?.querySelector('h6')?.textContent?.trim() ?? '';
+
+                selectionSummary.textContent = `${branchName} şubesinde ${stylistName} ile devam ediyorsunuz.`;
+                selectionSummary.classList.remove('d-none');
+
+                servicePlaceholder.classList.add('d-none');
+                serviceWrapper.classList.remove('d-none');
+
+                document.getElementById('serviceCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
         // Kategori filtreleme
-        document.querySelectorAll('button[data-category]').forEach(btn => {
-            btn.addEventListener('click', function() {
+        categoryButtons.forEach(btn => {
+            btn.addEventListener('click', function () {
                 const category = this.dataset.category;
-                
-                // Aktif buton güncelle
-                document.querySelectorAll('button[data-category]').forEach(b => b.classList.remove('active'));
+
+                categoryButtons.forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
-                
-                // Hizmetleri filtrele
+
                 document.querySelectorAll('.service-item').forEach(item => {
                     if (category === 'all' || item.dataset.category === category) {
                         item.style.display = 'block';
