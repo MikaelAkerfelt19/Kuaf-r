@@ -1,10 +1,18 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Users\\ahmet\\kuafor\\xxx-hairdresser\\",
+  "WorkspaceRootPath": "C:\\Masa\u00FCst\u00FC\\kuafor\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\ahmet\\kuafor\\xxx-hairdresser\\src\\Kuafor.Web\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:src\\Kuafor.Web\\Program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+      "AbsoluteMoniker": "D:0:0:{065563C3-8F80-4CAA-A093-AA3694C16969}|src\\Kuafor.Web\\Kuafor.Web.csproj|c:\\masa\u00FCst\u00FC\\kuafor\\src\\kuafor.web\\models\\services\\servicesindexviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{065563C3-8F80-4CAA-A093-AA3694C16969}|src\\Kuafor.Web\\Kuafor.Web.csproj|solutionrelative:src\\kuafor.web\\models\\services\\servicesindexviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{065563C3-8F80-4CAA-A093-AA3694C16969}|src\\Kuafor.Web\\Kuafor.Web.csproj|c:\\masa\u00FCst\u00FC\\kuafor\\src\\kuafor.web\\models\\entities\\stylist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{065563C3-8F80-4CAA-A093-AA3694C16969}|src\\Kuafor.Web\\Kuafor.Web.csproj|solutionrelative:src\\kuafor.web\\models\\entities\\stylist.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{065563C3-8F80-4CAA-A093-AA3694C16969}|src\\Kuafor.Web\\Kuafor.Web.csproj|c:\\masa\u00FCst\u00FC\\kuafor\\src\\kuafor.web\\areas\\customer\\controllers\\servicescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{065563C3-8F80-4CAA-A093-AA3694C16969}|src\\Kuafor.Web\\Kuafor.Web.csproj|solutionrelative:src\\kuafor.web\\areas\\customer\\controllers\\servicescontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
   ],
   "DocumentGroupContainers": [
@@ -14,7 +22,7 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 3,
+          "SelectedChildIndex": 4,
           "Children": [
             {
               "$type": "Bookmark",
@@ -30,15 +38,45 @@
             },
             {
               "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Program.cs",
-              "DocumentMoniker": "C:\\Users\\ahmet\\kuafor\\xxx-hairdresser\\src\\Kuafor.Web\\Program.cs",
-              "RelativeDocumentMoniker": "src\\Kuafor.Web\\Program.cs",
-              "ToolTip": "C:\\Users\\ahmet\\kuafor\\xxx-hairdresser\\src\\Kuafor.Web\\Program.cs",
-              "RelativeToolTip": "src\\Kuafor.Web\\Program.cs",
-              "ViewState": "AgIAAMsAAAAAAAAAAAAAANIAAAAaAAAAAAAAAA==",
+              "DocumentIndex": 1,
+              "Title": "Stylist.cs",
+              "DocumentMoniker": "C:\\Masa\u00FCst\u00FC\\kuafor\\src\\Kuafor.Web\\Models\\Entities\\Stylist.cs",
+              "RelativeDocumentMoniker": "src\\Kuafor.Web\\Models\\Entities\\Stylist.cs",
+              "ToolTip": "C:\\Masa\u00FCst\u00FC\\kuafor\\src\\Kuafor.Web\\Models\\Entities\\Stylist.cs",
+              "RelativeToolTip": "src\\Kuafor.Web\\Models\\Entities\\Stylist.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAAAWAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2025-09-06T12:50:41.88Z",
+              "WhenOpened": "2025-11-20T13:11:05.487Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "ServicesIndexViewModel.cs",
+              "DocumentMoniker": "C:\\Masa\u00FCst\u00FC\\kuafor\\src\\Kuafor.Web\\Models\\Services\\ServicesIndexViewModel.cs",
+              "RelativeDocumentMoniker": "src\\Kuafor.Web\\Models\\Services\\ServicesIndexViewModel.cs",
+              "ToolTip": "C:\\Masa\u00FCst\u00FC\\kuafor\\src\\Kuafor.Web\\Models\\Services\\ServicesIndexViewModel.cs",
+              "RelativeToolTip": "src\\Kuafor.Web\\Models\\Services\\ServicesIndexViewModel.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAgAAABTAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-20T13:09:37.002Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "ServicesController.cs",
+              "DocumentMoniker": "C:\\Masa\u00FCst\u00FC\\kuafor\\src\\Kuafor.Web\\Areas\\Customer\\Controllers\\ServicesController.cs",
+              "RelativeDocumentMoniker": "src\\Kuafor.Web\\Areas\\Customer\\Controllers\\ServicesController.cs",
+              "ToolTip": "C:\\Masa\u00FCst\u00FC\\kuafor\\src\\Kuafor.Web\\Areas\\Customer\\Controllers\\ServicesController.cs",
+              "RelativeToolTip": "src\\Kuafor.Web\\Areas\\Customer\\Controllers\\ServicesController.cs",
+              "ViewState": "AgIAAGcAAAAAAAAAAAAkwCwAAAAXAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2025-11-20T11:35:44.704Z",
               "EditorCaption": ""
             }
           ]
