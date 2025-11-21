@@ -113,6 +113,37 @@ namespace Kuafor.Web.Areas.Admin.Controllers
             }
             return RedirectToAction(nameof(Index));
         }
+        [HttpPost]
+        [Route("BulkDelete")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BulkDelete(int[] selectedIds)
+        {
+            if (selectedIds == null || selectedIds.Length == 0)
+            {
+                TempData["Error"] = "Lütfen silmek için en az bir hizmet seçin.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            try
+            {
+                foreach (var id in selectedIds)
+                {
+                    await _serviceService.DeleteAsync(id);
+                }
+
+                TempData["Success"] = $"{selectedIds.Length} hizmet silindi.";
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = $"Bazı hizmetler silinemedi: {ex.Message}";
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Beklenmeyen hata: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
 
         [HttpPost]
         public async Task<IActionResult> ToggleHomePageVisibility(int id)
