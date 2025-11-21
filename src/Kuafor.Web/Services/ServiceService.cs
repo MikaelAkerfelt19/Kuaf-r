@@ -21,6 +21,7 @@ public class ServiceService : IServiceService
         _context.ChangeTracker.Clear();
         
         return await _context.Services
+            .Include(s => s.Stylist)
             .OrderBy(s => s.DisplayOrder)
             .ThenBy(s => s.Name)
             .ToListAsync();
@@ -81,6 +82,7 @@ public class ServiceService : IServiceService
         _context.ChangeTracker.Clear();
         
         return await _context.Services
+            .Include(s => s.Stylist)
             .Where(s => s.IsActive)
             .OrderBy(s => s.DisplayOrder)
             .ThenBy(s => s.Name)

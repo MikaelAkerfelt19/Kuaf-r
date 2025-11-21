@@ -41,5 +41,7 @@ public class Stylist
     public virtual Branch Branch { get; set; } = null!;
     public virtual ICollection<Appointment> Appointments { get; set; } = new List<Appointment>();
 
+    public virtual ICollection<Service> Services { get; set; } = new List<Service>();
+
     public virtual ICollection<StylistWorkingHours> WorkingHours { get; set; } = new List<StylistWorkingHours>();
 }

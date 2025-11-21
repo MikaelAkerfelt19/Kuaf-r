@@ -17,6 +17,27 @@
                         <input asp-for="Name" class="form-control" placeholder="Örn: Saç Kesimi" />
                         <span asp-validation-for="Name" class="text-danger small"></span>
                     </div>
+                    <div class="mb-3">
+                        <label asp-for="StylistId" class="form-label">Kuaför</label>
+                        <select asp-for="StylistId" class="form-select" asp-items="(IEnumerable<SelectListItem>)ViewBag.Stylists">
+                            <option value="">Kuaför Seçin</option>
+                        </select>
+                        <span asp-validation-for="StylistId" class="text-danger small"></span>
+                    </div>
+                    <div class="mb-3">
+                        <label asp-for="Category" class="form-label">Hizmet Türü</label>
+                        <select asp-for="Category" class="form-select">
+                            <option value="">Hizmet Türü Seçin</option>
+                            <option value="haircut">Saç Kesimi</option>
+                            <option value="coloring">Saç Boyama</option>
+                            <option value="styling">Şekillendirme</option>
+                            <option value="beard">Sakal Tıraşı</option>
+                            <option value="care">Bakım & Spa</option>
+                            <option value="manicure">Manikür & Pedikür</option>
+                            <option value="other">Diğer</option>
+                        </select>
+                        <span asp-validation-for="Category" class="text-danger small"></span>
+                    </div>
                     <div class="row g-3">
                         <div class="col">
                             <label asp-for="DurationMin" class="form-label">Süre (dk)</label>

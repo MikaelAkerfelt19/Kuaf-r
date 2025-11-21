@@ -1,5 +1,5 @@
-@model List<Kuafor.Web.Models.Admin.Services.ServiceDto>
-@{
+@model Kuafor.Web.Models.Admin.Services.ServicesIndexViewModel
+@{ 
     ViewData["Title"] = "Hizmetler";
 }
 
@@ -33,6 +33,7 @@
                     <tr>
                         <th style="width:80px">#</th>
                         <th>Ad</th>
+                        <th style="width:160px">Kuaför</th>
                         <th style="width:140px">Kategori</th>
                         <th style="width:140px">Süre (dk)</th>
                         <th style="width:140px">Fiyat (₺)</th>
@@ -41,10 +42,10 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @if (Model.Count == 0)
+                    @if (Model.Services.Count == 0)
                     {
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
+                            <td colspan="8" class="text-center text-muted py-4">
                                 <i class="fas fa-info-circle fa-2x mb-3"></i>
                                 <br>
                                 <strong>Henüz hizmet eklenmemiş</strong>
@@ -55,11 +56,21 @@
                     }
                     else
                     {
-                        foreach (var s in Model)
+                        foreach (var s in Model.Services)
                         {
                             <tr>
                                 <td>@s.Id</td>
                                 <td>@s.Name</td>
+                                <td>
+                                    @if (s.StylistId > 0)
+                                    {
+                                        <span class="badge bg-secondary">@s.StylistName</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-muted">Atanmadı</span>
+                                    }
+                                </td>
                                 <td>
                                     @if (!string.IsNullOrEmpty(s.Category))
                                     {
@@ -96,7 +107,7 @@
                                 <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
                                         data-bs-target="#serviceModal" data-mode="edit" data-id="@s.Id" data-name="@s.Name"
-                                        data-duration="@s.DurationMin" data-price="@s.Price"
+                                        data-duration="@s.DurationMin" data-price="@s.Price" data-category="@s.Category" data-stylist="@s.StylistId"
                                         data-active="@(s.IsActive ? "true" : "false")">
                                         Düzenle
                                     </button>
