@@ -12,7 +12,7 @@
         const mode = button?.getAttribute('data-mode') || 'create';
 
         // varsayılanlar
-        let id = 0, name = '', duration = 30, price = 0, active = true;
+        let id = 0, name = '', duration = 30, price = 0, active = true, category = '', stylist = '';
 
         if (mode === 'edit') {
             id = parseInt(button.getAttribute('data-id') || '0', 10);
@@ -20,6 +20,8 @@
             duration = parseInt(button.getAttribute('data-duration') || '30', 10);
             price = button.getAttribute('data-price') || '0';
             active = (button.getAttribute('data-active') === 'true');
+            category = button.getAttribute('data-category') || '';
+            stylist = button.getAttribute('data-stylist') || '';
         }
 
         // Form alanlarını doldur
@@ -28,6 +30,10 @@
         form.querySelector('input[name="DurationMin"]').value = duration;
         form.querySelector('input[name="Price"]').value = price;
         form.querySelector('input[name="IsActive"]').checked = !!active;
+        const categorySelect = form.querySelector('select[name="Category"]');
+        if (categorySelect) categorySelect.value = category;
+        const stylistSelect = form.querySelector('select[name="StylistId"]');
+        if (stylistSelect) stylistSelect.value = stylist;
 
         // Başlık ve action
         if (mode === 'edit') {

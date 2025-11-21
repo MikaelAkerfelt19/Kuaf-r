@@ -135,6 +135,12 @@ public DbSet<WhatsAppTemplateUsage> WhatsAppTemplateUsages { get; set; }
             .Property(s => s.PriceFrom)
             .HasPrecision(18, 2);
 
+        builder.Entity<Service>()
+            .HasOne(s => s.Stylist)
+            .WithMany(st => st.Services)
+            .HasForeignKey(s => s.StylistId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.Entity<Stylist>()
             .Property(s => s.Rating)
             .HasPrecision(3, 1);

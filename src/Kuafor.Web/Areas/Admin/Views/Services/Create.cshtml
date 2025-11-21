@@ -13,6 +13,19 @@
         </a>
     </div>
 
+    <style>
+        /* Sayı alanlarındaki okları kaldır */
+        input[type=number].no-spinner::-webkit-inner-spin-button,
+        input[type=number].no-spinner::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+
+        input[type=number].no-spinner {
+            -moz-appearance: textfield;
+        }
+    </style>
+
     <div class="card shadow">
         <div class="card-header py-3">
             <h6 class="m-0 font-weight-bold text-primary">Hizmet Bilgileri</h6>
@@ -40,12 +53,12 @@
                     <div class="col-md-6">
                         <div class="mb-3">
                             <label asp-for="Category" class="form-label">Hizmet Türü <span class="text-danger">*</span></label>
-                            <select asp-for="Category" class="form-select" required>
+                            <select asp-for="Category" class="form-select" required id="Category">
                                 <option value="">Hizmet Türü Seçin</option>
                                 <option value="haircut">Saç Kesimi</option>
-                                <option value="coloring">Renklendirme</option>
+                                <option value="coloring">Saç Boyama</option>
                                 <option value="styling">Şekillendirme</option>
-                                <option value="beard">Sakal Traşı</option>
+                                <option value="beard">Sakal Tıraşı</option>
                                 <option value="care">Bakım & Spa</option>
                                 <option value="manicure">Manikür & Pedikür</option>
                                 <option value="other">Diğer</option>
@@ -58,16 +71,11 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="DurationMin" class="form-label">Süre (Dakika) <span class="text-danger">*</span></label>
-                            <input asp-for="DurationMin" type="number" class="form-control" min="5" max="480" placeholder="30" required />
-                            <span asp-validation-for="DurationMin" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label asp-for="Price" class="form-label">Fiyat (₺) <span class="text-danger">*</span></label>
-                            <input asp-for="Price" type="number" class="form-control" min="0" step="0.01" placeholder="150.00" required />
-                            <span asp-validation-for="Price" class="text-danger"></span>
+                            <label asp-for="StylistId" class="form-label">Kuaför <span class="text-danger">*</span></label>
+                            <select asp-for="StylistId" class="form-select" asp-items="(IEnumerable<SelectListItem>)ViewBag.Stylists" required>
+                                <option value="">Kuaför Seçin</option>
+                            </select>
+                            <span asp-validation-for="StylistId" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
@@ -75,25 +83,16 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="PriceFrom" class="form-label">Başlangıç Fiyatı (₺)</label>
-                            <input asp-for="PriceFrom" type="number" class="form-control" min="0" step="0.01" placeholder="100.00" />
-                            <span asp-validation-for="PriceFrom" class="text-danger"></span>
-                            <div class="form-text">Opsiyonel - "Başlangıç" fiyatı için</div>
+                            <label asp-for="DurationMin" class="form-label">Süre (Dakika) <span class="text-danger">*</span></label>
+                            <input asp-for="DurationMin" type="number" class="form-control no-spinner" min="5" max="480" placeholder="30" required />
+                            <span asp-validation-for="DurationMin" class="text-danger"></span>
                         </div>
                     </div>
                     <div class="col-md-6">
                         <div class="mb-3">
-                            <label asp-for="IconClass" class="form-label">İkon Sınıfı</label>
-                            <select asp-for="IconClass" class="form-select">
-                                <option value="bi bi-scissors">✂️ Makas</option>
-                                <option value="bi bi-palette">🎨 Palet</option>
-                                <option value="bi bi-droplet">💧 Damla</option>
-                                <option value="bi bi-hand-index">👆 El</option>
-                                <option value="bi bi-star">⭐ Yıldız</option>
-                                <option value="bi bi-heart">❤️ Kalp</option>
-                                <option value="bi bi-gem">💎 Elmas</option>
-                            </select>
-                            <span asp-validation-for="IconClass" class="text-danger"></span>
+                            <label asp-for="Price" class="form-label">Fiyat (₺) <span class="text-danger">*</span></label>
+                            <input asp-for="Price" type="number" class="form-control no-spinner" min="0" step="0.01" placeholder="150.00" required />
+                            <span asp-validation-for="Price" class="text-danger"></span>
                         </div>
                     </div>
                 </div>
@@ -115,27 +114,10 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label asp-for="DisplayOrder" class="form-label">Görüntü Sırası</label>
-                            <input asp-for="DisplayOrder" type="number" class="form-control" min="0" placeholder="1" />
-                            <span asp-validation-for="DisplayOrder" class="text-danger"></span>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
                             <div class="form-check">
                                 <input asp-for="IsActive" class="form-check-input" type="checkbox" />
                                 <label asp-for="IsActive" class="form-check-label">
                                     Hizmet aktif
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="mb-3">
-                            <div class="form-check">
-                                <input asp-for="ShowOnHomePage" class="form-check-input" type="checkbox" />
-                                <label asp-for="ShowOnHomePage" class="form-check-label">
-                                    Ana sayfada göster
                                 </label>
                             </div>
                         </div>
@@ -190,37 +172,8 @@
                     alert('Lütfen gerekli alanları doldurun ve geçerli değerler girin.');
                     return false;
                 }
-                
+
                 return true;
-            });
-            
-            // Kategori seçiminde otomatik ikon güncelleme
-            $('#Category').on('change', function() {
-                var category = $(this).val();
-                var iconSelect = $('#IconClass');
-                
-                switch(category) {
-                    case 'haircut':
-                        iconSelect.val('bi bi-scissors');
-                        break;
-                    case 'coloring':
-                        iconSelect.val('bi bi-palette');
-                        break;
-                    case 'styling':
-                        iconSelect.val('bi bi-star');
-                        break;
-                    case 'beard':
-                        iconSelect.val('bi bi-hand-index');
-                        break;
-                    case 'care':
-                        iconSelect.val('bi bi-droplet');
-                        break;
-                    case 'manicure':
-                        iconSelect.val('bi bi-heart');
-                        break;
-                    default:
-                        iconSelect.val('bi bi-scissors');
-                }
             });
         });
     </script>

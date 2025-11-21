@@ -10,6 +10,8 @@ namespace Kuafor.Web.Models.Admin.Services
         public string Name { get; set; } = string.Empty;
         [StringLength(50)]
         public string? Category { get; set; }
+        public int StylistId { get; set; }
+        public string StylistName { get; set; } = string.Empty;
         [Range(5, 480)]
         public int DurationMin { get; set; } = 30;
         [Range(0, 100000)]
@@ -25,6 +27,11 @@ namespace Kuafor.Web.Models.Admin.Services
         [Required(ErrorMessage = "Ad zorunludur.")]
         [StringLength(80, ErrorMessage = "Ad 80 karakteri aşamaz.")]
         public string Name { get; set; } = string.Empty;
+        [Required(ErrorMessage = "Kategori seçimi zorunludur.")]
+        [StringLength(50)]
+        public string? Category { get; set; }
+        [Required(ErrorMessage = "Kuaför seçimi zorunludur.")]
+        public int StylistId { get; set; }
         [Range(5, 480, ErrorMessage = "Süre 5-480 dk aralığında olmalıdır.")]
         public int DurationMin { get; set; } = 30;
         [Range(0, 100000, ErrorMessage = "Fiyat 0-100000 aralığında olmalıdır.")]
