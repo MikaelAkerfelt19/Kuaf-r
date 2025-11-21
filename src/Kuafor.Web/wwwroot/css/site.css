@@ -135,3 +135,16 @@ body {
   --field-bg: var(--bs-dark-bg);
   --field-border: rgba(255, 255, 255, .85);
 }
+.hero-large {
+    padding-top: 8rem !important;
+    padding-bottom: 8rem !important;
+    min-height: 600px;
+}
+
+@media (min-width: 992px) {
+    .hero-large {
+        padding-top: 10rem !important;
+        padding-bottom: 10rem !important;
+        min-height: 700px;
+    }
+}

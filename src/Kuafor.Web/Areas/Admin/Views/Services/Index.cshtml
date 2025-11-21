@@ -25,102 +25,148 @@
     </div>
 }
 
-<div class="card">
-    <div class="card-body p-0">
-        <div class="table-responsive">
-            <table class="table table-hover align-middle mb-0">
-                <thead class="table-light">
-                    <tr>
-                        <th style="width:80px">#</th>
-                        <th>Ad</th>
-                        <th style="width:140px">Kategori</th>
-                        <th style="width:140px">Süre (dk)</th>
-                        <th style="width:140px">Fiyat (₺)</th>
-                        <th style="width:120px">Durum</th>
-                        <th style="width:160px" class="text-end">İşlemler</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @if (Model.Count == 0)
-                    {
+
+<form asp-area="Admin"
+      asp-controller="Services"
+      asp-action="BulkDelete"
+      method="post">
+
+    @Html.AntiForgeryToken()
+
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
                         <tr>
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="fas fa-info-circle fa-2x mb-3"></i>
-                                <br>
-                                <strong>Henüz hizmet eklenmemiş</strong>
-                                <br>
-                                <small>İlk hizmeti eklemek için "Yeni Hizmet" butonuna tıklayın.</small>
-                            </td>
+                            <th style="width:40px">
+                                <input type="checkbox" id="select-all" />
+                            </th>
+                            <th style="width:80px">#</th>
+                            <th>Ad</th>
+                            <th style="width:140px">Kategori</th>
+                            <th style="width:140px">Süre (dk)</th>
+                            <th style="width:140px">Fiyat (₺)</th>
+                            <th style="width:120px">Durum</th>
+                            <th style="width:160px" class="text-end">İşlemler</th>
                         </tr>
-                    }
-                    else
-                    {
-                        foreach (var s in Model)
+                    </thead>
+                    <tbody>
+                        @if (Model.Count == 0)
                         {
                             <tr>
-                                <td>@s.Id</td>
-                                <td>@s.Name</td>
-                                <td>
-                                    @if (!string.IsNullOrEmpty(s.Category))
-                                    {
-                                        var categoryName = s.Category switch
-                                        {
-                                            "haircut" => "Saç Kesimi",
-                                            "coloring" => "Renklendirme",
-                                            "styling" => "Şekillendirme",
-                                            "beard" => "Sakal Traşı",
-                                            "care" => "Bakım & Spa",
-                                            "manicure" => "Manikür & Pedikür",
-                                            "other" => "Diğer",
-                                            _ => s.Category
-                                        };
-                                        <span class="badge bg-info">@categoryName</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="text-muted">Kategori yok</span>
-                                    }
-                                </td>
-                                <td>@s.DurationMin</td>
-                                <td>@s.Price.ToString("0.##")</td>
-                                <td>
-                                    @if (s.IsActive)
-                                    {
-                                        <span class="badge bg-success">Aktif</span>
-                                    }
-                                    else
-                                    {
-                                        <span class="badge bg-secondary">Pasif</span>
-                                    }
-                                </td>
-                                <td class="text-end">
-                                    <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal"
-                                        data-bs-target="#serviceModal" data-mode="edit" data-id="@s.Id" data-name="@s.Name"
-                                        data-duration="@s.DurationMin" data-price="@s.Price"
-                                        data-active="@(s.IsActive ? "true" : "false")">
-                                        Düzenle
-                                    </button>
-
-                                    <form method="post" action="/Admin/Services/Delete" class="d-inline">
-                                        @Html.AntiForgeryToken()
-                                        <input type="hidden" name="id" value="@s.Id" />
-                                        <button type="submit" class="btn btn-sm btn-outline-danger"
-                                            onclick="return confirm('Silmek istediğinize emin misiniz?');">
-                                            Sil
-                                        </button>
-                                    </form>
+                                <td colspan="8" class="text-center text-muted py-4">
+                                    <i class="fas fa-info-circle fa-2x mb-3"></i>
+                                    <br />
+                                    <strong>Henüz hizmet eklenmemiş</strong>
+                                    <br />
+                                    <small>İlk hizmeti eklemek için "Yeni Hizmet" butonuna tıklayın.</small>
                                 </td>
                             </tr>
                         }
-                    }
-                </tbody>
-            </table>
+                        else
+                        {
+                            foreach (var s in Model)
+                            {
+                                <tr>
+                                    <!-- Checkbox kolonu (TOPLU SİLME İÇİN) -->
+                                    <td>
+                                        <input type="checkbox"
+                                               name="selectedIds"
+                                               value="@s.Id"
+                                               class="row-checkbox" />
+                                    </td>
+
+                                    <td>@s.Id</td>
+                                    <td>@s.Name</td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(s.Category))
+                                        {
+                                            var categoryName = s.Category switch
+                                            {
+                                                "haircut" => "Saç Kesimi",
+                                                "coloring" => "Renklendirme",
+                                                "styling" => "Şekillendirme",
+                                                "beard" => "Sakal Traşı",
+                                                "care" => "Bakım & Spa",
+                                                "manicure" => "Manikür & Pedikür",
+                                                "other" => "Diğer",
+                                                _ => s.Category
+                                            };
+                                            <span class="badge bg-info">@categoryName</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Kategori yok</span>
+                                        }
+                                    </td>
+                                    <td>@s.DurationMin</td>
+                                    <td>@s.Price.ToString("0.##")</td>
+                                    <td>
+                                        @if (s.IsActive)
+                                        {
+                                            <span class="badge bg-success">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Pasif</span>
+                                        }
+                                    </td>
+                                    <td class="text-end">
+                                        <button type="button" class="btn btn-sm btn-outline-primary me-1"
+                                                data-bs-toggle="modal"
+                                                data-bs-target="#serviceModal"
+                                                data-mode="edit"
+                                                data-id="@s.Id"
+                                                data-name="@s.Name"
+                                                data-duration="@s.DurationMin"
+                                                data-price="@s.Price"
+                                                data-active="@(s.IsActive ? "true" : "false")">
+                                            Düzenle
+                                        </button>
+
+                                        <!-- TEK TEK SİLME: LINK (GET → Delete view → POST DeleteConfirmed) -->
+                                        <a asp-area="Admin"
+                                           asp-controller="Services"
+                                           asp-action="Delete"
+                                           asp-route-id="@s.Id"
+                                           class="btn btn-sm btn-outline-danger"
+                                           onclick="return confirm('Bu hizmeti silmek istediğinize emin misiniz?');">
+                                            Sil
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card-footer d-flex justify-content-between">
+            <span class="text-muted small">
+                Birden fazla hizmeti seçip aşağıdaki butonla toplu olarak silebilirsiniz.
+            </span>
+            <button type="submit"
+                    class="btn btn-danger"
+                    onclick="return confirm('Seçili tüm hizmetleri silmek istediğinize emin misiniz?');">
+                Seçilenleri Sil
+            </button>
         </div>
     </div>
-</div>
+</form>
 
 @await Html.PartialAsync("Partials/_ServiceModal", new Kuafor.Web.Models.Admin.Services.ServiceFormModel())
 
 @section Scripts {
     <script src="~/js/admin-services.js" asp-append-version="true"></script>
+
+    <script>
+        // Hepsini / hiçbirini seç
+        document.getElementById('select-all')?.addEventListener('change', function () {
+            var checked = this.checked;
+            document.querySelectorAll('.row-checkbox')
+                .forEach(cb => cb.checked = checked);
+        });
+    </script>
 }
